@@ -1,0 +1,42 @@
+definitions:
+  motifs:
+    motif1:
+      seed: SLG
+  signals:
+    signal1:
+      motifs:
+        - motif1
+      sequence_position_weights:
+        '107': 1
+  simulations:
+    sim1:
+      is_repertoire: false
+      paired: false
+      sequence_type: amino_acid
+      simulation_strategy: RejectionSampling
+      remove_seqs_with_signals: true
+      sim_items:
+        sig1:
+          generative_model:
+            default_model_name: humanTRB  # humanIGH
+            type: OLGA
+          is_noise: false
+          number_of_examples: 10 # simulate 100 TCRs
+          signals:
+            signal1: 1
+        noSig:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 900 # simulate 900 TCRs
+          signals: {} # no signal
+
+instructions:
+  my_sim_inst:
+    export_p_gens: false
+    max_iterations: 5000
+    number_of_processes: 4
+    sequence_batch_size: 1000
+    simulation: sim1
+    type: LigoSim

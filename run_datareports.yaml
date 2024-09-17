@@ -1,0 +1,25 @@
+definitions:
+  datasets:
+    my_dataset:
+      format: AIRR
+      params:
+        path: data/SLG_dataset_output/my_sim_inst/batch1.tsv #genModel_output/PWM/my_train_gen_model_inst/generated_sequences/batch1.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+
+  reports:
+    my_sld_report: SequenceLengthDistribution
+    my_aa_freq_report: AminoAcidFrequencyDistribution
+
+instructions:
+  my_instruction:
+    type: ExploratoryAnalysis
+    analyses:
+      SeqLen_analysis:
+        dataset: my_dataset
+        report: my_sld_report
+      AA_analysis:
+        dataset: my_dataset
+        report: my_aa_freq_report

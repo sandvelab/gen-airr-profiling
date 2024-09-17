@@ -1,0 +1,36 @@
+definitions:
+  datasets:
+    my_ligo_data:
+      format: AIRR
+      params:
+        path: data/SLG_dataset_output/my_sim_inst/batch1.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    my_sonnia_model:
+      SoNNia:
+        batch_size: 10000
+        epochs: 5 #50
+        default_model_name: 'humanTRB'
+        deep: False # this param has no function?
+        include_joint_genes: True
+        n_gen_seqs: 1000 #500000
+  reports:
+    my_KLKmerCompare_report: KLKmerComparison
+    my_sld_report: SequenceLengthDistribution
+    my_aa_freq_report: AminoAcidFrequencyDistribution
+
+instructions:
+  my_train_gen_model_inst:
+    type: TrainGenModel
+    export_combined_dataset: True
+    dataset: my_ligo_data
+    method: my_sonnia_model
+    gen_examples_count: 1000
+    number_of_processes: 4
+    reports:
+      - my_KLKmerCompare_report
+      - my_sld_report
+      - my_aa_freq_report
