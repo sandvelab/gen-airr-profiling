@@ -3,7 +3,7 @@ definitions:
     my_dataset:
       format: AIRR
       params:
-        path: data/SLG_dataset_output/my_sim_inst/batch1.tsv #genModel_output/PWM/my_train_gen_model_inst/generated_sequences/batch1.tsv
+        path: results/dataset1/simulation/my_sim_inst/batch1.tsv #results/dataset1/models/VAE/my_train_gen_model_inst/generated_sequences/batch1.tsv
         is_repertoire: False
         paired: False
         region_type: IMGT_JUNCTION
@@ -17,9 +17,9 @@ instructions:
   my_instruction:
     type: ExploratoryAnalysis
     analyses:
-      SeqLen_analysis:
+      SeqLen:
         dataset: my_dataset
         report: my_sld_report
-      AA_analysis:
+      AA:
         dataset: my_dataset
         report: my_aa_freq_report

@@ -3,7 +3,7 @@ definitions:
     my_ligo_data:
       format: AIRR
       params:
-        path: data/SLG_dataset_output/my_sim_inst/batch1.tsv
+        path: results/dataset1/simulation/my_sim_inst/batch1.tsv
         is_repertoire: False
         paired: False
         region_type: IMGT_CDR3 #IMGT_JUNCTION
@@ -35,10 +35,11 @@ definitions:
 instructions:
   my_train_gen_model_inst:
     type: TrainGenModel
-    export_combined_dataset: True
+    export_combined_dataset: False
     dataset: my_ligo_data
     method: my_vae_model
     gen_examples_count: 1000
     number_of_processes: 4
     reports:
+      - my_KLKmerCompare_report
       - my_vae_report
