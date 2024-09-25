@@ -33,7 +33,7 @@ definitions:
           signals: {} # no signal
 
 instructions:
-  my_sim_inst:
+  dataset:
     export_p_gens: false
     max_iterations: 5000
     number_of_processes: 4
