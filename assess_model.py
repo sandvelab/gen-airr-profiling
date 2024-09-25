@@ -43,7 +43,6 @@ def seq_len_compare(file1, file2):
     # Make sure both distributions have the same support (i.e., same sequence lengths)
     # Merge the two datasets to align the sequence lengths
     merged_data = pd.merge(data1, data2, on='sequence_lengths', how='outer').fillna(0)
-    print(merged_data)
 
     # Recompute the normalized counts after merging
     P = merged_data['counts_x'] / merged_data['counts_x'].sum()
@@ -66,16 +65,16 @@ aa_path = 'my_instruction/analysis_AA_analysis/report/amino_acid_frequency_distr
 orig_aa_file = root_path / analysis_path / 'orig' / aa_path
 pwm_aa_file = root_path / analysis_path / 'PWM' / aa_path
 vae_aa_file = root_path / analysis_path / 'VAE' / aa_path
-print(f'KL-Divergence for AA distribution (orig vs. PWM): {kl_aa_compare(orig_aa_file, pwm_aa_file)}')
-print(f'KL-Divergence for AA distribution (orig vs. VAE): {kl_aa_compare(orig_aa_file, vae_aa_file)}')
+print(f'KL-Divergence for AA distribution (orig vs. PWM): {kl_aa_compare(pwm_aa_file, orig_aa_file)}')
+print(f'KL-Divergence for AA distribution (orig vs. VAE): {kl_aa_compare(vae_aa_file, orig_aa_file)}')
 
 # Compare for sequence length distribution
 seq_len_path = 'my_instruction/analysis_SeqLen_analysis/report/sequence_length_distribution.csv'
 orig_seq_len_file = root_path / analysis_path / 'orig' / seq_len_path
 pwm_seq_len_file = root_path / analysis_path / 'PWM' / seq_len_path
 vae_seq_len_file = root_path / analysis_path / 'VAE' / seq_len_path
-print(f'KL-Divergence for sequence length distribution (orig vs. PWM): {seq_len_compare(orig_seq_len_file, pwm_seq_len_file)}')
-#print(f'KL-Divergence for sequence length distribution (orig vs. VAE): {seq_len_compare(orig_seq_len_file, vae_seq_len_file)}')
+print(f'KL-Divergence for sequence length distribution (orig vs. PWM): {seq_len_compare(pwm_seq_len_file, orig_seq_len_file)}')
+print(f'KL-Divergence for sequence length distribution (orig vs. VAE): {seq_len_compare(vae_seq_len_file, orig_seq_len_file)}')
 
 # Check for kmer
 model_seq_path = 'my_train_gen_model_inst/generated_sequences/batch1.tsv'
