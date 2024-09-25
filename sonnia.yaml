@@ -1,6 +1,6 @@
 definitions:
   datasets:
-    my_ligo_data:
+    dataset:
       format: AIRR
       params:
         path: data/SLG_dataset_output/my_sim_inst/batch1.tsv
@@ -26,7 +26,7 @@ instructions:
   my_train_gen_model_inst:
     type: TrainGenModel
     export_combined_dataset: True
-    dataset: my_ligo_data
+    dataset: dataset
     method: my_sonnia_model
     gen_examples_count: 1000
     number_of_processes: 4
