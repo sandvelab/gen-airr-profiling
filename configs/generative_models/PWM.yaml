@@ -19,7 +19,7 @@ definitions:
     my_pwm_report: PWMSummary
 
 instructions:
-  my_train_gen_model_inst:
+  gen_model:
     type: TrainGenModel
     export_combined_dataset: False
     dataset: dataset

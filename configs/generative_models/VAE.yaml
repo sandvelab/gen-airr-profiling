@@ -33,7 +33,7 @@ definitions:
         dim_dist_rows: None
 
 instructions:
-  my_train_gen_model_inst:
+  gen_model:
     type: TrainGenModel
     export_combined_dataset: False
     dataset: dataset

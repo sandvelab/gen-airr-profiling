@@ -1,6 +1,6 @@
 definitions:
   datasets:
-    my_dataset:
+    dataset:
       format: AIRR
       params:
         path: results/dataset1/simulation/my_sim_inst/batch1.tsv #results/dataset1/models/VAE/my_train_gen_model_inst/generated_sequences/batch1.tsv
@@ -18,8 +18,8 @@ instructions:
     type: ExploratoryAnalysis
     analyses:
       SeqLen:
-        dataset: my_dataset
+        dataset: dataset
         report: my_sld_report
       AA:
-        dataset: my_dataset
+        dataset: dataset
         report: my_aa_freq_report
