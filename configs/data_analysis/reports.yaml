@@ -14,7 +14,7 @@ definitions:
     my_aa_freq_report: AminoAcidFrequencyDistribution
 
 instructions:
-  my_instruction:
+  report_types:
     type: ExploratoryAnalysis
     analyses:
       SeqLen:
