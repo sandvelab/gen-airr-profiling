@@ -6,14 +6,14 @@ definitions:
         path: results/dataset1/simulation/my_sim_inst/batch1.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_JUNCTION
+        region_type: IMGT_CDR3
         separator: "\t"
   ml_methods:
     my_pwm_model:
       PWM:
         chain: beta
         sequence_type: amino_acid
-        region_type: IMGT_JUNCTION
+        region_type: IMGT_CDR3
   reports:
     my_KLKmerCompare_report: KLKmerComparison
     my_pwm_report: PWMSummary
