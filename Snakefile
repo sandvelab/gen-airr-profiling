@@ -12,49 +12,49 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
 # Input and output directories
 INPUT_DIR = "configs"  # Directory containing input YAML files
 RESULT_DIR = "results"  # Path to the directory where the results will be saved
+sim_num = range(10)     # Number of simulations to run per dataset
 
-# Rule to list all input files using glob_wildcards
+
 rule all:
     input:
-        expand((f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/comparison_aa_freq_{{model}}_{{dataset}}.txt",
-                f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/comparison_seq_len_{{model}}_{{dataset}}.txt"),
+        expand(f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
+               sim_num=sim_num,
                model=glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model)
 
-# Rule to run the 'ligo' command on each input file and mark completion with a .done file
-rule run_simulation:
-    # Should we run each simulation twice to create a training and test set?
+
+rule run_simulations:
     input:
-        f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml"  # Each YAML file in the input directory
+        f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/simulation/dataset")  # A directory to save the simulation results
+        directory(f"{RESULT_DIR}/{{dataset}}/simulations/simulation_{{sim_num}}/dataset/")
     shell:
-        "ligo {input} {RESULT_DIR}/{wildcards.dataset}/simulation"
+        "ligo {input} {RESULT_DIR}/{wildcards.dataset}/simulations/simulation_{wildcards.sim_num}"
 
 
 rule write_report_yaml_config_for_ligo_data:
     input:
         report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
-        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulation/dataset/"
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/simulation_{{sim_num}}/dataset/"
     output:
-        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/report_config_simulated_{{dataset}}.yaml"
+        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
     run:
         write_immuneml_config(input.report_template, input.simulated_data + "/batch1.tsv", output.report_config_file)
 
 
 rule run_reports_for_ligo_data:
     input:
-        f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/report_config_simulated_{{dataset}}.yaml"
+        f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}")
+        directory(f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_{{sim_num}}")
     shell:
-        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/simulated/reports_simulated_{wildcards.dataset}"
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/simulated/reports_simulated_{wildcards.dataset}_{wildcards.sim_num}"
 
 
 rule write_model_yaml_config:
     input:
         model_template = f"{INPUT_DIR}/generative_models/{{model}}.yaml/",
-        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulation/dataset/"
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/simulation_0/dataset/"
     output:
         model_config_file = f"{RESULT_DIR}/{{dataset}}/model_configs/model_config_{{model}}_{{dataset}}.yaml"
     run:
@@ -91,7 +91,7 @@ rule run_reports_for_generated_data:
 
 rule compare_reports:
     input:
-        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}",
+        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_0",
         report_model = f"{RESULT_DIR}/{{dataset}}/reports/models/reports_{{model}}_{{dataset}}"
     output:
         aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/comparison_aa_freq_{{model}}_{{dataset}}.txt",
@@ -104,3 +104,19 @@ rule compare_reports:
 
         for c in commands:
             shell(c)
+
+
+rule collect_results:
+    input:
+        aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/comparison_aa_freq_{{model}}_{{dataset}}.txt",
+        seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/comparison_seq_len_{{model}}_{{dataset}}.txt"
+    output:
+        f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt"
+    run:
+        with open(input.aa_freq_comparison, 'r') as file:
+            aa_freq_comparison = file.read()
+        with open(input.seq_len_comparison, 'r') as file:
+            seq_len_comparison = file.read()
+        with open(output[0], 'w') as file:
+            file.write("\tAA_freq\tSeq_len\n")
+            file.write("\t".join([wildcards.model, aa_freq_comparison, seq_len_comparison]))
