@@ -23,8 +23,7 @@ def kl_aa_compare(file1, file2):
     p = merged_df['relative frequency_p'].values
     q = merged_df['relative frequency_q'].values
 
-    # Avoid division by zero or log of zero, by adding a small value
-    p = np.where(p == 0, 1e-100, p)
+    # Avoid division by zero by adding a small value
     q = np.where(q == 0, 1e-100, q)
 
     # Compute KL divergence
