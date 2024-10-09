@@ -9,6 +9,7 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
     with open(output_config_file,'w') as file:
         yaml.safe_dump(model_template_config,file)
 
+
 # Input and output directories
 INPUT_DIR = "configs"  # Directory containing input YAML files
 RESULT_DIR = "results"  # Path to the directory where the results will be saved
@@ -17,7 +18,9 @@ sim_num = range(10)     # Number of simulations to run per dataset
 
 rule all:
     input:
-        expand(f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
+        expand((f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_{{sim_num}}",
+                f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
+                f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
                model=glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model)
@@ -94,13 +97,14 @@ rule compare_reports:
         report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_0",
         report_model = f"{RESULT_DIR}/{{dataset}}/reports/models/reports_{{model}}_{{dataset}}"
     output:
-        aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/comparison_aa_freq_{{model}}_{{dataset}}.txt",
-        seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/comparison_seq_len_{{model}}_{{dataset}}.txt"
+        aa_freq_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
+        seq_len_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt",
+        seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
     run:
         commands = ["python scripts/AAFreqCompare.py {input.report_simulated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv "
-        "{input.report_model}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output.aa_freq_comparison}",
+        "{input.report_model}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output.aa_freq_kldiv}",
         "python scripts/SeqLenCompare.py {input.report_simulated}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv "
-        "{input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_comparison}"]
+        "{input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_kldiv} {output.seq_len_plot}"]
 
         for c in commands:
             shell(c)
@@ -108,8 +112,8 @@ rule compare_reports:
 
 rule collect_results:
     input:
-        aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/comparison_aa_freq_{{model}}_{{dataset}}.txt",
-        seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/comparison_seq_len_{{model}}_{{dataset}}.txt"
+        aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
+        seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt"
     output:
         f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt"
     run:
