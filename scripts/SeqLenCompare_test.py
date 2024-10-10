@@ -1,29 +1,11 @@
-import os
 import argparse
 import pandas as pd
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.figure_factory as ff
 import plotly.graph_objects as go
-from scipy.stats import entropy
-import numpy as np
-from scipy.stats import gaussian_kde
 
 
 def load_csv(file_path):
     # Load the TSV file into a DataFrame
     return pd.read_csv(file_path)
-
-def load_test_data(test_path):
-
-    all_data = []
-    # Walk through the directory
-    for dirpath, dirnames, filenames in os.walk(test_path):
-        for filename in filenames:
-            data = load_csv(os.path.join(dirpath, filename))
-            all_data.append(data)
-
-    return all_data
 
 def create_merged_dataframe(datasets_list):
     # Rename the 'counts' column in each DataFrame to make them unique
