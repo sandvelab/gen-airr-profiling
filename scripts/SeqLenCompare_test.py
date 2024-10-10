@@ -80,7 +80,6 @@ def plot_test_gen_seq_len_distribution(merged_df, model_df, model_name, image_fi
                          title=f"Sequence Length Distribution of {model_name} and simulated data",
                          xaxis_title="Sequence lengths", yaxis_title="Counts")
 
-    figure.show()
     figure.write_html(image_file)
 
 
