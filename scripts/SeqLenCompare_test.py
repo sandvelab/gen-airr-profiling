@@ -86,7 +86,7 @@ def plot_test_gen_seq_len_distribution(merged_df, model_df, model_name, image_fi
 
 def main():
     parser = argparse.ArgumentParser(description='Plot sequence length distributions for test and model data.')
-    parser.add_argument('simulated_data_path', type=str, help='Path to the directory.')
+    parser.add_argument('simulated_data_path', nargs='+', type=str, help='Path to the directory.')
     parser.add_argument('generated_data_path', type=str, help='Path to the generated sequences.')
     parser.add_argument('image_output_file', type=str, default='.', help='Output directory for the results.')
     parser.add_argument('model_name', type=str, default='.', help='Name of the model.')
@@ -94,8 +94,13 @@ def main():
     args = parser.parse_args()
 
     # Load test data
-    test_data = create_merged_dataframe(load_test_data(args.simulated_data_path))
+    all_data = []
+    # Walk through the directory
+    for path in args.simulated_data_path:
+        data = load_csv(path)
+        all_data.append(data)
 
+    test_data = create_merged_dataframe(all_data)
     # Load generated data
     generated_data = load_csv(args.generated_data_path)
 

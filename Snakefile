@@ -18,9 +18,9 @@ sim_num = range(10)     # Number of simulations to run per dataset
 
 rule all:
     input:
-        expand((f"{RESULT_DIR}/{{dataset}}/analyses/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
-                f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
-                f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"),
+        expand((f"{RESULT_DIR}/{{dataset}}/analyses/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"),
+                #f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
+                #f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
                model=glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model)
@@ -140,27 +140,27 @@ rule compare_train_generated_reports:
 
 rule compare_test_generated_reports:
     input:
-        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/test/",
+        report_simulated = expand(f"{RESULT_DIR}/{{dataset}}/reports/simulated/test/reports_simulated_{{dataset}}_{{sim_num}}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv",
+                                  dataset="{dataset}", sim_num=sim_num),
         report_model = f"{RESULT_DIR}/{{dataset}}/reports/models/reports_{{model}}_{{dataset}}"
     output:
         seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
-    run:
-        """
-        python scripts/SeqLenCompare_test.py {input.report_simulated}
-        {input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_plot} {wildcards.model}
-        """
+    shell:
+        """python scripts/SeqLenCompare_test.py {input.report_simulated} 
+        {input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_plot} {wildcards.model}"""
 
-rule collect_results:
-    input:
-        aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
-        seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt"
-    output:
-        f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt"
-    run:
-        with open(input.aa_freq_comparison, 'r') as file:
-            aa_freq_comparison = file.read()
-        with open(input.seq_len_comparison, 'r') as file:
-            seq_len_comparison = file.read()
-        with open(output[0], 'w') as file:
-            file.write("\tAA_freq\tSeq_len\n")
-            file.write("\t".join([wildcards.model, aa_freq_comparison, seq_len_comparison]))
+
+# rule collect_results:
+#     input:
+#         aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
+#         seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt"
+#     output:
+#         f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt"
+#     run:
+#         with open(input.aa_freq_comparison, 'r') as file:
+#             aa_freq_comparison = file.read()
+#         with open(input.seq_len_comparison, 'r') as file:
+#             seq_len_comparison = file.read()
+#         with open(output[0], 'w') as file:
+#             file.write("\tAA_freq\tSeq_len\n")
+#             file.write("\t".join([wildcards.model, aa_freq_comparison, seq_len_comparison]))
