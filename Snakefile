@@ -18,7 +18,7 @@ sim_num = range(10)     # Number of simulations to run per dataset
 
 rule all:
     input:
-        expand((f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_{{sim_num}}",
+        expand((f"{RESULT_DIR}/{{dataset}}/analyses/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
                 f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
@@ -26,38 +26,66 @@ rule all:
                model=glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model)
 
 
-rule run_simulations:
+rule run_simulation_training_data:
     input:
         f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/simulations/simulation_{{sim_num}}/dataset/")
+        directory(f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation/dataset/")
     shell:
-        "ligo {input} {RESULT_DIR}/{wildcards.dataset}/simulations/simulation_{wildcards.sim_num}"
+        "ligo {input} {RESULT_DIR}/{wildcards.dataset}/simulations/train/simulation/"
 
 
-rule write_report_yaml_config_for_ligo_data:
+rule run_simulations_test_data:
+    input:
+        f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/simulations/test/simulation_{{sim_num}}/dataset/")
+    shell:
+        "ligo {input} {RESULT_DIR}/{wildcards.dataset}/simulations/test/simulation_{wildcards.sim_num}/"
+
+
+rule write_report_yaml_config_for_ligo_train_data:
     input:
         report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
-        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/simulation_{{sim_num}}/dataset/"
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation/dataset/"
     output:
-        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
+        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/train/report_config_simulated_{{dataset}}.yaml"
     run:
         write_immuneml_config(input.report_template, input.simulated_data + "/batch1.tsv", output.report_config_file)
 
 
-rule run_reports_for_ligo_data:
+rule write_report_yaml_config_for_ligo_test_data:
     input:
-        f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
+        report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/test/simulation_{{sim_num}}/dataset/"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_{{sim_num}}")
+        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/test/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
+    run:
+        write_immuneml_config(input.report_template, input.simulated_data + "/batch1.tsv", output.report_config_file)
+
+
+rule run_reports_for_ligo_train_data:
+    input:
+        f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/train/report_config_simulated_{{dataset}}.yaml"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/reports/simulated/train/reports_simulated_{{dataset}}")
     shell:
-        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/simulated/reports_simulated_{wildcards.dataset}_{wildcards.sim_num}"
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/simulated/train/reports_simulated_{wildcards.dataset}"
+
+
+rule run_reports_for_ligo_test_data:
+    input:
+        f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/test/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/reports/simulated/test/reports_simulated_{{dataset}}_{{sim_num}}")
+    shell:
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/simulated/test/reports_simulated_{wildcards.dataset}_{wildcards.sim_num}"
 
 
 rule write_model_yaml_config:
     input:
         model_template = f"{INPUT_DIR}/generative_models/{{model}}.yaml/",
-        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/simulation_0/dataset/"
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation/dataset/"
     output:
         model_config_file = f"{RESULT_DIR}/{{dataset}}/model_configs/model_config_{{model}}_{{dataset}}.yaml"
     run:
@@ -92,23 +120,35 @@ rule run_reports_for_generated_data:
         "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/models/reports_{wildcards.model}_{wildcards.dataset}"
 
 
-rule compare_reports:
+rule compare_train_generated_reports:
     input:
-        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/reports_simulated_{{dataset}}_0",
+        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/train/reports_simulated_{{dataset}}",
         report_model = f"{RESULT_DIR}/{{dataset}}/reports/models/reports_{{model}}_{{dataset}}"
     output:
-        aa_freq_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
-        seq_len_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt",
-        seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
+        aa_freq_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/train/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
+        seq_len_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/train/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt",
+        seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/train/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
     run:
         commands = ["python scripts/AAFreqCompare.py {input.report_simulated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv "
         "{input.report_model}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output.aa_freq_kldiv}",
-        "python scripts/SeqLenCompare.py {input.report_simulated}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv "
+        "python scripts/SeqLenCompare_train.py {input.report_simulated}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv "
         "{input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_kldiv} {output.seq_len_plot}"]
 
         for c in commands:
             shell(c)
 
+
+rule compare_test_generated_reports:
+    input:
+        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/test/",
+        report_model = f"{RESULT_DIR}/{{dataset}}/reports/models/reports_{{model}}_{{dataset}}"
+    output:
+        seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
+    run:
+        """
+        python scripts/SeqLenCompare_test.py {input.report_simulated}
+        {input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_plot} {wildcards.model}
+        """
 
 rule collect_results:
     input:
