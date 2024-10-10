@@ -48,7 +48,7 @@ def plot_test_gen_seq_len_distribution(merged_df, model_df, model_name, image_fi
 
     df_combine = {"Simulated": merged_df, "Model": model_df}
     df_combine = pd.concat(df_combine, names=["dataset"]).reset_index(level=0)
-
+    print(df_combine)
     # Create the bar traces separately
     trace1 = go.Bar(
         x=merged_df['sequence_lengths'],
@@ -103,7 +103,6 @@ def main():
     test_data = create_merged_dataframe(all_data)
     # Load generated data
     generated_data = load_csv(args.generated_data_path)
-
     # Plot the sequence length distribution
     plot_test_gen_seq_len_distribution(test_data, generated_data, args.image_output_file, args.model_name)
 
