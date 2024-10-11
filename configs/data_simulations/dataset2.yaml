@@ -21,7 +21,7 @@ definitions:
             default_model_name: humanTRB  # humanIGH
             type: OLGA
           is_noise: false
-          number_of_examples: 10 # simulate 100 TCRs
+          number_of_examples: 1000
           signals:
             signal1: 1
         noSig:
@@ -29,7 +29,7 @@ definitions:
             default_model_name: humanTRB
             type: OLGA
           is_noise: false
-          number_of_examples: 900 # simulate 900 TCRs
+          number_of_examples: 9000
           signals: {} # no signal
 
 instructions:
