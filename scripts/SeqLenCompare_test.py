@@ -7,6 +7,7 @@ def load_csv(file_path):
     # Load the TSV file into a DataFrame
     return pd.read_csv(file_path)
 
+
 def create_merged_dataframe(datasets_list):
     # Rename the 'counts' column in each DataFrame to make them unique
     for i, df in enumerate(datasets_list):
@@ -26,18 +27,17 @@ def create_merged_dataframe(datasets_list):
 
     return merged_df
 
-def plot_test_gen_seq_len_distribution(merged_df, model_df, model_name, image_file):
 
-    df_combine = {"Simulated": merged_df, "Model": model_df}
-    df_combine = pd.concat(df_combine, names=["dataset"]).reset_index(level=0)
+def plot_test_gen_seq_len_distribution(merged_simulations_df, model_df, model_name, image_file):
+
     # Create the bar traces separately
     trace1 = go.Bar(
-        x=merged_df['sequence_lengths'],
-        y=merged_df['mean'],
-        name='Simulated',
+        x=merged_simulations_df['sequence_lengths'],
+        y=merged_simulations_df['mean'],
+        name='Simulated (test)',
         error_y=dict(
             type='data',
-            array=merged_df['std_dev'],
+            array=merged_simulations_df['std_dev'],
             visible=True
         )
     )
@@ -48,19 +48,23 @@ def plot_test_gen_seq_len_distribution(merged_df, model_df, model_name, image_fi
         name=model_name,
         error_y=dict(
             type='data',
-            array=[0] * len(model_df),  # Set error values to 0 for Group 2
-            visible=False  # Explicitly hide the error bars for Group 2
+            visible=False  # Explicitly hide the error bars for model data
         )
     )
 
     # Create the figure with both traces
     figure = go.Figure(data=[trace1, trace2])
 
-    figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=df_combine["sequence_lengths"]),
-                         yaxis=dict(tickmode='array', tickvals=df_combine["counts"]),
+    # Update the layout
+    x_tick_vals = pd.merge(merged_simulations_df['sequence_lengths'],
+                           model_df['sequence_lengths'],
+                           how='outer')['sequence_lengths']
+    figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=x_tick_vals),
+                         yaxis=dict(tickmode='array'),
                          template="plotly_white",
-                         title=f"Sequence Length Distribution of {model_name} and simulated data",
-                         xaxis_title="Sequence lengths", yaxis_title="Counts")
+                         title=f"Sequence Length Distributions of simulated test data and {model_name} data",
+                         xaxis_title="Sequence lengths", yaxis_title="Counts",
+                         font=dict(size=22))
 
     figure.write_html(image_file)
 
@@ -80,10 +84,11 @@ def main():
     for path in args.simulated_data_path:
         data = load_csv(path)
         all_data.append(data)
-
     test_data = create_merged_dataframe(all_data)
+
     # Load generated data
     generated_data = load_csv(args.generated_data_path)
+
     # Plot the sequence length distribution
     plot_test_gen_seq_len_distribution(test_data, generated_data, args.model_name, args.image_output_file)
 
