@@ -20,10 +20,16 @@ def create_merged_dataframe(datasets_list):
     merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
     merged_df = merged_df[merged_df['sequence_lengths'] != 0]
 
-    # Calculate the mean and standard deviation across the counts columns for each sequence length
-    count_columns = [col for col in merged_df.columns if 'counts_' in col]
-    merged_df['mean'] = merged_df[count_columns].mean(axis=1)
-    merged_df['std_dev'] = merged_df[count_columns].std(axis=1)
+    # Convert counts to frequencies
+    for i in range(1, len(datasets_list) + 1):
+        merged_df[f'counts_{i}'] = merged_df[f'counts_{i}'] / merged_df[f'counts_{i}'].sum()
+        # rename the columns from counts to frequencies
+        merged_df.rename(columns={f'counts_{i}': f'frequencies_{i}'}, inplace=True)
+
+    # Calculate the mean and standard deviation across the freq columns for each sequence length
+    freq_columns = [col for col in merged_df.columns if 'frequencies_' in col]
+    merged_df['mean'] = merged_df[freq_columns].mean(axis=1)
+    merged_df['std_dev'] = merged_df[freq_columns].std(axis=1)
 
     return merged_df
 
@@ -44,7 +50,7 @@ def plot_test_gen_seq_len_distribution(merged_simulations_df, model_df, model_na
 
     trace2 = go.Bar(
         x=model_df['sequence_lengths'],
-        y=model_df['counts'],
+        y=model_df['frequencies'],
         name=model_name,
         error_y=dict(
             type='data',
@@ -63,7 +69,7 @@ def plot_test_gen_seq_len_distribution(merged_simulations_df, model_df, model_na
                          yaxis=dict(tickmode='array'),
                          template="plotly_white",
                          title=f"Sequence Length Distributions of simulated test data and {model_name} data",
-                         xaxis_title="Sequence lengths", yaxis_title="Counts",
+                         xaxis_title="Sequence lengths", yaxis_title="Frequency",
                          font=dict(size=22))
 
     figure.write_html(image_file)
@@ -86,8 +92,10 @@ def main():
         all_data.append(data)
     test_data = create_merged_dataframe(all_data)
 
-    # Load generated data
+    # Load generated data and convert counts to frequencies
     generated_data = load_csv(args.generated_data_path)
+    generated_data['counts'] = generated_data['counts'] / generated_data['counts'].sum()
+    generated_data.rename(columns={'counts': 'frequencies'}, inplace=True)
 
     # Plot the sequence length distribution
     plot_test_gen_seq_len_distribution(test_data, generated_data, args.model_name, args.image_output_file)
