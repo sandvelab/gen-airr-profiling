@@ -132,7 +132,7 @@ rule compare_train_generated_reports:
         commands = ["python scripts/AAFreqCompare.py {input.report_simulated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv "
         "{input.report_model}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output.aa_freq_kldiv}",
         "python scripts/SeqLenCompare_train.py {input.report_simulated}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv "
-        "{input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_kldiv} {output.seq_len_plot}"]
+        "{input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_kldiv} {output.seq_len_plot} {wildcards.model}"]
 
         for c in commands:
             shell(c)
