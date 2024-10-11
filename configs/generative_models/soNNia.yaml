@@ -19,11 +19,9 @@ definitions:
         n_gen_seqs: 1000 #500000
   reports:
     my_KLKmerCompare_report: KLKmerComparison
-    my_sld_report: SequenceLengthDistribution
-    my_aa_freq_report: AminoAcidFrequencyDistribution
 
 instructions:
-  my_train_gen_model_inst:
+  gen_model:
     type: TrainGenModel
     export_combined_dataset: True
     dataset: dataset
@@ -32,5 +30,3 @@ instructions:
     number_of_processes: 4
     reports:
       - my_KLKmerCompare_report
-      - my_sld_report
-      - my_aa_freq_report
