@@ -13,12 +13,13 @@ def create_merged_dataframe(datasets_list):
     for i, df in enumerate(datasets_list):
         df.rename(columns={'counts': f'counts_{i + 1}'}, inplace=True)
 
-    # Merge all DataFrames on 'sequence_lengths' column and fill missing values with 0
-    merged_df = pd.concat(datasets_list, axis=1).fillna(0)
-
-    # If 'sequence_lengths' appears multiple times, keep only one
-    merged_df = merged_df.loc[:, ~merged_df.columns.duplicated()]
-    merged_df = merged_df[merged_df['sequence_lengths'] != 0]
+    # Merge all DataFrames on 'sequence_lengths' column
+    merged_df = None
+    for i, df in enumerate(datasets_list):
+        if i == 0:
+            merged_df = df
+        else:
+            merged_df = merged_df.merge(df, on='sequence_lengths', how='outer').fillna(0)
 
     # Convert counts to frequencies
     for i in range(1, len(datasets_list) + 1):
