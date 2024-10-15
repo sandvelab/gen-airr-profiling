@@ -130,7 +130,7 @@ rule compare_train_generated_reports:
         seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/train/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
     run:
         commands = ["python scripts/AAFreqCompare.py {input.report_simulated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv "
-        "{input.report_model}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output.aa_freq_kldiv}",
+        "{input.report_model}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output.aa_freq_kldiv} {wildcards.model}",
         "python scripts/SeqLenCompare_train.py {input.report_simulated}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv "
         "{input.report_model}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv {output.seq_len_kldiv} {output.seq_len_plot} {wildcards.model}"]
 
