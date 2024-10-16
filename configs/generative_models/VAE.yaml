@@ -6,7 +6,7 @@ definitions:
         path: results/dataset1/simulation/my_sim_inst/batch1.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_CDR3
+        region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
     my_vae_model:
@@ -15,7 +15,7 @@ definitions:
         beta: 0.75
         latent_dim: 20
         linear_nodes_count: 75
-        num_epochs: 2 #5000
+        num_epochs: 2 #00 #5000
         batch_size: 10000
         j_gene_embed_dim: 13
         v_gene_embed_dim: 30
