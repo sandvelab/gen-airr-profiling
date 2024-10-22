@@ -53,7 +53,7 @@ def plot_seq_len_distribution(simulated_file, model_file, image_file, model_name
         df['counts'] = df['counts'] / df['counts'].sum()
         df.rename(columns={'counts': 'frequencies'}, inplace=True)
 
-    df_combine = {"Simulated (train)": data1, model_name: data2}
+    df_combine = {"Simulated (train)": data1, f"Generated ({model_name})": data2}
     df_combine = pd.concat(df_combine, names=["dataset"]).reset_index(level=0)
 
     # Create distribution plot with px
@@ -61,7 +61,7 @@ def plot_seq_len_distribution(simulated_file, model_file, image_file, model_name
 
     figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=df_combine["sequence_lengths"]),
                          yaxis=dict(tickmode='array'),
-                         template="plotly_white", title=f"Sequence Length Distributions of simulated train data and {model_name} data",
+                         template="plotly_white", title=f"Sequence Length Distributions of simulated train data and generated ({model_name}) data",
                          font=dict(size=22))
 
     figure.write_html(image_file)
