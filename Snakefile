@@ -13,14 +13,19 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
 # Input and output directories
 INPUT_DIR = "configs"  # Directory containing input YAML files
 RESULT_DIR = "results"  # Path to the directory where the results will be saved
-sim_num = range(10)     # Number of simulations to run per dataset
+sim_num = range(5)     # Number of simulations to run per dataset
 data_split = ["train", "test"]
 
 rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 #f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
-                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html"),
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
+                f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset_filtered/",
+                f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/",
+                # f"{RESULT_DIR}/{{dataset}}/reports_filtered/simulated/train/reports_simulated_{{dataset}}_0_len_15",
+                # f"{RESULT_DIR}/{{dataset}}/reports_filtered/models/{{model}}/reports_{{model}}_{{dataset}}_0_len_15",
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_15_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
                data_split=data_split,
@@ -98,6 +103,7 @@ rule compare_train_generated_reports:
         report_generated = f"{RESULT_DIR}/{{dataset}}/reports/models/{{model}}/reports_{{model}}_{{dataset}}_0"
     output:
         aa_freq_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}_0.txt",
+        #aa_freq_plot = f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_plot_{{model}}_{{dataset}}_0.png",
         seq_len_kldiv = f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}_0.txt",
         seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html"
     run:
@@ -109,6 +115,66 @@ rule compare_train_generated_reports:
         for c in commands:
             shell(c)
 
+
+rule filter_train_data_by_sequence_length:
+    input:
+        f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset/batch1.tsv"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset_filtered/")
+    run:
+        shell("python scripts/filter_seq_len.py {input} {output}")
+
+rule filter_model_data_by_sequence_length:
+    input:
+        f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/")
+    run:
+        shell("python scripts/filter_seq_len.py {input}/gen_model/generated_sequences/batch1.tsv {output}")
+
+rule write_report_yaml_config_for_train_data_filtered:
+    input:
+        report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
+        simulated_data_filtered = f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset_filtered"
+    output:
+        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/train/report_config_simulated_{{dataset}}_0_len_15.yaml"
+    run:
+        write_immuneml_config(input.report_template, input.simulated_data_filtered + "/batch1_len_15.tsv", output.report_config_file)
+
+rule write_report_yaml_config_for_model_data_filtered:
+    input:
+        report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
+        model_data_filtered = f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/"
+    output:
+        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/models/report_config_{{model}}_{{dataset}}_0_len_15.yaml"
+    run:
+        write_immuneml_config(input.report_template, input.model_data_filtered + "/batch1_len_15.tsv", output.report_config_file)
+
+rule run_report_filtered_train_data:
+    input:
+        f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/train/report_config_simulated_{{dataset}}_0_len_15.yaml"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/reports_filtered/simulated/train/reports_simulated_{{dataset}}_0_len_15")
+    shell:
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports_filtered/simulated/train/reports_simulated_{wildcards.dataset}_0_len_15"
+
+rule run_report_filtered_model_data:
+    input:
+        f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/models/report_config_{{model}}_{{dataset}}_0_len_15.yaml"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/reports_filtered/models/{{model}}/reports_{{model}}_{{dataset}}_0_len_15")
+    shell:
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports_filtered/models/{wildcards.model}/reports_{wildcards.model}_{wildcards.dataset}_0_len_15"
+
+rule compare_train_and_model_filtered_reports:
+    input:
+        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports_filtered/simulated/train/reports_simulated_{{dataset}}_0_len_15",
+        report_generated = f"{RESULT_DIR}/{{dataset}}/reports_filtered/models/{{model}}/reports_{{model}}_{{dataset}}_0_len_15"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_15_{{model}}_{{dataset}}/")
+    run:
+        shell(f"python scripts/aa_freq_plot_fold_change.py {input.report_simulated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv "
+              f"{input.report_generated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output} {wildcards.model}")
 
 rule compare_test_generated_reports:
     input:
