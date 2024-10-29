@@ -1,15 +1,11 @@
 import argparse
 import pandas as pd
-from scipy.stats import entropy
 import numpy as np
 import os
 import plotly.express as px
 from scipy import stats
 import logomaker
 import matplotlib.pyplot as plt
-#from plotnineseqsuite import pyggseqlogo
-from pyggseqlogo import ggseqlogo
-from plotnineseqsuite import geom_logo
 
 from immuneML.reports.PlotlyUtil import PlotlyUtil
 
@@ -78,13 +74,8 @@ def run_fishers_exact_test(df_simulated, df_model):
             if p_value < 0.05:
                 significant_p_values[(aa, pos)] = p_value
                 # compute fold change
-                # Get relative frequencies for aa and position
-                simulated_aa_rel_freq = df_simulated[(df_simulated['amino acid'] == aa) & (df_simulated['position'] == pos)]['relative frequency'].values[0]
-                model_aa_rel_freq = df_model[(df_model['amino acid'] == aa) & (df_model['position'] == pos)]['relative frequency'].values[0]
-                #log_fold_change = np.log(model_aa_rel_freq / simulated_aa_rel_freq)
                 log_fold_change = np.log((count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated))
                 log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
-
 
     # Filter df by significant p-values
     df_simulated_significant = df_simulated[df_simulated.apply(lambda row: (row['amino acid'], row['position']) in significant_p_values, axis=1)]
@@ -121,7 +112,6 @@ def combined_plot_aa_compare_significant_aa_pos(df_simulated_significant, df_mod
     figure.update_xaxes(categoryorder="array", categoryarray=unique_positions)
 
     # Save the plot
-    figure.show()
     figure.write_html(f"{output_dir}/aa_freq_compare.html")
 
 
@@ -198,7 +188,6 @@ def plot_fold_changes(log_fold_changes, output_dir, model_name):
     figure.update_layout(height=600, width=1000, bargap=0.2)
 
     # Save the plot
-    #figure.show()
     figure.write_html(f"{output_dir}/log_fold_changes.html")
 
 
@@ -209,6 +198,7 @@ def make_logo_df(df):
     # Fill NaNs with 0 if there are any missing frequencies
     frequency_df = frequency_df.fillna(0)
     return frequency_df
+
 
 def make_significance_df(frequency_df, significant_p_values):
     # Initialize the significance DataFrame with zeros (non-significant by default)
@@ -222,7 +212,22 @@ def make_significance_df(frequency_df, significant_p_values):
 
     return significance_df
 
-def plot_logo(frequency_df, significance_df):
+def plot_logo_train(frequency_df, output_dir):
+    plt.figure(figsize=(10, 5))
+    logo = logomaker.Logo(frequency_df)
+    logo.style_glyphs(color_scheme='chemistry')
+
+    # Customize plot appearance
+    logo.style_spines(visible=False)
+    logo.style_spines(spines=['left', 'bottom'], visible=True)
+    logo.style_xticks(rotation=90, fmt='%d')
+    plt.title("Amino Acid Frequency Logo for train sequences")
+    plt.ylabel("Frequency")
+    plt.xlabel("Position")
+    plt.savefig(f"{output_dir}/train_logo.png")
+
+
+def plot_logo_model(frequency_df, significance_df, model_name, output_dir):
     # Initialize the logo plot
     fig, ax = plt.subplots(figsize=(10, 5))
     color_mapping = {True: 'red', False: 'gray'}
@@ -244,15 +249,11 @@ def plot_logo(frequency_df, significance_df):
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks)
     ax.tick_params(axis='x', rotation=90)
-    plt.title("Amino Acid Frequency Logo with Significance Highlighting")
+    plt.title(f"Amino Acid Frequency Logo for {model_name} sequences with amino acids significantly different from simulated in red")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
-    plt.show()
+    plt.savefig(f"{output_dir}/{model_name}_logo.png")
 
-
-def plot_ggseqlogo(frequency_df, significance_df):
-    color_dict = significance_df.replace({True: "red", False: "gray"}).to_dict()
-    ggseqlogo(frequency_df, colors=color_dict)
 
 def main():
     parser = argparse.ArgumentParser(description='Compare two CDR3 length specific amino acid frequency distribution TSV files.')
@@ -284,15 +285,11 @@ def main():
     # Plot the fold changes
     plot_fold_changes(fold_changes, args.output_dir, args.model_name)
 
-
-    # Plot logo
-    frequency_df = make_logo_df(df_model)
-    #print(frequency_df)
-    #print(make_significance_df(frequency_df, significant_p_values))
-
-    #plot_ggseqlogo(frequency_df, make_significance_df(frequency_df, significant_p_values))
-
-    plot_logo(frequency_df, make_significance_df(frequency_df, significant_p_values))
+    # Plot logos
+    train_frequency_df = make_logo_df(df_simulated)
+    plot_logo_train(train_frequency_df, args.output_dir)
+    model_frequency_df = make_logo_df(df_model)
+    plot_logo_model(model_frequency_df, make_significance_df(model_frequency_df, significant_p_values), args.model_name, args.output_dir)
 
 
 if __name__ == "__main__":
