@@ -224,26 +224,26 @@ def make_significance_df(frequency_df, significant_p_values):
 
 def plot_logo(frequency_df, significance_df):
     # Initialize the logo plot
-    plt.figure(figsize=(10, 5))
-    logo = logomaker.Logo(frequency_df)
-    # Define colors for significant (e.g., red) and non-significant (e.g., gray) amino acids
+    fig, ax = plt.subplots(figsize=(10, 5))
     color_mapping = {True: 'red', False: 'gray'}
 
-    # Apply binary colors to each glyph based on significance
-    color_dict = {}
-    for position in significance_df.index:
+    for position in frequency_df.index:
+        logo = logomaker.Logo(frequency_df.loc[[position]], ax=ax)
+        color_dict = {}
         for amino_acid in significance_df.columns:
-            # Get the significance value (0 or 1) and apply the corresponding color
             is_significant = significance_df.loc[position, amino_acid]
-            if is_significant:
-                color_dict[amino_acid] = color_mapping[is_significant]
-
-    logo.style_glyphs(color_scheme=color_dict)
-
-    # Customize plot appearance
-    logo.style_spines(visible=False)
-    logo.style_spines(spines=['left', 'bottom'], visible=True)
-    logo.style_xticks(rotation=90, fmt='%d')
+            color_dict[amino_acid] = color_mapping[is_significant]
+        logo.style_glyphs(color_scheme=color_dict)
+        logo.style_spines(visible=False)
+        logo.style_spines(spines=['left', 'bottom'], visible=True)
+        logo.style_xticks(rotation=90, fmt='%d')
+    ax.spines['left'].set_visible(True)
+    ax.spines['bottom'].set_visible(True)
+    #To do: find better way for shifting xticks instead of adding additional index
+    xticks = [frequency_df.index[0]-1] + list(frequency_df.index)
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticks)
+    ax.tick_params(axis='x', rotation=90)
     plt.title("Amino Acid Frequency Logo with Significance Highlighting")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
@@ -292,7 +292,7 @@ def main():
 
     #plot_ggseqlogo(frequency_df, make_significance_df(frequency_df, significant_p_values))
 
-    #plot_logo(frequency_df, make_significance_df(frequency_df, significant_p_values))
+    plot_logo(frequency_df, make_significance_df(frequency_df, significant_p_values))
 
 
 if __name__ == "__main__":
