@@ -45,12 +45,6 @@ def get_counts(aa, pos, pos_counts):
     return count_aa, count_other_aa
 
 
-def fishers_exact_test(simulated_count1, simulated_count2, model_count1, model_count2):
-    # Perform Fisher's exact test
-    odds_ratio, p_value = stats.fisher_exact([[simulated_count1, model_count1], [simulated_count2, model_count2]])
-    return p_value
-
-
 def run_fishers_exact_test(df_simulated, df_model):
     # Extract amino acid counts by position
     pos_counts_simulated = extract_aa_counts_by_pos(df_simulated)
@@ -68,13 +62,13 @@ def run_fishers_exact_test(df_simulated, df_model):
 
             count_aa_simulated, count_other_aa_simulated = get_counts(aa, pos, pos_counts_simulated)
             count_aa_model, count_other_aa_model = get_counts(aa, pos, pos_counts_model)
-            p_value = fishers_exact_test(count_aa_simulated, count_other_aa_simulated,
-                                         count_aa_model, count_other_aa_model)
+            odds_ratio, p_value = stats.fisher_exact([[count_aa_simulated, count_aa_model], [count_other_aa_simulated, count_other_aa_model]])
 
             if p_value < 0.05:
                 significant_p_values[(aa, pos)] = p_value
-                # compute fold change
-                log_fold_change = np.log((count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated))
+                # compute log fold change
+                fold_change = (count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated)
+                log_fold_change = np.log(fold_change)
                 log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
 
     # Filter df by significant p-values
@@ -212,10 +206,19 @@ def make_significance_df(frequency_df, significant_p_values):
 
     return significance_df
 
+
 def plot_logo_train(frequency_df, output_dir):
+    # Create a color dictionary for the amino acids
+    color_dict = {
+            'Y': '#66c5cc', 'W': '#b3de69', 'V': '#dcb0f2', 'T': '#d9d9d9', 'S': '#8dd3c7', 'R': '#fb8072',
+            'Q': '#9eb9f3', 'P': '#f89c74', 'N': '#87c55f', 'M': '#fe88b1', 'L': '#c9db74', 'K': '#ffed6f',
+            'I': '#b497e7', 'H': '#f6cf71', 'G': '#be82da', 'F': '#80b1d3', 'E': '#fdb462', 'D': '#fccde5',
+            'C': '#bc80bd', 'A': '#ccebc5'
+    }
+
     plt.figure(figsize=(10, 5))
     logo = logomaker.Logo(frequency_df)
-    logo.style_glyphs(color_scheme='chemistry')
+    logo.style_glyphs(color_scheme=color_dict)
 
     # Customize plot appearance
     logo.style_spines(visible=False)
@@ -224,6 +227,7 @@ def plot_logo_train(frequency_df, output_dir):
     plt.title("Amino Acid Frequency Logo for train sequences")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
+    plt.show()
     plt.savefig(f"{output_dir}/train_logo.png")
 
 
