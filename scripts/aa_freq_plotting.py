@@ -72,7 +72,12 @@ def run_fishers_exact_test(df_simulated, df_model):
             if p_value < 0.05:
                 significant_p_values[(aa, pos)] = p_value
                 # compute log fold change
+                # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
+                count_other_aa_simulated = count_other_aa_simulated if count_other_aa_simulated > 0 else 1e-10
+                count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
+                count_other_aa_model = count_other_aa_model if count_other_aa_model > 0 else 1e-10
                 fold_change = (count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated)
+                fold_change = fold_change if fold_change > 0 else 1e-10
                 log_fold_change = np.log2(fold_change)
                 log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
 
