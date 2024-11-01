@@ -76,19 +76,11 @@ def find_significant_amino_acids(df_simulated, df_model):
     for i, (aa, pos) in enumerate(tests):
         if adjusted_p_values[i] < 0.05:
             significant_p_values[(aa, pos)] = adjusted_p_values[i]
-            count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
-            count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
-            # compute log fold change
-            # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
-            count_other_aa_simulated = count_other_aa_simulated if count_other_aa_simulated > 0 else 1e-10
-            count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
-            count_other_aa_model = count_other_aa_model if count_other_aa_model > 0 else 1e-10
-            fold_change = (count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated)
-            fold_change = fold_change if fold_change > 0 else 1e-10
-            log_fold_change = np.log2(fold_change)
+            log_fold_change = calculate_log_fold_change(aa, pos, pos_counts_simulated, pos_counts_model)
             log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
 
     return significant_p_values, log_fold_changes
+
 
 def run_fisher_test(aa, pos, pos_counts_simulated, pos_counts_model):
     count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
@@ -96,6 +88,21 @@ def run_fisher_test(aa, pos, pos_counts_simulated, pos_counts_model):
     _, p_value = stats.fisher_exact(
         [[count_aa_simulated, count_aa_model], [count_other_aa_simulated, count_other_aa_model]])
     return p_value
+
+
+def calculate_log_fold_change(aa, pos, pos_counts_simulated, pos_counts_model):
+    count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
+    count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
+    # compute log fold change
+    # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
+    count_other_aa_simulated = count_other_aa_simulated if count_other_aa_simulated > 0 else 1e-10
+    count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
+    count_other_aa_model = count_other_aa_model if count_other_aa_model > 0 else 1e-10
+    fold_change = (count_aa_model / count_other_aa_model) / (count_aa_simulated / count_other_aa_simulated)
+    fold_change = fold_change if fold_change > 0 else 1e-10
+    log_fold_change = np.log2(fold_change)
+    return log_fold_change
+
 
 def make_logo_df(df):
     # Pivot the DataFrame to have positions as rows and amino acids as columns
