@@ -8,6 +8,7 @@ import logomaker
 import matplotlib.pyplot as plt
 
 from immuneML.reports.PlotlyUtil import PlotlyUtil
+from statsmodels.stats.multitest import multipletests
 
 
 def load_tsv(file_path):
@@ -59,27 +60,34 @@ def run_fishers_exact_test(df_simulated, df_model):
         raise ValueError("The positions are not the same between the two datasets.")
 
     # Perform Fisher's exact test for each amino acid at each position
-    significant_p_values = {}
-    log_fold_changes = {}
+    p_values = []
+    tests = []
     for pos in pos_counts_simulated.keys():
         for aa in pos_counts_simulated[pos].keys():
-
             count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
             count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
             _, p_value = stats.fisher_exact(
                 [[count_aa_simulated, count_aa_model], [count_other_aa_simulated, count_other_aa_model]])
+            p_values.append(p_value)
+            tests.append((aa, pos))
 
-            if p_value < 0.05:
-                significant_p_values[(aa, pos)] = p_value
-                # compute log fold change
-                # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
-                count_other_aa_simulated = count_other_aa_simulated if count_other_aa_simulated > 0 else 1e-10
-                count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
-                count_other_aa_model = count_other_aa_model if count_other_aa_model > 0 else 1e-10
-                fold_change = (count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated)
-                fold_change = fold_change if fold_change > 0 else 1e-10
-                log_fold_change = np.log2(fold_change)
-                log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
+    _, adjusted_p_values, _, _ = multipletests(p_values, method='fdr_bh')
+    significant_p_values = {}
+    log_fold_changes = {}
+    print(adjusted_p_values)
+
+    for i, (aa, pos) in enumerate(tests):
+        if adjusted_p_values[i] < 0.05:
+            significant_p_values[(aa, pos)] = adjusted_p_values[i]
+            # compute log fold change
+            # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
+            count_other_aa_simulated = count_other_aa_simulated if count_other_aa_simulated > 0 else 1e-10
+            count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
+            count_other_aa_model = count_other_aa_model if count_other_aa_model > 0 else 1e-10
+            fold_change = (count_aa_model/count_other_aa_model) / (count_aa_simulated/count_other_aa_simulated)
+            fold_change = fold_change if fold_change > 0 else 1e-10
+            log_fold_change = np.log2(fold_change)
+            log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
 
     return significant_p_values, log_fold_changes
 
