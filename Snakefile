@@ -10,17 +10,17 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
         yaml.safe_dump(model_template_config,file)
 
 
-# Input and output directories
-INPUT_DIR = "configs"  # Directory containing input YAML files
-RESULT_DIR = "results"  # Path to the directory where the results will be saved
-sim_num = range(5)     # Number of simulations to run per dataset
+# Parameters
+INPUT_DIR = "configs"
+RESULT_DIR = "results"
+# Wildcards parameters
+sim_num = range(5)
 data_split = ["train", "test"]
 filtered_sequences_lengths = [15]
 
 rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
-                #f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
                 f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset_filtered/",
                 f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/",
@@ -31,7 +31,6 @@ rule all:
                model=glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model,
                seq_len=filtered_sequences_lengths)
 
-
 rule run_data_simulations:
     input:
         f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml"
@@ -39,7 +38,6 @@ rule run_data_simulations:
         directory(f"{RESULT_DIR}/{{dataset}}/simulations/{{data_split}}/simulation_{{sim_num}}/dataset/")
     shell:
         "ligo {input} {RESULT_DIR}/{wildcards.dataset}/simulations/{wildcards.data_split}/simulation_{wildcards.sim_num}/"
-
 
 rule write_report_yaml_config_for_ligo_data:
     input:
@@ -58,7 +56,6 @@ rule run_reports_for_ligo_data:
     shell:
         "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/simulated/{wildcards.data_split}/reports_simulated_{wildcards.dataset}_{wildcards.sim_num}"
 
-
 rule write_model_yaml_config:
     input:
         model_template = f"{INPUT_DIR}/generative_models/{{model}}.yaml/",
@@ -68,7 +65,6 @@ rule write_model_yaml_config:
     run:
         write_immuneml_config(input.model_template, input.simulated_data + "/batch1.tsv", output.model_config_file)
 
-
 rule run_models:
     input:
         f"{RESULT_DIR}/{{dataset}}/model_configs/{{model}}/model_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
@@ -76,7 +72,6 @@ rule run_models:
         directory(f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_{{sim_num}}")
     shell:
         "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/models/{wildcards.model}/{wildcards.model}_{wildcards.dataset}_{wildcards.sim_num}"
-
 
 rule write_report_yaml_config_for_generated_data:
     input:
@@ -87,7 +82,6 @@ rule write_report_yaml_config_for_generated_data:
     run:
         write_immuneml_config(input.report_template, input.generated_sequences + "/gen_model/generated_sequences/batch1.tsv", output.report_config_file)
 
-
 rule run_reports_for_generated_data:
     input:
         f"{RESULT_DIR}/{{dataset}}/report_configs/models/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
@@ -96,7 +90,7 @@ rule run_reports_for_generated_data:
     shell:
         "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/models/{wildcards.model}/reports_{wildcards.model}_{wildcards.dataset}_{wildcards.sim_num}"
 
-#for now we always compare first model
+#TO DO: for now we always compare first model
 rule compare_train_generated_reports:
     input:
         report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/train/reports_simulated_{{dataset}}_0",
@@ -114,7 +108,6 @@ rule compare_train_generated_reports:
 
         for c in commands:
             shell(c)
-
 
 rule filter_train_data_by_sequence_length:
     input:
@@ -192,19 +185,3 @@ rule compare_test_generated_reports:
 
         shell(f"python scripts/SeqLenCompare_test.py --simulated_data_path {' '.join(report_simulated_with_suffix)} --generated_data_path {' '.join(report_generated_with_suffix)} "
               f"--image_output_file {output.seq_len_plot} --model_name {wildcards.model}")
-
-#I comment it out since it's not being used
-# rule collect_results:
-#     input:
-#         aa_freq_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/train/aa_freq/kldiv_comparison_aa_freq_{{model}}_{{dataset}}.txt",
-#         seq_len_comparison = f"{RESULT_DIR}/{{dataset}}/analyses/train/seq_len/kldiv_comparison_seq_len_{{model}}_{{dataset}}.txt"
-#     output:
-#         f"{RESULT_DIR}/{{dataset}}/analyses/summary_{{model}}_{{dataset}}.txt"
-#     run:
-#         with open(input.aa_freq_comparison, 'r') as file:
-#             aa_freq_comparison = file.read()
-#         with open(input.seq_len_comparison, 'r') as file:
-#             seq_len_comparison = file.read()
-#         with open(output[0], 'w') as file:
-#             file.write("\tAA_freq\tSeq_len\n")
-#             file.write("\t".join([wildcards.model, aa_freq_comparison, seq_len_comparison]))
