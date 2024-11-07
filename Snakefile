@@ -1,6 +1,7 @@
 from scripts.immuneml_formatting import write_immuneml_config
 from scripts.seq_len_comparing import plot_seq_len_distributions, plot_seq_len_distributions_multiple_datasets
 from scripts.seq_len_filtering import filter_by_cdr3_length
+from scripts.kmer_freq_plotting import run_kmer_analysis
 
 # Parameters
 INPUT_DIR = "configs"
@@ -14,6 +15,7 @@ rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_plot_{{model}}_{{data_split}}_{{dataset}}_0.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
@@ -109,6 +111,18 @@ rule compare_sequence_length_distributions_generated_vs_test:
                                         for path in input.report_generated]
 
         plot_seq_len_distributions_multiple_datasets(report_simulated_with_suffix, report_generated_with_suffix, output.seq_len_plot, wildcards.model)
+
+#TO DO: for now we always compare first simulation
+rule compare_kmer_distribution:
+    input:
+        generated_data = f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0",
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/{{data_split}}/simulation_0/dataset/"
+    output:
+        f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_plot_{{model}}_{{data_split}}_{{dataset}}_0.html"
+    run:
+        input_generated_data = f"{input.generated_data}/gen_model/generated_sequences/batch1.tsv"
+        input_simulated_data = f"{input.simulated_data}/batch1.tsv"
+        run_kmer_analysis(input_generated_data, wildcards.model, input_simulated_data, wildcards.data_split, output, 3)
 
 #TO DO: for now we always compare first simulation
 rule split_train_data_by_sequence_length:

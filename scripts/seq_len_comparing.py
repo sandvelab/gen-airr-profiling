@@ -81,6 +81,7 @@ def plot_seq_len_distributions_with_error_bars(merged_simulations_df, generated_
 
     figure.write_html(image_file)
 
+
 def plot_seq_len_distributions(simulated_file, generated_file, image_file, model_name):
     data1 = pd.read_csv(simulated_file)
     data2 = pd.read_csv(generated_file)
@@ -98,10 +99,12 @@ def plot_seq_len_distributions(simulated_file, generated_file, image_file, model
 
     figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=df_combine["sequence_lengths"]),
                          yaxis=dict(tickmode='array'),
-                         template="plotly_white", title=f"Sequence Length Distributions of simulated train data and generated ({model_name}) data",
+                         template="plotly_white",
+                         title=f"Sequence Length Distributions of simulated train data and generated ({model_name}) data",
                          font=dict(size=22))
 
     figure.write_html(image_file)
+
 
 def plot_seq_len_distributions_multiple_datasets(simulated_files, generated_files, image_file, model_name):
     simulated_data = load_data(simulated_files)
