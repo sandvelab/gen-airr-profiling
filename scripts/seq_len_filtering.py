@@ -3,19 +3,11 @@ import argparse
 import os
 
 
-def split_by_cdr3_length(data_file, output_dir):
+def filter_by_cdr3_length(data_file, output_file, sequence_length):
     """
-    Generate new files for each sequence length in the data file.
+    Generate new filtered data file for given sequence length.
     """
     data = pd.read_csv(data_file, sep='\t')
 
     # Filter on sequence length
-    max_len = data['sequence_aa'].apply(len).max()
-    min_len = data['sequence_aa'].apply(len).min()
-
-    #TO DO: this should be created by snakemake
-    if not os.path.exists(str(output_dir)):
-        os.makedirs(str(output_dir))
-
-    for i in range(min_len, max_len + 1):
-        data[data['sequence_aa'].apply(len) == i].to_csv(f'{str(output_dir)}/batch1_len_{i}.tsv', sep='\t', index=False)
+    data[data['sequence_aa'].apply(len) == int(sequence_length)].to_csv(output_file, sep='\t', index=False)
