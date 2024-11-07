@@ -14,7 +14,7 @@ definitions:
         batch_size: 100
         beta: 0.75
         cdr3_embed_dim: 21
-        locus: beta
+        chain: beta
         device: cpu
         j_gene_embed_dim: 13
         latent_dim: 20
