@@ -1,6 +1,6 @@
 from scripts.immuneml_formatting import write_immuneml_config
 from scripts.seq_len_comparing import plot_seq_len_distributions
-from scripts.seq_len_filtering import split_by_cdr3_length
+from scripts.seq_len_filtering import filter_by_cdr3_length
 
 # Parameters
 INPUT_DIR = "configs"
@@ -8,14 +8,12 @@ RESULT_DIR = "results"
 # Wildcards parameters
 sim_num = range(1)
 data_split = ["train", "test"]
-filtered_sequences_lengths = [15]
+filtered_sequences_lengths = [14, 15, 16]
 
 rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
-                f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered/",
-                f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
@@ -114,67 +112,30 @@ rule compare_sequence_length_distributions_generated_vs_test:
               f"--image_output_file {output.seq_len_plot} --model_name {wildcards.model}")
 
 #TO DO: for now we always compare first simulation
-#TO DO: save only necessary data splits
 rule split_train_data_by_sequence_length:
     input:
         f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset/"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered/")
+        f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
     run:
         input_file = f"{input}/batch1.tsv"
-        split_by_cdr3_length(input_file, output)
+        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
 
 #TO DO: for now we always compare first simulation
-#TO DO: save only necessary data splits
 rule split_model_data_by_sequence_length:
     input:
         f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/")
+        f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
     run:
         input_file = f"{input}/gen_model/generated_sequences/batch1.tsv"
-        split_by_cdr3_length(input_file,output)
+        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
 
-rule write_report_yaml_config_for_train_data_filtered:
+rule compare_aa_frequency_distribution_generated_vs_train:
     input:
-        report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
-        simulated_data_filtered = f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered"
-    output:
-        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/train/report_config_simulated_{{dataset}}_0_len_{{filtered_sequences_lengths}}.yaml"
-    run:
-        write_immuneml_config(input.report_template, input.simulated_data_filtered + f"/batch1_len_{wildcards.filtered_sequences_lengths}.tsv", output.report_config_file)
-
-rule write_report_yaml_config_for_model_data_filtered:
-    input:
-        report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
-        model_data_filtered = f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/"
-    output:
-        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/models/report_config_{{model}}_{{dataset}}_0_len_{{filtered_sequences_lengths}}.yaml"
-    run:
-        write_immuneml_config(input.report_template, input.model_data_filtered + f"/batch1_len_{wildcards.filtered_sequences_lengths}.tsv", output.report_config_file)
-
-rule run_report_filtered_train_data:
-    input:
-        f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/train/report_config_simulated_{{dataset}}_0_len_{{filtered_sequences_lengths}}.yaml"
-    output:
-        directory(f"{RESULT_DIR}/{{dataset}}/reports_filtered/simulated/train/reports_simulated_{{dataset}}_0_len_{{filtered_sequences_lengths}}")
-    shell:
-        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports_filtered/simulated/train/reports_simulated_{wildcards.dataset}_0_len_{wildcards.filtered_sequences_lengths}"
-
-rule run_report_filtered_model_data:
-    input:
-        f"{RESULT_DIR}/{{dataset}}/report_configs/filtered/models/report_config_{{model}}_{{dataset}}_0_len_{{filtered_sequences_lengths}}.yaml"
-    output:
-        directory(f"{RESULT_DIR}/{{dataset}}/reports_filtered/models/{{model}}/reports_{{model}}_{{dataset}}_0_len_{{filtered_sequences_lengths}}")
-    shell:
-        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports_filtered/models/{wildcards.model}/reports_{wildcards.model}_{wildcards.dataset}_0_len_{wildcards.filtered_sequences_lengths}"
-
-rule compare_train_and_model_filtered_reports:
-    input:
-        report_simulated = f"{RESULT_DIR}/{{dataset}}/reports_filtered/simulated/train/reports_simulated_{{dataset}}_0_len_{{filtered_sequences_lengths}}",
-        report_generated = f"{RESULT_DIR}/{{dataset}}/reports_filtered/models/{{model}}/reports_{{model}}_{{dataset}}_0_len_{{filtered_sequences_lengths}}"
+        train_data = f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv",
+        generated_data = f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
     output:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/")
     run:
-        shell(f"python scripts/aa_freq_plotting.py {input.report_simulated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv "
-              f"{input.report_generated}/report_types/analysis_AA/report/amino_acid_frequency_distribution.tsv {output} {wildcards.model}")
+        shell(f"python scripts/aa_freq_plotting.py {input.train_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")

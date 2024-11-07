@@ -16,6 +16,33 @@ def load_tsv(file_path):
     return pd.read_csv(file_path, sep='\t')
 
 
+def get_aa_counts_frequencies_df(file_path, max_position):
+    # Load the data
+    df = pd.read_csv(file_path, sep='\t')
+
+    # Initialize a list to store the results
+    results = []
+
+    # Loop through each position up to max_position
+    for pos in range(int(max_position)):
+        # Extract amino acids at the current position across all sequences
+        aa_series = df['sequence_aa'].str[pos].dropna()
+
+        # Get counts of each amino acid at this position
+        aa_counts = aa_series.value_counts().to_dict()
+        total_count = len(aa_series)
+
+        # Calculate relative frequencies and store the results
+        for aa in 'ACDEFGHIKLMNPQRSTVWY':
+            count = aa_counts.get(aa, 0)
+            relative_freq = count / total_count if total_count > 0 else 0
+            results.append({'amino acid': aa, 'position': pos, 'count': count, 'relative frequency': relative_freq})
+
+    # Convert results to a DataFrame
+    result_df = pd.DataFrame(results)
+    return result_df
+
+
 def get_aa_color_map():
     return {
         'Y': '#66c5cc', 'W': '#b3de69', 'V': '#dcb0f2', 'T': '#d9d9d9', 'S': '#8dd3c7', 'R': '#fb8072',
@@ -199,16 +226,17 @@ def plot_log_fold_changes(log_fold_changes, output_dir, model_name):
 
 def main():
     parser = argparse.ArgumentParser(description='Compare two CDR3 length specific amino acid frequency distribution TSV files.')
-    parser.add_argument('file1', type=str, help='Path to the first TSV file.')
-    parser.add_argument('file2', type=str, help='Path to the second TSV file.')
+    parser.add_argument('file1', type=str, help='Path to the first data file.')
+    parser.add_argument('file2', type=str, help='Path to the second data file.')
+    parser.add_argument('filtered_sequences_lengths', type=int, help='Number of filtered sequences lengths.')
     parser.add_argument('output_dir', type=str, default='.', help='Output directory to save plots.')
     parser.add_argument('model_name', type=str, default='.', help='Name of the model.')
 
     args = parser.parse_args()
 
-    # Load the TSV files
-    df_simulated = load_tsv(args.file1)
-    df_model = load_tsv(args.file2)
+    # Get dataframes for the two files
+    df_simulated = get_aa_counts_frequencies_df(args.file1, args.filtered_sequences_lengths)
+    df_model = get_aa_counts_frequencies_df(args.file2, args.filtered_sequences_lengths)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(args.output_dir):
