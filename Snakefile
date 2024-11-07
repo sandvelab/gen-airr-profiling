@@ -9,7 +9,7 @@ RESULT_DIR = "results"
 # Wildcards parameters
 sim_num = range(1)
 data_split = ["train", "test"]
-filtered_sequences_lengths = [14, 15, 16]
+filtered_sequences_lengths = [10, 15, 20]
 
 rule all:
     input:

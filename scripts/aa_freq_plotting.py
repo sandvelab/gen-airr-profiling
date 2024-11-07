@@ -20,6 +20,10 @@ def get_aa_counts_frequencies_df(file_path, max_position):
     # Load the data
     df = pd.read_csv(file_path, sep='\t')
 
+    # return None if the dataframe is empty
+    if df.empty:
+        return None
+
     # Initialize a list to store the results
     results = []
 
@@ -241,6 +245,12 @@ def main():
     # Create output directory if it doesn't exist
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
+
+    # if given length is not present, return log file
+    if df_simulated is None or df_model is None:
+        with open(args.output_dir + "/aa_freq_plotting.log", "w") as f:
+            f.write("No sequence data found for the given length.")
+        return
 
     # Run Fisher's exact test
     significant_p_values, fold_changes = find_significant_amino_acids(df_simulated, df_model)
