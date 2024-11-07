@@ -1,6 +1,4 @@
 import pandas as pd
-import argparse
-import os
 
 
 def filter_by_cdr3_length(data_file, output_file, sequence_length):
