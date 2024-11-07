@@ -1,6 +1,7 @@
-import argparse
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
+from scipy.stats import entropy, gaussian_kde
 
 
 def load_data(file_paths_list):
@@ -39,10 +40,10 @@ def create_merged_dataframe(datasets_list):
     return merged_df
 
 
-def plot_test_gen_seq_len_distribution(merged_simulations_df, generated_data_df, model_name, image_file):
-
+def plot_seq_len_distributions_with_error_bars(merged_simulations_df, generated_data_df, model_name, image_file):
     # Create the bar traces separately
     trace1 = go.Bar(
+
         x=merged_simulations_df['sequence_lengths'],
         y=merged_simulations_df['mean'],
         name='Simulated (test)',
@@ -81,20 +82,32 @@ def plot_test_gen_seq_len_distribution(merged_simulations_df, generated_data_df,
     figure.write_html(image_file)
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Plot sequence length distributions for test and model data.')
-    parser.add_argument('--simulated_data_path', nargs='+', type=str, required=True,help='Path to the test directory.')
-    parser.add_argument('--generated_data_path', nargs='+', type=str, required=True, help='Path to the generated sequences.')
-    parser.add_argument('--image_output_file', type=str, default='.', required=True, help='Output directory for the results.')
-    parser.add_argument('--model_name', type=str, default='.', required=True, help='Name of the model.')
+def plot_seq_len_distributions(simulated_file, generated_file, image_file, model_name):
+    data1 = pd.read_csv(simulated_file)
+    data2 = pd.read_csv(generated_file)
 
-    args = parser.parse_args()
+    # Convert counts to frequencies
+    for df in [data1, data2]:
+        df['counts'] = df['counts'] / df['counts'].sum()
+        df.rename(columns={'counts': 'frequencies'}, inplace=True)
 
-    test_data = load_data(args.simulated_data_path)
-    generated_data = load_data(args.generated_data_path)
+    df_combine = {"Simulated (train)": data1, f"Generated ({model_name})": data2}
+    df_combine = pd.concat(df_combine, names=["dataset"]).reset_index(level=0)
 
-    plot_test_gen_seq_len_distribution(test_data, generated_data, args.model_name, args.image_output_file)
+    # Create distribution plot with px
+    figure = px.bar(df_combine, x="sequence_lengths", y="frequencies", color='dataset')
+
+    figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=df_combine["sequence_lengths"]),
+                         yaxis=dict(tickmode='array'),
+                         template="plotly_white",
+                         title=f"Sequence Length Distributions of simulated train data and generated ({model_name}) data",
+                         font=dict(size=22))
+
+    figure.write_html(image_file)
 
 
-if __name__ == "__main__":
-    main()
+def plot_seq_len_distributions_multiple_datasets(simulated_files, generated_files, image_file, model_name):
+    simulated_data = load_data(simulated_files)
+    generated_data = load_data(generated_files)
+
+    plot_seq_len_distributions_with_error_bars(simulated_data, generated_data, model_name, image_file)

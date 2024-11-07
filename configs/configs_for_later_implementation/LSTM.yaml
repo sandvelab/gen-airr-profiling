@@ -13,7 +13,7 @@ definitions:
         SimpleLSTM:
             chain: beta
             sequence_type: amino_acid
-            num_epochs: 100
+            num_epochs: 15
             batch_size: 10000
             device: cpu
             hidden_size: 8
