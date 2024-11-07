@@ -16,7 +16,7 @@ rule all:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_plot_{{model}}_{{data_split}}_{{dataset}}_0.html",
-                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
                data_split=data_split,
@@ -125,11 +125,11 @@ rule compare_kmer_distribution:
         run_kmer_analysis(input_generated_data, wildcards.model, input_simulated_data, wildcards.data_split, output, 3)
 
 #TO DO: for now we always compare first simulation
-rule split_train_data_by_sequence_length:
+rule split_simulated_data_by_sequence_length:
     input:
-        f"{RESULT_DIR}/{{dataset}}/simulations/train/simulation_0/dataset/"
+        f"{RESULT_DIR}/{{dataset}}/simulations/{{data_split}}/simulation_0/dataset/"
     output:
-        f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
+        f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
     run:
         input_file = f"{input}/batch1.tsv"
         filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
@@ -144,11 +144,11 @@ rule split_model_data_by_sequence_length:
         input_file = f"{input}/gen_model/generated_sequences/batch1.tsv"
         filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
 
-rule compare_aa_frequency_distribution_generated_vs_train:
+rule compare_aa_frequency_distribution_generated_vs_simulated:
     input:
-        train_data = f"{RESULT_DIR}/{{dataset}}/simulations_filtered/train/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv",
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv",
         generated_data = f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/")
+        directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/")
     run:
-        shell(f"python scripts/aa_freq_plotting.py {input.train_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
+        shell(f"python scripts/aa_freq_plotting.py {input.simulated_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")

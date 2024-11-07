@@ -159,7 +159,7 @@ def make_significance_df(df_model, significant_p_values):
     return significance_df
 
 
-def plot_logo_train(df_simulated, output_dir, num_sequences):
+def plot_logo_simulated(df_simulated, output_dir, num_sequences):
     frequency_df = make_logo_df(df_simulated)
 
     # Create a color dictionary for the amino acids
@@ -175,10 +175,10 @@ def plot_logo_train(df_simulated, output_dir, num_sequences):
     logo.style_spines(visible=False)
     logo.style_spines(spines=['left', 'bottom'], visible=True)
     logo.style_xticks(rotation=90, fmt='%d')
-    plt.title(f"Amino Acid Frequency Logo for train sequences ({num_sequences} sequences)")
+    plt.title(f"Amino Acid Frequency Logo for simulated sequences ({num_sequences} sequences)")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
-    plt.savefig(f"{output_dir}/train_logo.png")
+    plt.savefig(f"{output_dir}/simulated_logo.png")
 
 
 def plot_logo_model(df_model, significant_p_values, model_name, output_dir, num_sequences):
@@ -257,12 +257,11 @@ def main():
     significant_p_values, fold_changes = find_significant_amino_acids(df_simulated, df_model)
 
     # Plot logos
-    plot_logo_train(df_simulated, args.output_dir, num_sequences_simulated)
+    plot_logo_simulated(df_simulated, args.output_dir, num_sequences_simulated)
     plot_logo_model(df_model, significant_p_values, args.model_name, args.output_dir, num_sequences_model)
 
     # Plot log fold changes
     plot_log_fold_changes(fold_changes, args.output_dir, args.model_name)
-
 
 
 if __name__ == "__main__":
