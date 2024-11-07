@@ -20,9 +20,11 @@ def get_aa_counts_frequencies_df(file_path, max_position):
     # Load the data
     df = pd.read_csv(file_path, sep='\t')
 
+    num_sequences = len(df)
+
     # return None if the dataframe is empty
     if df.empty:
-        return None
+        return None, num_sequences
 
     # Initialize a list to store the results
     results = []
@@ -44,7 +46,7 @@ def get_aa_counts_frequencies_df(file_path, max_position):
 
     # Convert results to a DataFrame
     result_df = pd.DataFrame(results)
-    return result_df
+    return result_df, num_sequences
 
 
 def get_aa_color_map():
@@ -126,10 +128,9 @@ def calculate_log_fold_change(aa, pos, pos_counts_simulated, pos_counts_model):
     count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
     # compute log fold change
     # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
-    count_other_aa_simulated = count_other_aa_simulated if count_other_aa_simulated > 0 else 1e-10
     count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
-    count_other_aa_model = count_other_aa_model if count_other_aa_model > 0 else 1e-10
-    fold_change = (count_aa_model / count_other_aa_model) / (count_aa_simulated / count_other_aa_simulated)
+    fold_change = ((count_aa_model / (count_aa_model + count_other_aa_model)) /
+                   (count_aa_simulated / (count_aa_simulated + count_other_aa_simulated)))
     fold_change = fold_change if fold_change > 0 else 1e-10
     log_fold_change = np.log2(fold_change)
     return log_fold_change
@@ -158,7 +159,7 @@ def make_significance_df(df_model, significant_p_values):
     return significance_df
 
 
-def plot_logo_train(df_simulated, output_dir):
+def plot_logo_train(df_simulated, output_dir, num_sequences):
     frequency_df = make_logo_df(df_simulated)
 
     # Create a color dictionary for the amino acids
@@ -174,13 +175,13 @@ def plot_logo_train(df_simulated, output_dir):
     logo.style_spines(visible=False)
     logo.style_spines(spines=['left', 'bottom'], visible=True)
     logo.style_xticks(rotation=90, fmt='%d')
-    plt.title("Amino Acid Frequency Logo for train sequences")
+    plt.title(f"Amino Acid Frequency Logo for train sequences ({num_sequences} sequences)")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
     plt.savefig(f"{output_dir}/train_logo.png")
 
 
-def plot_logo_model(df_model, significant_p_values, model_name, output_dir):
+def plot_logo_model(df_model, significant_p_values, model_name, output_dir, num_sequences):
     frequency_df = make_logo_df(df_model)
     significance_df = make_significance_df(df_model, significant_p_values)
     # Initialize the logo plot
@@ -204,7 +205,7 @@ def plot_logo_model(df_model, significant_p_values, model_name, output_dir):
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks)
     ax.tick_params(axis='x', rotation=90)
-    plt.title(f"Amino Acid Frequency Logo for {model_name} sequences with amino acids significantly different from simulated in red")
+    plt.title(f"Amino Acid Frequency Logo for {model_name} sequences (Sequence count: {num_sequences}, Red: significantly different)")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
     plt.savefig(f"{output_dir}/{model_name}_logo.png")
@@ -239,8 +240,8 @@ def main():
     args = parser.parse_args()
 
     # Get dataframes for the two files
-    df_simulated = get_aa_counts_frequencies_df(args.file1, args.filtered_sequences_lengths)
-    df_model = get_aa_counts_frequencies_df(args.file2, args.filtered_sequences_lengths)
+    df_simulated, num_sequences_simulated = get_aa_counts_frequencies_df(args.file1, args.filtered_sequences_lengths)
+    df_model, num_sequences_model = get_aa_counts_frequencies_df(args.file2, args.filtered_sequences_lengths)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(args.output_dir):
@@ -256,8 +257,8 @@ def main():
     significant_p_values, fold_changes = find_significant_amino_acids(df_simulated, df_model)
 
     # Plot logos
-    plot_logo_train(df_simulated, args.output_dir)
-    plot_logo_model(df_model, significant_p_values, args.model_name, args.output_dir)
+    plot_logo_train(df_simulated, args.output_dir, num_sequences_simulated)
+    plot_logo_model(df_model, significant_p_values, args.model_name, args.output_dir, num_sequences_model)
 
     # Plot log fold changes
     plot_log_fold_changes(fold_changes, args.output_dir, args.model_name)
