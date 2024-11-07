@@ -1,5 +1,5 @@
 from scripts.immuneml_formatting import write_immuneml_config
-from scripts.seq_len_comparing import plot_seq_len_distributions
+from scripts.seq_len_comparing import plot_seq_len_distributions, plot_seq_len_distributions_multiple_datasets
 from scripts.seq_len_filtering import filter_by_cdr3_length
 
 # Parameters
@@ -108,8 +108,7 @@ rule compare_sequence_length_distributions_generated_vs_test:
         report_generated_with_suffix = [f"{path}/report_types/analysis_SeqLen/report/sequence_length_distribution.csv"
                                         for path in input.report_generated]
 
-        shell(f"python scripts/SeqLenCompare_test.py --simulated_data_path {' '.join(report_simulated_with_suffix)} --generated_data_path {' '.join(report_generated_with_suffix)} "
-              f"--image_output_file {output.seq_len_plot} --model_name {wildcards.model}")
+        plot_seq_len_distributions_multiple_datasets(report_simulated_with_suffix, report_generated_with_suffix, output.seq_len_plot, wildcards.model)
 
 #TO DO: for now we always compare first simulation
 rule split_train_data_by_sequence_length:
