@@ -122,7 +122,7 @@ rule compare_kmer_distribution:
     run:
         input_generated_data = f"{input.generated_data}/gen_model/generated_sequences/batch1.tsv"
         input_simulated_data = f"{input.simulated_data}/batch1.tsv"
-        run_kmer_analysis(input_generated_data, wildcards.model, input_simulated_data, wildcards.data_split, output, 3)
+        run_kmer_analysis(input_generated_data, wildcards.model, input_simulated_data, wildcards.data_split, output, k=3, kmer_count_threshold=5)
 
 #TO DO: for now we always compare first simulation
 rule split_simulated_data_by_sequence_length:

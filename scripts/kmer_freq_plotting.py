@@ -14,7 +14,7 @@ def get_kmer_counts(sequences, k):
     return kmer_counts
 
 
-def find_significantly_different_kmers(dataset1, name1, dataset2, name2, k=3):
+def find_significantly_different_kmers(dataset1, name1, dataset2, name2, k=3, kmer_count_threshold=5):
     dataset1_kmer_counts = get_kmer_counts(dataset1, k)
     dataset2_kmer_counts = get_kmer_counts(dataset2, k)
     all_kmers_comparison = set(dataset1_kmer_counts.keys()).union(set(dataset2_kmer_counts.keys()))
@@ -23,9 +23,10 @@ def find_significantly_different_kmers(dataset1, name1, dataset2, name2, k=3):
     for kmer in all_kmers_comparison:
         dataset1_count = dataset1_kmer_counts.get(kmer, 0)
         dataset2_count = dataset2_kmer_counts.get(kmer, 0)
-        dataset1_freq = dataset1_count / sum(dataset1_kmer_counts.values())
-        dataset2_freq = dataset2_count / sum(dataset2_kmer_counts.values())
-        data_comparison.append([kmer, dataset1_count, dataset2_count, dataset1_freq, dataset2_freq])
+        if dataset1_count + dataset2_count > kmer_count_threshold:
+            dataset1_freq = dataset1_count / sum(dataset1_kmer_counts.values())
+            dataset2_freq = dataset2_count / sum(dataset2_kmer_counts.values())
+            data_comparison.append([kmer, dataset1_count, dataset2_count, dataset1_freq, dataset2_freq])
     kmer_comparison_df = pd.DataFrame(data_comparison,
                                       columns=['kmer', name1 + '_count', name2 + '_count', name1 + '_freq',
                                                name2 + '_freq'])
@@ -62,6 +63,12 @@ def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_file, k=3):
     kmer_comparison_df[f"pseudo_{name2}_freq"] = pseudo_log_transform(kmer_comparison_df[f"{name2}_freq"])
     kmer_comparison_df['significance'] = np.where(kmer_comparison_df['adjusted_p_value'] < 0.05, True, False)
 
+    # TO DO: investigate repeat regions in significantly different k-mers
+    significance_ranking_20 = kmer_comparison_df.sort_values(by='adjusted_p_value', ascending=True).head(20)
+    significance_labels = significance_ranking_20[significance_ranking_20['adjusted_p_value'] < 0.05]['kmer']
+    kmer_comparison_df['label'] = kmer_comparison_df['kmer']
+    kmer_comparison_df['label'] = np.where(kmer_comparison_df['kmer'].isin(significance_labels), kmer_comparison_df['kmer'], "")
+
     significant_count = kmer_comparison_df['significance'].value_counts().get(True, 0)
 
     fig = px.scatter(
@@ -70,42 +77,47 @@ def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_file, k=3):
         y=f"pseudo_{name2}_freq",
         hover_name="kmer",
         color="significance",
+        color_discrete_map={True: "red", False: "blue"},
         labels={f"pseudo_{name1}_freq": f"Pseudo-log {name1} frequency",
                 f"pseudo_{name2}_freq": f"Pseudo-log {name2} frequency"},
-        title=f"Scatter plot of {name1} vs {name2} {k}-mer frequencies ({significant_count} significantly different {k}-mers)",
+        title=f"Scatter plot of {name1} vs {name2} {k}-mer frequencies ({significant_count} significantly different {k}-mers, {len(kmer_comparison_df)} tests)",
         width=1000,
         height=1000,
-        opacity=0.5
+        opacity=0.3,
+        text="label"
     )
 
     fig.update_layout(
         xaxis_title=f"{name1} frequency (pseudo-log scale)",
         yaxis_title=f"{name2} frequency (pseudo-log scale)"
     )
+    fig.update_traces(textposition="bottom right")
 
     fig.write_html(output_file)
 
 
-def run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k=3):
+def run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k=3, kmer_count_threshold=5):
     dataset1_df = pd.read_csv(dataset1, sep="\t")
     dataset2_df = pd.read_csv(dataset2, sep="\t")
     dataset1_sequences = dataset1_df['sequence_aa'].tolist()
     dataset2_sequences = dataset2_df['sequence_aa'].tolist()
 
     kmer_comparison_df, significant_kmers = find_significantly_different_kmers(dataset1_sequences, name1,
-                                                                               dataset2_sequences, name2, k)
+                                                                               dataset2_sequences, name2,
+                                                                               k, kmer_count_threshold)
     plot_kmers_distribution(kmer_comparison_df, name1, name2, str(output_file), k)
 
 
 def main():
-    dataset1 = "../results/dataset1/models/PWM/PWM_dataset1_0/gen_model/generated_sequences/batch1.tsv"
-    dataset2 = "../results/dataset1/models/PWM/PWM_dataset1_0/gen_model/generated_sequences/batch1.tsv"
+    dataset1 = "../results/dataset1/simulations/train/simulation_0/dataset/batch1.tsv"
+    dataset2 = "../results/dataset1/models/VAE/VAE_dataset1_0/gen_model/generated_sequences/batch1.tsv"
     output_file = "output/kmer_comparison.html"
-    name1 = "Dataset1"
-    name2 = "Dataset2"
+    name1 = "simulated"
+    name2 = "VAE"
     k = 3
+    kmer_count_threshold = 5
 
-    run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k)
+    run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k, kmer_count_threshold)
 
 if __name__ == "__main__":
     main()
