@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from immuneML.reports.PlotlyUtil import PlotlyUtil
 from statsmodels.stats.multitest import multipletests
+from numpy.linalg import eigvalsh
 
 
 def load_tsv(file_path):
@@ -83,6 +84,23 @@ def get_aa_counts(aa, pos, pos_counts):
     return count_aa, count_other_aa
 
 
+def get_covariance_matrix(df):
+    frequency_df = df.pivot(index='position', columns='amino acid', values='relative frequency')
+    frequency_df = frequency_df.fillna(0)
+
+    cov_matrix = np.cov(frequency_df.T)   # Transpose the matrix to get each amino acid as a variable
+    return cov_matrix
+
+
+def adjust_alpha_for_dependent_tests(aa_dataframe, positional_counts, alpha=0.05):
+    # Sum of the eigenvalues gives the effective number of tests
+    eigenvalues = eigvalsh(get_covariance_matrix(aa_dataframe))
+    m_eff_aa = np.sum(eigenvalues) / np.max(eigenvalues)
+    # Adjust alpha for dependencies between amino acid frequencies
+    adjusted_alpha = alpha / (m_eff_aa * len(positional_counts.keys()))
+    return adjusted_alpha
+
+
 def find_significant_amino_acids(df_simulated, df_model):
     # Extract amino acid counts by position
     pos_counts_simulated = extract_aa_counts_by_pos(df_simulated)
@@ -102,7 +120,11 @@ def find_significant_amino_acids(df_simulated, df_model):
             p_values.append(p_value)
             tests.append((aa, pos))
 
+    # TO DO: decide whether to adjust alpha for multiple testing
+    adjusted_alpha = adjust_alpha_for_dependent_tests(df_simulated, pos_counts_simulated, alpha=0.05)
+    #_, adjusted_p_values, _, _ = multipletests(p_values, alpha=adjusted_alpha, method='fdr_bh')
     _, adjusted_p_values, _, _ = multipletests(p_values, method='fdr_bh')
+
     significant_p_values = {}
     log_fold_changes = {}
 
@@ -118,8 +140,11 @@ def find_significant_amino_acids(df_simulated, df_model):
 def run_fisher_test(aa, pos, pos_counts_simulated, pos_counts_model):
     count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
     count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
-    _, p_value = stats.fisher_exact(
-        [[count_aa_simulated, count_aa_model], [count_other_aa_simulated, count_other_aa_model]])
+
+    contingency_table = [[count_aa_simulated, count_other_aa_simulated],
+                         [count_aa_model, count_other_aa_model]]
+    _, p_value = stats.fisher_exact(contingency_table)
+
     return p_value
 
 
@@ -184,6 +209,8 @@ def plot_logo_simulated(df_simulated, output_dir, num_sequences):
 def plot_logo_model(df_model, significant_p_values, model_name, output_dir, num_sequences):
     frequency_df = make_logo_df(df_model)
     significance_df = make_significance_df(df_model, significant_p_values)
+    num_significant = (significance_df == 1).sum().sum()
+
     # Initialize the logo plot
     fig, ax = plt.subplots(figsize=(10, 6))
     color_mapping = {1: 'red', 0: 'gray'}
@@ -205,10 +232,20 @@ def plot_logo_model(df_model, significant_p_values, model_name, output_dir, num_
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticks)
     ax.tick_params(axis='x', rotation=90)
-    plt.title(f"Amino Acid Frequency Logo for {model_name} sequences (Sequence count: {num_sequences}, Red: significantly different)")
+    plt.title(f"Amino Acid Frequency Logo for {model_name} sequences (Sequence count: {num_sequences}, Red: {num_significant} significantly different)")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
     plt.savefig(f"{output_dir}/{model_name}_logo.png")
+
+
+def plot_logo_with_background_frequencies(model_freq, simulated_freq, output_dir, model_name):
+    # TO DO: make two-directional logo
+    foreground_df = make_logo_df(model_freq)
+    background_df = make_logo_df(simulated_freq)
+
+    # Create logo plot for foreground frequencies
+    fig, ax = plt.subplots(figsize=(10, 6))
+    return NotImplemented
 
 
 def plot_log_fold_changes(log_fold_changes, output_dir, model_name):
@@ -226,7 +263,6 @@ def plot_log_fold_changes(log_fold_changes, output_dir, model_name):
 
     # Save the plot
     figure.write_html(f"{output_dir}/log_fold_changes.html")
-
 
 
 def main():
