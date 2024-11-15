@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -58,7 +59,7 @@ def pseudo_log_transform(x, threshold=1e-3):
     return np.sign(x) * np.log1p(np.abs(x / threshold))
 
 
-def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_file, k=3):
+def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_dir, k=3):
     kmer_comparison_df[f"pseudo_{name1}_freq"] = pseudo_log_transform(kmer_comparison_df[f"{name1}_freq"])
     kmer_comparison_df[f"pseudo_{name2}_freq"] = pseudo_log_transform(kmer_comparison_df[f"{name2}_freq"])
     kmer_comparison_df['significance'] = np.where(kmer_comparison_df['adjusted_p_value'] < 0.05, True, False)
@@ -93,10 +94,42 @@ def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_file, k=3):
     )
     fig.update_traces(textposition="bottom right")
 
-    fig.write_html(output_file)
+    fig.write_html(output_dir + "/kmer_comparison.html")
 
 
-def run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k=3, kmer_count_threshold=5):
+def count_amino_acid_repeats(kmers):
+    repeat_count = 0
+    for kmer in kmers:
+        for i in range(len(kmer) - 1):
+            if kmer[i] == kmer[i + 1]:
+                repeat_count += 1
+    return repeat_count
+
+
+def count_repeat_regions_kmers(dataset1_sequences, name1, dataset2_sequences, name2, k, significant_kmers, output_dir):
+    dataset1_kmer_counts = get_kmer_counts(dataset1_sequences, k=k)
+    dataset2_kmer_counts = get_kmer_counts(dataset2_sequences, k=k)
+
+    dataset1_repeats = count_amino_acid_repeats(dataset1_kmer_counts.keys())
+    dataset2_repeats = count_amino_acid_repeats(dataset2_kmer_counts.keys())
+    repeat_counts = pd.DataFrame({"repeats_all_kmers": [dataset1_repeats, dataset2_repeats]}, index=[name1, name2])
+
+    overrepresented_kmers_dataset2 = significant_kmers[
+        significant_kmers[f'{name2}_freq'] > significant_kmers[f'{name1}_freq']]
+    overrepresented_kmers_dataset2_repeats = count_amino_acid_repeats(overrepresented_kmers_dataset2['kmer'])
+
+    overrepresented_kmers_dataset1 = significant_kmers[
+        significant_kmers[f'{name1}_freq'] > significant_kmers[f'{name2}_freq']]
+    overrepresented_kmers_dataset1_repeats = count_amino_acid_repeats(overrepresented_kmers_dataset1['kmer'])
+
+    repeat_counts["repeats_overrepresented_kmers"] = [overrepresented_kmers_dataset1_repeats, overrepresented_kmers_dataset2_repeats]
+    repeat_counts.to_csv(output_dir + "/repeat_counts.tsv", sep="\t")
+
+
+def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_count_threshold=5):
+
+    os.makedirs(str(output_dir), exist_ok=True)
+
     dataset1_df = pd.read_csv(dataset1, sep="\t")
     dataset2_df = pd.read_csv(dataset2, sep="\t")
     dataset1_sequences = dataset1_df['sequence_aa'].tolist()
@@ -105,19 +138,21 @@ def run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k=3, kmer_c
     kmer_comparison_df, significant_kmers = find_significantly_different_kmers(dataset1_sequences, name1,
                                                                                dataset2_sequences, name2,
                                                                                k, kmer_count_threshold)
-    plot_kmers_distribution(kmer_comparison_df, name1, name2, str(output_file), k)
+    count_repeat_regions_kmers(dataset1_sequences, name1, dataset2_sequences, name2, k, significant_kmers, str(output_dir))
+
+    plot_kmers_distribution(kmer_comparison_df, name1, name2, str(output_dir), k)
 
 
 def main():
     dataset1 = "../results/dataset1/simulations/train/simulation_0/dataset/batch1.tsv"
-    dataset2 = "../results/dataset1/models/VAE/VAE_dataset1_0/gen_model/generated_sequences/batch1.tsv"
-    output_file = "output/kmer_comparison.html"
+    dataset2 = "../results/dataset1/models/PWM/PWM_dataset1_0/gen_model/generated_sequences/batch1.tsv"
+    output_dir = "output/"
     name1 = "simulated"
-    name2 = "VAE"
+    name2 = "PWM"
     k = 3
     kmer_count_threshold = 5
 
-    run_kmer_analysis(dataset1, name1, dataset2, name2, output_file, k, kmer_count_threshold)
+    run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k, kmer_count_threshold)
 
 if __name__ == "__main__":
     main()

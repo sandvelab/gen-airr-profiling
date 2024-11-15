@@ -15,7 +15,7 @@ rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
-                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_plot_{{model}}_{{data_split}}_{{dataset}}_0.html",
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0/",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
@@ -118,7 +118,7 @@ rule compare_kmer_distribution:
         generated_data = f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0",
         simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/{{data_split}}/simulation_0/dataset/"
     output:
-        f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_plot_{{model}}_{{data_split}}_{{dataset}}_0.html"
+        directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0")
     run:
         input_generated_data = f"{input.generated_data}/gen_model/generated_sequences/batch1.tsv"
         input_simulated_data = f"{input.simulated_data}/batch1.tsv"
