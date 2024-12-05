@@ -1,3 +1,4 @@
+import glob
 from scripts.immuneml_formatting import write_immuneml_config
 from scripts.seq_len_comparing import plot_seq_len_distributions, plot_seq_len_distributions_multiple_datasets
 from scripts.seq_len_filtering import filter_by_cdr3_length
@@ -11,12 +12,13 @@ sim_num = range(1)
 data_split = ["train", "test"]
 filtered_sequences_lengths = [10, 15, 20]
 
+
 rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
-                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0/",
-                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0"),
+                #f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
                data_split=data_split,
@@ -38,7 +40,7 @@ rule write_report_yaml_config_for_ligo_data:
     output:
         report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/simulated/{{data_split}}/report_config_simulated_{{dataset}}_{{sim_num}}.yaml"
     run:
-        write_immuneml_config(input.report_template, input.simulated_data + "/batch1.tsv", output.report_config_file)
+        write_immuneml_config(input.report_template,input.simulated_data + "/simulated_dataset.tsv", output.report_config_file)
 
 rule run_reports_for_ligo_data:
     input:
@@ -55,7 +57,7 @@ rule write_model_yaml_config:
     output:
         model_config_file = f"{RESULT_DIR}/{{dataset}}/model_configs/{{model}}/model_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
     run:
-        write_immuneml_config(input.model_template, input.simulated_data + "/batch1.tsv", output.model_config_file)
+        write_immuneml_config(input.model_template,input.simulated_data + "/simulated_dataset.tsv", output.model_config_file)
 
 rule run_models:
     input:
@@ -72,7 +74,8 @@ rule write_report_yaml_config_for_generated_data:
     output:
         report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/models/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
     run:
-        write_immuneml_config(input.report_template, input.generated_sequences + "/gen_model/generated_sequences/batch1.tsv", output.report_config_file)
+        input_file_name = glob.glob(input.generated_sequences + "/gen_model/generated_sequences/*.tsv")[0]
+        write_immuneml_config(input.report_template, input_file_name, output.report_config_file)
 
 rule run_reports_for_generated_data:
     input:
@@ -120,35 +123,38 @@ rule compare_kmer_distribution:
     output:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0")
     run:
-        input_generated_data = f"{input.generated_data}/gen_model/generated_sequences/batch1.tsv"
-        input_simulated_data = f"{input.simulated_data}/batch1.tsv"
+        input_generated_data = glob.glob(f"{input.generated_data}/gen_model/generated_sequences/*.tsv")[0]
+        input_simulated_data = f"{input.simulated_data}/simulated_dataset.tsv"
         run_kmer_analysis(input_generated_data, wildcards.model, input_simulated_data, wildcards.data_split, output, k=3, kmer_count_threshold=5)
 
+'''
 #TO DO: for now we always compare first simulation
 rule split_simulated_data_by_sequence_length:
     input:
         f"{RESULT_DIR}/{{dataset}}/simulations/{{data_split}}/simulation_0/dataset/"
     output:
-        f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
+        f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     run:
-        input_file = f"{input}/batch1.tsv"
-        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
+        input_file = f"{input}/simulated_dataset.tsv"
+        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths, region_type="IMGT_JUNCTION")
 
 #TO DO: for now we always compare first simulation
 rule split_model_data_by_sequence_length:
     input:
         f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0"
     output:
-        f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
+        f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     run:
-        input_file = f"{input}/gen_model/generated_sequences/batch1.tsv"
-        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
+        input_file = glob.glob(f"{input}/gen_model/generated_sequences/*.tsv")[0]
+        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths, region_type="IMGT_CDR3")
+
 
 rule compare_aa_frequency_distribution_generated_vs_simulated:
     input:
-        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv",
-        generated_data = f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/batch1_len_{{filtered_sequences_lengths}}.tsv"
+        simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv",
+        generated_data = f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     output:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/")
     run:
         shell(f"python scripts/aa_freq_plotting.py {input.simulated_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
+'''
