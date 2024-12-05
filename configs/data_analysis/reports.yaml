@@ -6,7 +6,7 @@ definitions:
         path: results/dataset1/simulation/my_sim_inst/batch1.tsv #results/dataset1/models/VAE/my_train_gen_model_inst/generated_sequences/batch1.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_JUNCTION
+        region_type: IMGT_CDR3
         separator: "\t"
 
   reports:

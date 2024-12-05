@@ -17,6 +17,7 @@ definitions:
         deep: False # this param has no function?
         include_joint_genes: True
         n_gen_seqs: 1000 #500000
+        # bug in region_type: ?
   reports:
     my_KLKmerCompare_report: KLKmerComparison
 

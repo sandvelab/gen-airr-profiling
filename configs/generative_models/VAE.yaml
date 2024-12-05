@@ -14,7 +14,7 @@ definitions:
         batch_size: 100
         beta: 0.75
         cdr3_embed_dim: 21
-        chain: beta
+        locus: beta
         device: cpu
         j_gene_embed_dim: 13
         latent_dim: 20
@@ -24,6 +24,7 @@ definitions:
         pretrains: 0
         v_gene_embed_dim: 30
         warmup_epochs: 20
+        # add region_type: ?
 
   reports:
     my_KLKmerCompare_report: KLKmerComparison
