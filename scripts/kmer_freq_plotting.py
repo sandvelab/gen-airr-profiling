@@ -132,8 +132,10 @@ def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_co
 
     dataset1_df = pd.read_csv(dataset1, sep="\t")
     dataset2_df = pd.read_csv(dataset2, sep="\t")
-    dataset1_sequences = dataset1_df['sequence_aa'].tolist()
-    dataset2_sequences = dataset2_df['sequence_aa'].tolist()
+
+    # TO DO: standardize sequence extraction by column name
+    dataset1_sequences = dataset1_df['cdr3_aa'].tolist()
+    dataset2_sequences = dataset2_df['junction_aa'].tolist()
 
     kmer_comparison_df, significant_kmers = find_significantly_different_kmers(dataset1_sequences, name1,
                                                                                dataset2_sequences, name2,
@@ -144,11 +146,11 @@ def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_co
 
 
 def main():
-    dataset1 = "../results/dataset1/simulations/train/simulation_0/dataset/batch1.tsv"
-    dataset2 = "../results/dataset1/models/PWM/PWM_dataset1_0/gen_model/generated_sequences/batch1.tsv"
+    dataset1 = "../results/dataset1/models/soNNia/soNNia_dataset1_0/gen_model/generated_sequences/SoNNiaDataset.tsv"
+    dataset2 = "../results/dataset1/simulations/train/simulation_0/dataset/simulated_dataset.tsv"
     output_dir = "output/"
-    name1 = "simulated"
-    name2 = "PWM"
+    name1 = "soNNia"
+    name2 = "simulated"
     k = 3
     kmer_count_threshold = 5
 
