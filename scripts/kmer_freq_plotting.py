@@ -70,6 +70,10 @@ def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_dir, k=3):
     kmer_comparison_df['label'] = kmer_comparison_df['kmer']
     kmer_comparison_df['label'] = np.where(kmer_comparison_df['kmer'].isin(significance_labels), kmer_comparison_df['kmer'], "")
 
+    # Manually adding SLG k-mer label (temporary)
+    if 'soNNia' in [name1, name2]:
+        kmer_comparison_df['label'] = np.where(kmer_comparison_df['kmer'].isin(['SLG']), "SLG", kmer_comparison_df['label'])
+
     significant_count = kmer_comparison_df['significance'].value_counts().get(True, 0)
 
     fig = px.scatter(
@@ -97,33 +101,49 @@ def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_dir, k=3):
     fig.write_html(output_dir + "/kmer_comparison.html")
 
 
-def count_amino_acid_repeats(kmers):
+def count_amino_acid_repeats(kmer_counts):
     repeat_count = 0
-    for kmer in kmers:
+    for kmer, count in kmer_counts.items():
         for i in range(len(kmer) - 1):
             if kmer[i] == kmer[i + 1]:
-                repeat_count += 1
+                repeat_count += count
+                break
     return repeat_count
 
 
-def count_repeat_regions_kmers(dataset1_sequences, name1, dataset2_sequences, name2, k, significant_kmers, output_dir):
-    dataset1_kmer_counts = get_kmer_counts(dataset1_sequences, k=k)
-    dataset2_kmer_counts = get_kmer_counts(dataset2_sequences, k=k)
+def compute_kmer_repeats(dataset_sequences, overrepresented_kmers, k):
+    kmer_counts = get_kmer_counts(dataset_sequences, k=k)
+    repeats_all = count_amino_acid_repeats(kmer_counts)
+    overrepresented_kmer_counts = {kmer: kmer_counts[kmer] for kmer in overrepresented_kmers['kmer']}
+    repeats_overrepresented = count_amino_acid_repeats(overrepresented_kmer_counts)
+    return repeats_all, repeats_overrepresented
 
-    dataset1_repeats = count_amino_acid_repeats(dataset1_kmer_counts.keys())
-    dataset2_repeats = count_amino_acid_repeats(dataset2_kmer_counts.keys())
-    repeat_counts = pd.DataFrame({"repeats_all_kmers": [dataset1_repeats, dataset2_repeats]}, index=[name1, name2])
 
-    overrepresented_kmers_dataset2 = significant_kmers[
-        significant_kmers[f'{name2}_freq'] > significant_kmers[f'{name1}_freq']]
-    overrepresented_kmers_dataset2_repeats = count_amino_acid_repeats(overrepresented_kmers_dataset2['kmer'])
-
+def kmer_repeat_regions_analysis(dataset1_sequences, name1, dataset2_sequences, name2, k, significant_kmers, output_dir):
     overrepresented_kmers_dataset1 = significant_kmers[
         significant_kmers[f'{name1}_freq'] > significant_kmers[f'{name2}_freq']]
-    overrepresented_kmers_dataset1_repeats = count_amino_acid_repeats(overrepresented_kmers_dataset1['kmer'])
+    overrepresented_kmers_dataset2 = significant_kmers[
+        significant_kmers[f'{name2}_freq'] > significant_kmers[f'{name1}_freq']]
 
-    repeat_counts["repeats_overrepresented_kmers"] = [overrepresented_kmers_dataset1_repeats, overrepresented_kmers_dataset2_repeats]
-    repeat_counts.to_csv(output_dir + "/repeat_counts.tsv", sep="\t")
+    repeats_all_dataset1, repeats_overrepresented_dataset1 = compute_kmer_repeats(dataset1_sequences,
+                                                                                  overrepresented_kmers_dataset1, k)
+    repeats_all_dataset2, repeats_overrepresented_dataset2 = compute_kmer_repeats(dataset2_sequences,
+                                                                                  overrepresented_kmers_dataset2, k)
+
+    repeat_counts = pd.DataFrame({
+        "repeats_all_kmers": [repeats_all_dataset1, repeats_all_dataset2],
+        "repeats_overrepresented_kmers": [repeats_overrepresented_dataset1, repeats_overrepresented_dataset2]
+    }, index=[name1, name2])
+
+    repeat_counts.to_csv(f"{output_dir}/repeat_counts.tsv", sep="\t")
+
+    # run fisher's exact test on repeat counts
+    contingency_table = [[repeats_overrepresented_dataset1, repeats_all_dataset1],
+                         [repeats_overrepresented_dataset2, repeats_all_dataset2]]
+    _, p_value = fisher_exact(contingency_table)
+    with open(output_dir + "/repeat_counts_fisher_exact_test_pval.txt", "w") as f:
+        f.write(f"Contingency table:\n{contingency_table}\n")
+        f.write(f"P-value: {p_value}\n")
 
 
 def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_count_threshold=5):
@@ -138,7 +158,7 @@ def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_co
     kmer_comparison_df, significant_kmers = find_significantly_different_kmers(dataset1_sequences, name1,
                                                                                dataset2_sequences, name2,
                                                                                k, kmer_count_threshold)
-    count_repeat_regions_kmers(dataset1_sequences, name1, dataset2_sequences, name2, k, significant_kmers, str(output_dir))
+    kmer_repeat_regions_analysis(dataset1_sequences, name1, dataset2_sequences, name2, k, significant_kmers, str(output_dir))
 
     plot_kmers_distribution(kmer_comparison_df, name1, name2, str(output_dir), k)
 
