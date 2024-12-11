@@ -17,25 +17,22 @@ def load_tsv(file_path):
     return pd.read_csv(file_path, sep='\t')
 
 
-def get_aa_counts_frequencies_df(file_path, max_position):
-    # Load the data
-    df = pd.read_csv(file_path, sep='\t')
+def get_aa_counts_frequencies_df(file_path, max_position, shared_region_type='junction_aa'):
 
+    df = pd.read_csv(file_path, sep='\t')
     num_sequences = len(df)
 
     # return None if the dataframe is empty
     if df.empty:
         return None, num_sequences
 
-    # Initialize a list to store the results
+    if shared_region_type == 'cdr3_aa':
+        max_position = int(max_position) - 2
+
     results = []
-
-    # Loop through each position up to max_position
     for pos in range(int(max_position)):
-        # Extract amino acids at the current position across all sequences
-        aa_series = df['sequence_aa'].str[pos].dropna()
 
-        # Get counts of each amino acid at this position
+        aa_series = df[shared_region_type].str[pos].dropna()
         aa_counts = aa_series.value_counts().to_dict()
         total_count = len(aa_series)
 
@@ -45,7 +42,6 @@ def get_aa_counts_frequencies_df(file_path, max_position):
             relative_freq = count / total_count if total_count > 0 else 0
             results.append({'amino acid': aa, 'position': pos, 'count': count, 'relative frequency': relative_freq})
 
-    # Convert results to a DataFrame
     result_df = pd.DataFrame(results)
     return result_df, num_sequences
 
@@ -265,19 +261,33 @@ def plot_log_fold_changes(log_fold_changes, output_dir, model_name):
     figure.write_html(f"{output_dir}/log_fold_changes.html")
 
 
+def get_shared_region_type(data_file1, data_file2):
+    data1 = pd.read_csv(data_file1, sep='\t')
+    data2 = pd.read_csv(data_file2, sep='\t')
+
+    if not any(pd.isnull(data1['junction_aa'])) and not any(pd.isnull(data2['junction_aa'])):
+        return 'junction_aa'
+    elif not any(pd.isnull(data1['cdr3_aa'])) and not any(pd.isnull(data2['cdr3_aa'])):
+        return 'cdr3_aa'
+    else:
+        raise ValueError("No sequence data found in same column for the two files.")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Compare two CDR3 length specific amino acid frequency distribution TSV files.')
     parser.add_argument('file1', type=str, help='Path to the first data file.')
     parser.add_argument('file2', type=str, help='Path to the second data file.')
-    parser.add_argument('filtered_sequences_lengths', type=int, help='Number of filtered sequences lengths.')
+    parser.add_argument('filtered_sequences_lengths', type=int, help='Length of filtered sequences.')
     parser.add_argument('output_dir', type=str, default='.', help='Output directory to save plots.')
     parser.add_argument('model_name', type=str, default='.', help='Name of the model.')
 
     args = parser.parse_args()
 
+    shared_region_type = get_shared_region_type(args.file1, args.file2)
+
     # Get dataframes for the two files
-    df_simulated, num_sequences_simulated = get_aa_counts_frequencies_df(args.file1, args.filtered_sequences_lengths)
-    df_model, num_sequences_model = get_aa_counts_frequencies_df(args.file2, args.filtered_sequences_lengths)
+    df_simulated, num_sequences_simulated = get_aa_counts_frequencies_df(args.file1, args.filtered_sequences_lengths, shared_region_type)
+    df_model, num_sequences_model = get_aa_counts_frequencies_df(args.file2, args.filtered_sequences_lengths, shared_region_type)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(args.output_dir):
