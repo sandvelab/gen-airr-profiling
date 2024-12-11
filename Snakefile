@@ -17,8 +17,8 @@ rule all:
     input:
         expand((f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html",
                 f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html",
-                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0"),
-                #f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0",
+                f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/"),
                dataset=glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset,
                sim_num=sim_num,
                data_split=data_split,
@@ -74,7 +74,7 @@ rule write_report_yaml_config_for_generated_data:
     output:
         report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/models/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
     run:
-        input_file_name = glob.glob(input.generated_sequences + "/gen_model/generated_sequences/*.tsv")[0]
+        input_file_name = glob.glob(input.generated_sequences + "/gen_model/exported_gen_dataset/*.tsv")[0]
         write_immuneml_config(input.report_template, input_file_name, output.report_config_file)
 
 rule run_reports_for_generated_data:
@@ -123,11 +123,11 @@ rule compare_kmer_distribution:
     output:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0")
     run:
-        input_generated_data = glob.glob(f"{input.generated_data}/gen_model/generated_sequences/*.tsv")[0]
+        input_generated_data = glob.glob(f"{input.generated_data}/gen_model/exported_gen_dataset/*.tsv")[0]
         input_simulated_data = f"{input.simulated_data}/simulated_dataset.tsv"
         run_kmer_analysis(input_generated_data, wildcards.model, input_simulated_data, wildcards.data_split, output, k=3, kmer_count_threshold=5)
 
-'''
+
 #TO DO: for now we always compare first simulation
 rule split_simulated_data_by_sequence_length:
     input:
@@ -136,7 +136,7 @@ rule split_simulated_data_by_sequence_length:
         f"{RESULT_DIR}/{{dataset}}/simulations_filtered/{{data_split}}/simulation_0/dataset_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     run:
         input_file = f"{input}/simulated_dataset.tsv"
-        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths, region_type="IMGT_JUNCTION")
+        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
 
 #TO DO: for now we always compare first simulation
 rule split_model_data_by_sequence_length:
@@ -145,9 +145,8 @@ rule split_model_data_by_sequence_length:
     output:
         f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     run:
-        input_file = glob.glob(f"{input}/gen_model/generated_sequences/*.tsv")[0]
-        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths, region_type="IMGT_CDR3")
-
+        input_file = glob.glob(f"{input}/gen_model/exported_gen_dataset/*.tsv")[0]
+        filter_by_cdr3_length(input_file, str(output), wildcards.filtered_sequences_lengths)
 
 rule compare_aa_frequency_distribution_generated_vs_simulated:
     input:
@@ -157,4 +156,3 @@ rule compare_aa_frequency_distribution_generated_vs_simulated:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/")
     run:
         shell(f"python scripts/aa_freq_plotting.py {input.simulated_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
-'''
