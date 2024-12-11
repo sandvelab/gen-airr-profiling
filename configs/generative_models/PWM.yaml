@@ -3,17 +3,17 @@ definitions:
     dataset:
       format: AIRR
       params:
-        path: results/dataset1/simulation/my_sim_inst/batch1.tsv
+        path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_JUNCTION #IMGT_CDR3
+        region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
     my_pwm_model:
       PWM:
         locus: beta
         sequence_type: amino_acid
-        region_type: IMGT_CDR3 # imgt_junction?
+        region_type: IMGT_JUNCTION
   reports:
     my_KLKmerCompare_report: KLKmerComparison
     my_pwm_report: PWMSummary
