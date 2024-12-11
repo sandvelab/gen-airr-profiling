@@ -1,4 +1,4 @@
-#pandas==1.5.3
 pytest==8.0.0
-#numpy==1.26.4
+snakemake
+sonnia==0.1.5
 git+https://github.com/uio-bmi/immuneML.git@f9b9f07c9c4683adcb072b458c4dbeb004b238e5
