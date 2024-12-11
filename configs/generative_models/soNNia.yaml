@@ -14,7 +14,7 @@ definitions:
         batch_size: 10000
         epochs: 50 #50
         default_model_name: 'humanTRB'
-        deep: False # this param has no function?
+        deep: True
         include_joint_genes: True
         n_gen_seqs: 1000 #500000
   reports:
