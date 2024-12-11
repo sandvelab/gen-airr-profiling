@@ -1,6 +1,6 @@
 pytest==8.0.0
 snakemake
 sonnia==0.1.5
-git+https://github.com/uio-bmi/immuneML.git
+git+https://github.com/uio-bmi/immuneML.git@fixes
 
 #git+https://github.com/uio-bmi/immuneML.git@f9b9f07c9c4683adcb072b458c4dbeb004b238e5 # old nar branch
