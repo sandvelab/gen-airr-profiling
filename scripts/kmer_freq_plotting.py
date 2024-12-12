@@ -32,6 +32,9 @@ def find_significantly_different_kmers(dataset1, name1, dataset2, name2, k=3, km
                                       columns=['kmer', name1 + '_count', name2 + '_count', name1 + '_freq',
                                                name2 + '_freq'])
 
+    if kmer_comparison_df.empty:
+        return kmer_comparison_df, None
+
     p_values = []
     for _, row in kmer_comparison_df.iterrows():
         dataset1_count = row[name1 + '_count']
