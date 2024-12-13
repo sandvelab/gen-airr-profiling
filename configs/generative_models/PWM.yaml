@@ -6,14 +6,14 @@ definitions:
         path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_JUNCTION
+        region_type: IMGT_CDR3 #IMGT_JUNCTION
         separator: "\t"
   ml_methods:
     my_pwm_model:
       PWM:
         locus: beta
         sequence_type: amino_acid
-        region_type: IMGT_JUNCTION
+        region_type: IMGT_CDR3 #IMGT_JUNCTION
   reports:
     my_KLKmerCompare_report: KLKmerComparison
     my_pwm_report: PWMSummary

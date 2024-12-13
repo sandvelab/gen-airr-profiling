@@ -6,14 +6,14 @@ definitions:
         path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_JUNCTION
+        region_type: IMGT_CDR3 #IMGT_JUNCTION
         separator: "\t"
   ml_methods:
     my_sonia_model:
       SoNNia:
         batch_size: 10000
         epochs: 50 #50
-        default_model_name: 'humanTRB'
+        default_model_name: 'humanIGH' #'humanTRB'
         deep: False
         include_joint_genes: True
         n_gen_seqs: 1000 #500000
