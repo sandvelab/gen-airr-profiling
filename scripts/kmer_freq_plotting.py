@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
+from scripts.utils import get_shared_region_type
 
 
 def get_kmer_counts(sequences, k):
@@ -156,14 +157,9 @@ def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_co
     dataset1_df = pd.read_csv(dataset1, sep="\t")
     dataset2_df = pd.read_csv(dataset2, sep="\t")
 
-    # TO DO: standardize sequence extraction by column name
-    dataset1_sequences = dataset1_df['junction_aa'].tolist()
-    dataset2_sequences = dataset2_df['junction_aa'].tolist()
-
-    # Check if nan values are present in the dataset_sequences
-    if any(pd.isnull(dataset1_sequences)) or any(pd.isnull(dataset2_sequences)):
-        dataset1_sequences = dataset1_df['cdr3_aa'].tolist()
-        dataset2_sequences = dataset2_df['cdr3_aa'].tolist()
+    shared_region_type = get_shared_region_type(dataset1_df, dataset2_df)
+    dataset1_sequences = dataset1_df[shared_region_type].tolist()
+    dataset2_sequences = dataset2_df[shared_region_type].tolist()
 
     kmer_comparison_df, significant_kmers = find_significantly_different_kmers(dataset1_sequences, name1,
                                                                                dataset2_sequences, name2,
