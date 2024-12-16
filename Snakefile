@@ -113,14 +113,23 @@ rule split_generated_data_by_sequence_length:
         input_file = glob.glob(f"{input}/gen_model/exported_gen_dataset/*.tsv")[0]
         filter_by_cdr3_length(input_file, str(output), sequence_length=wildcards.filtered_sequences_lengths)
 
+rule split_experimental_data_by_sequence_length:
+    input:
+        f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/"
+    output:
+        f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_filtered/{{experimental_dataset}}_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
+    run:
+        input_file = f"{input}/datasets/dataset/dataset.tsv"
+        filter_by_cdr3_length(input_file, str(output), sequence_length=wildcards.filtered_sequences_lengths)
+
 rule compare_aa_frequency_distribution_generated_vs_experimental:
     input:
-        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/datasets/dataset/dataset.tsv",
+        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_filtered/{{experimental_dataset}}_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv",
         generated_data = f"{RESULT_DIR}/{{experimental_dataset}}/models_filtered/{{model}}/{{model}}_{{experimental_dataset}}_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     output:
         directory(f"{RESULT_DIR}/{{experimental_dataset}}/analyses/{{model}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{experimental_dataset}}/")
     run:
-        shell(f"python scripts/aa_freq_plotting.py {input.experimental_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
+        shell(f"python -m scripts.aa_freq_plotting {input.experimental_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
 
 rule compare_kmer_distribution_for_experimental_data:
     input:
