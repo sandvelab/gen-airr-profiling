@@ -1,0 +1,23 @@
+definitions:
+  datasets:
+    dataset:
+      format: Generic
+      params:
+        path: data/mason/mason_mHER_H3_AgPos.csv
+        is_repertoire: false
+        paired: false
+        separator: ","
+        region_type: IMGT_CDR3
+        column_mapping:
+          AASeq: cdr3_aa
+        columns_to_load:
+          - AASeq
+
+instructions:
+  data_export:
+    type: DatasetExport
+    datasets:
+      - dataset
+    number_of_processes: 4
+    export_formats:
+      - AIRR

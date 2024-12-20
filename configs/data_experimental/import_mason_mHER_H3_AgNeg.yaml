@@ -3,7 +3,7 @@ definitions:
     dataset:
       format: Generic
       params:
-        path: data/mason/mHER_H3_AgPos.csv
+        path: data/mason/mason_mHER_H3_AgPos.csv
         is_repertoire: false
         paired: false
         separator: ","
