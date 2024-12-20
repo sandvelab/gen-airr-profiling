@@ -20,14 +20,14 @@ rule all:
         expand((f"{RESULT_DIR}/{{experimental_dataset}}/analyses/{{model}}/seq_len/seq_len_plot_{{model}}_{{experimental_dataset}}.html",
                 f"{RESULT_DIR}/{{experimental_dataset}}/analyses/{{model}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{experimental_dataset}}/",
                 f"{RESULT_DIR}/{{experimental_dataset}}/analyses/{{model}}/kmer_freq/kmer_compare_{{model}}_{{experimental_dataset}}"),
-               experimental_dataset=glob_wildcards(f"{DATA_DIR}/mason/{{experimental_dataset}}.csv").experimental_dataset,
+               experimental_dataset=glob_wildcards(f"{DATA_DIR}/{{experimental_dataset}}.csv").experimental_dataset,
                model=glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model,
                filtered_sequences_lengths=filtered_sequences_lengths)
 
 rule write_immuneml_data_process_yaml_config:
     input:
-        immuneml_export_config = f"{INPUT_DIR}/data_experimental/import_experimental_data.yaml",
-        experimental_data = f"{DATA_DIR}/mason/{{experimental_dataset}}.csv"
+        immuneml_export_config = f"{INPUT_DIR}/data_experimental/import_{{experimental_dataset}}.yaml",
+        experimental_data = f"{DATA_DIR}/{{experimental_dataset}}.csv"
     output:
         f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_process_config/import_experimental_data_{{experimental_dataset}}.yaml"
     run:
