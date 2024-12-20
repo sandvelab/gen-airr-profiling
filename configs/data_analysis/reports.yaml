@@ -6,7 +6,7 @@ definitions:
         path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_CDR3
+        region_type: IMGT_JUNCTION
         separator: "\t"
 
   reports:
