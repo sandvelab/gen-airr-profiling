@@ -8,7 +8,7 @@ from immuneML.environment.EnvironmentSettings import EnvironmentSettings
 from immuneML.IO.dataset_export.AIRRExporter import AIRRExporter
 
 
-class TestSeqLenFiltering(TestCase):
+class TestKmerPlotting(TestCase):
     def test_get_kmer_counts(self):
         data_seqs = ['AAAT', 'GAAT']
         kmer_counts = get_kmer_counts(data_seqs, 3)

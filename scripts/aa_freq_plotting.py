@@ -11,15 +11,12 @@ from immuneML.reports.PlotlyUtil import PlotlyUtil
 from statsmodels.stats.multitest import multipletests
 from numpy.linalg import eigvalsh
 
-
-def load_tsv(file_path):
-    # Load the TSV file into a DataFrame
-    return pd.read_csv(file_path, sep='\t')
+from scripts.utils import get_shared_region_type
 
 
-def get_aa_counts_frequencies_df(file_path, max_position, shared_region_type='junction_aa'):
+def get_aa_counts_frequencies_df(df, max_position, shared_region_type='junction_aa'):
+    """ Calculate relative frequencies and store the results """
 
-    df = pd.read_csv(file_path, sep='\t')
     num_sequences = len(df)
 
     # return None if the dataframe is empty
@@ -31,12 +28,10 @@ def get_aa_counts_frequencies_df(file_path, max_position, shared_region_type='ju
 
     results = []
     for pos in range(int(max_position)):
-
         aa_series = df[shared_region_type].str[pos].dropna()
         aa_counts = aa_series.value_counts().to_dict()
         total_count = len(aa_series)
 
-        # Calculate relative frequencies and store the results
         for aa in 'ACDEFGHIKLMNPQRSTVWY':
             count = aa_counts.get(aa, 0)
             relative_freq = count / total_count if total_count > 0 else 0
@@ -261,18 +256,6 @@ def plot_log_fold_changes(log_fold_changes, output_dir, model_name):
     figure.write_html(f"{output_dir}/log_fold_changes.html")
 
 
-def get_shared_region_type(data_file1, data_file2):
-    data1 = pd.read_csv(data_file1, sep='\t')
-    data2 = pd.read_csv(data_file2, sep='\t')
-
-    if not any(pd.isnull(data1['junction_aa'])) and not any(pd.isnull(data2['junction_aa'])):
-        return 'junction_aa'
-    elif not any(pd.isnull(data1['cdr3_aa'])) and not any(pd.isnull(data2['cdr3_aa'])):
-        return 'cdr3_aa'
-    else:
-        raise ValueError("No sequence data found in same column for the two files.")
-
-
 def main():
     parser = argparse.ArgumentParser(description='Compare two CDR3 length specific amino acid frequency distribution TSV files.')
     parser.add_argument('file1', type=str, help='Path to the first data file.')
@@ -283,11 +266,13 @@ def main():
 
     args = parser.parse_args()
 
-    shared_region_type = get_shared_region_type(args.file1, args.file2)
+    df1 = pd.read_csv(args.file1, sep='\t')
+    df2 = pd.read_csv(args.file2, sep='\t')
+    shared_region_type = get_shared_region_type(df1, df2)
 
     # Get dataframes for the two files
-    df_simulated, num_sequences_simulated = get_aa_counts_frequencies_df(args.file1, args.filtered_sequences_lengths, shared_region_type)
-    df_model, num_sequences_model = get_aa_counts_frequencies_df(args.file2, args.filtered_sequences_lengths, shared_region_type)
+    df_simulated, num_sequences_simulated = get_aa_counts_frequencies_df(df1, args.filtered_sequences_lengths, shared_region_type)
+    df_model, num_sequences_model = get_aa_counts_frequencies_df(df2, args.filtered_sequences_lengths, shared_region_type)
 
     # Create output directory if it doesn't exist
     if not os.path.exists(args.output_dir):

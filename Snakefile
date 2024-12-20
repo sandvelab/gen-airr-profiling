@@ -155,4 +155,4 @@ rule compare_aa_frequency_distribution_generated_vs_simulated:
     output:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/aa_freq/aa_freq_compare_len_{{filtered_sequences_lengths}}_{{model}}_{{dataset}}/")
     run:
-        shell(f"python scripts/aa_freq_plotting.py {input.simulated_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
+        shell(f"python -m scripts.aa_freq_plotting {input.simulated_data} {input.generated_data} {wildcards.filtered_sequences_lengths} {output} {wildcards.model}")
