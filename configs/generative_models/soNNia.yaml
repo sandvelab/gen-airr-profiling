@@ -12,7 +12,7 @@ definitions:
     my_sonnia_model:
       SoNNia:
         batch_size: 10000
-        epochs: 50 #50
+        epochs: 30 #50
         default_model_name: 'humanIGH' #'humanTRB'
         deep: True
         include_joint_genes: True
