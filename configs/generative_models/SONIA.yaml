@@ -6,17 +6,16 @@ definitions:
         path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_CDR3 #IMGT_JUNCTION
+        region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
     my_sonia_model:
-      SoNNia:
+      SONIA:
         batch_size: 10000
-        epochs: 50 #50
+        epochs: 30 #50
         default_model_name: 'humanIGH' #'humanTRB'
-        deep: False
         include_joint_genes: True
-        n_gen_seqs: 1000 #500000
+        n_gen_seqs: 50000
   reports:
     my_KLKmerCompare_report: KLKmerComparison
 
@@ -26,7 +25,7 @@ instructions:
     export_combined_dataset: True
     dataset: dataset
     method: my_sonia_model
-    gen_examples_count: 1000
+    gen_examples_count: 10000
     number_of_processes: 4
     reports:
       - my_KLKmerCompare_report

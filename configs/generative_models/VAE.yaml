@@ -6,7 +6,7 @@ definitions:
         path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_CDR3 #IMGT_JUNCTION
+        region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
     my_vae_model:
@@ -24,7 +24,6 @@ definitions:
         pretrains: 0
         v_gene_embed_dim: 30
         warmup_epochs: 20
-        # add region_type: ?
 
   reports:
     my_KLKmerCompare_report: KLKmerComparison
@@ -39,7 +38,7 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: my_vae_model
-    gen_examples_count: 1000
+    gen_examples_count: 10000
     number_of_processes: 4
     reports:
       - my_KLKmerCompare_report

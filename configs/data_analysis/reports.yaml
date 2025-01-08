@@ -6,11 +6,13 @@ definitions:
         path: data.tsv
         is_repertoire: False
         paired: False
-        region_type: IMGT_CDR3
+        region_type: IMGT_JUNCTION
         separator: "\t"
 
   reports:
-    my_sld_report: SequenceLengthDistribution
+    my_sld_report:
+      SequenceLengthDistribution:
+        region_type: IMGT_JUNCTION
     my_aa_freq_report: AminoAcidFrequencyDistribution
 
 instructions:
