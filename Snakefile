@@ -3,15 +3,16 @@ from scripts.immuneml_formatting import write_immuneml_config
 from scripts.seq_len_comparing import plot_seq_len_distributions, plot_seq_len_distributions_multiple_datasets
 from scripts.seq_len_filtering import filter_by_cdr3_length
 from scripts.kmer_freq_plotting import run_kmer_analysis
+from scripts.junction_from_cdr3 import add_junction_from_cdr3
 
 # Parameters
 INPUT_DIR = "configs"
-DATA_DIR = "data"
+DATA_DIR = "data/datasets"
 RESULT_DIR = "results_experiments"
 # Wildcards parameters
 sim_num = range(1)
 data_split = ["train", "test"]
-filtered_sequences_lengths = [12, 15, 20]
+filtered_sequences_lengths = [15]
 
 ################### EXPERIMENTAL DATA PIPELINE ###################
 
@@ -41,14 +42,23 @@ rule immuneml_process_experimental_data:
     shell:
         "immune-ml {input} {output}"
 
+# TO DO: necessary step to run sonia models (alternatively find full junction sequences)
+rule add_junction_to_experimental_data:
+    input:
+        experimental_data_cdr3 = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/"
+    output:
+        experimental_data_junction = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv"
+    run:
+        add_junction_from_cdr3(input.experimental_data_cdr3+"/datasets/dataset/dataset.tsv", output.experimental_data_junction)
+
 rule write_report_yaml_config_for_experimental_data:
     input:
         report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
-        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/"
+        experimental_data= f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv"
     output:
         report_config_file = f"{RESULT_DIR}/{{experimental_dataset}}/report_configs/experimental/report_config_{{experimental_dataset}}.yaml"
     run:
-        write_immuneml_config(input.report_template, input.experimental_data+"/datasets/dataset/dataset.tsv", output.report_config_file)
+        write_immuneml_config(input.report_template, input.experimental_data, output.report_config_file)
 
 rule run_reports_for_experimental_data:
     input:
@@ -61,11 +71,11 @@ rule run_reports_for_experimental_data:
 rule write_model_yaml_config_for_experimental_data:
     input:
         model_template = f"{INPUT_DIR}/generative_models/{{model}}.yaml",
-        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/"
+        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv"
     output:
         model_config_file = f"{RESULT_DIR}/{{experimental_dataset}}/model_configs/{{model}}/model_config_{{model}}_{{experimental_dataset}}.yaml"
     run:
-        write_immuneml_config(input.model_template, input.experimental_data+"/datasets/dataset/dataset.tsv", output.model_config_file)
+        write_immuneml_config(input.model_template, input.experimental_data, output.model_config_file)
 
 rule run_models_for_experimental_data:
     input:
@@ -115,12 +125,11 @@ rule split_generated_data_by_sequence_length:
 
 rule split_experimental_data_by_sequence_length:
     input:
-        f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/"
+        f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv"
     output:
         f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_filtered/{{experimental_dataset}}_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     run:
-        input_file = f"{input}/datasets/dataset/dataset.tsv"
-        filter_by_cdr3_length(input_file, str(output), sequence_length=wildcards.filtered_sequences_lengths)
+        filter_by_cdr3_length(str(input), str(output), sequence_length=wildcards.filtered_sequences_lengths)
 
 rule compare_aa_frequency_distribution_generated_vs_experimental:
     input:
@@ -134,13 +143,12 @@ rule compare_aa_frequency_distribution_generated_vs_experimental:
 rule compare_kmer_distribution_for_experimental_data:
     input:
         generated_data = f"{RESULT_DIR}/{{experimental_dataset}}/models/{{model}}/{{model}}_{{experimental_dataset}}",
-        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format/"
+        experimental_data = f"{RESULT_DIR}/{{experimental_dataset}}/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv"
     output:
         directory(f"{RESULT_DIR}/{{experimental_dataset}}/analyses/{{model}}/kmer_freq/kmer_compare_{{model}}_{{experimental_dataset}}")
     run:
         input_generated_data = glob.glob(f"{input.generated_data}/gen_model/exported_gen_dataset/*.tsv")[0]
-        input_experimental_data = f"{input.experimental_data}/datasets/dataset/dataset.tsv"
-        run_kmer_analysis(input_generated_data, wildcards.model, input_experimental_data, "experimental data", output, k=3, kmer_count_threshold=5)
+        run_kmer_analysis(input_generated_data, wildcards.model, str(input.experimental_data), "experimental data", output, k=3, kmer_count_threshold=5)
 
 
 '''
