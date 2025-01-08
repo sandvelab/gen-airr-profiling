@@ -1,7 +1,6 @@
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from scipy.stats import entropy, gaussian_kde
 
 
 def load_data(file_paths_list):
@@ -46,7 +45,7 @@ def plot_seq_len_distributions_with_error_bars(merged_simulations_df, generated_
 
         x=merged_simulations_df['sequence_lengths'],
         y=merged_simulations_df['mean'],
-        name='Simulated (test)',
+        name='Test',
         error_y=dict(
             type='data',
             array=merged_simulations_df['std_dev'],
@@ -75,7 +74,7 @@ def plot_seq_len_distributions_with_error_bars(merged_simulations_df, generated_
     figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=x_tick_vals),
                          yaxis=dict(tickmode='array'),
                          template="plotly_white",
-                         title=f"Sequence Length Distributions of simulated test data and {model_name} data",
+                         title=f"Sequence Length Distributions of test data and {model_name} data",
                          xaxis_title="Sequence lengths", yaxis_title="Frequency",
                          font=dict(size=22))
 
@@ -91,7 +90,7 @@ def plot_seq_len_distributions(simulated_file, generated_file, image_file, model
         df['counts'] = df['counts'] / df['counts'].sum()
         df.rename(columns={'counts': 'frequencies'}, inplace=True)
 
-    df_combine = {"Simulated (train)": data1, f"Generated ({model_name})": data2}
+    df_combine = {"Train": data1, f"Generated ({model_name})": data2}
     df_combine = pd.concat(df_combine, names=["dataset"]).reset_index(level=0)
 
     # Create distribution plot with px
@@ -100,7 +99,7 @@ def plot_seq_len_distributions(simulated_file, generated_file, image_file, model
     figure.update_layout(barmode='group', xaxis=dict(tickmode='array', tickvals=df_combine["sequence_lengths"]),
                          yaxis=dict(tickmode='array'),
                          template="plotly_white",
-                         title=f"Sequence Length Distributions of simulated train data and generated ({model_name}) data",
+                         title=f"Sequence Length Distributions of train data and generated ({model_name}) data",
                          font=dict(size=22))
 
     figure.write_html(image_file)
