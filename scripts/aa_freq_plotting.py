@@ -92,27 +92,27 @@ def adjust_alpha_for_dependent_tests(aa_dataframe, positional_counts, alpha=0.05
     return adjusted_alpha
 
 
-def find_significant_amino_acids(df_simulated, df_model):
+def find_significant_amino_acids(df_original, df_model):
     # Extract amino acid counts by position
-    pos_counts_simulated = extract_aa_counts_by_pos(df_simulated)
+    pos_counts_original = extract_aa_counts_by_pos(df_original)
     pos_counts_model = extract_aa_counts_by_pos(df_model)
 
     # TO DO: handle the case when the positions are not the same
     # Check if the positions are the same
-    if pos_counts_simulated.keys() != pos_counts_model.keys():
+    if pos_counts_original.keys() != pos_counts_model.keys():
         raise ValueError("The positions are not the same between the two datasets.")
 
     # Perform Fisher's exact test for each amino acid at each position
     p_values = []
     tests = []
-    for pos in pos_counts_simulated.keys():
-        for aa in pos_counts_simulated[pos].keys():
-            p_value = run_fisher_test(aa, pos, pos_counts_simulated, pos_counts_model)
+    for pos in pos_counts_original.keys():
+        for aa in pos_counts_original[pos].keys():
+            p_value = run_fisher_test(aa, pos, pos_counts_original, pos_counts_model)
             p_values.append(p_value)
             tests.append((aa, pos))
 
     # TO DO: decide whether to adjust alpha for multiple testing
-    adjusted_alpha = adjust_alpha_for_dependent_tests(df_simulated, pos_counts_simulated, alpha=0.05)
+    adjusted_alpha = adjust_alpha_for_dependent_tests(df_original, pos_counts_original, alpha=0.05)
     #_, adjusted_p_values, _, _ = multipletests(p_values, alpha=adjusted_alpha, method='fdr_bh')
     _, adjusted_p_values, _, _ = multipletests(p_values, method='fdr_bh')
 
@@ -122,31 +122,31 @@ def find_significant_amino_acids(df_simulated, df_model):
     for i, (aa, pos) in enumerate(tests):
         if adjusted_p_values[i] < 0.05:
             significant_p_values[(aa, pos)] = adjusted_p_values[i]
-            log_fold_change = calculate_log_fold_change(aa, pos, pos_counts_simulated, pos_counts_model)
+            log_fold_change = calculate_log_fold_change(aa, pos, pos_counts_original, pos_counts_model)
             log_fold_changes[" ".join([aa, str(pos)])] = log_fold_change
 
     return significant_p_values, log_fold_changes
 
 
-def run_fisher_test(aa, pos, pos_counts_simulated, pos_counts_model):
-    count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
+def run_fisher_test(aa, pos, pos_counts_original, pos_counts_model):
+    count_aa_original, count_other_aa_original = get_aa_counts(aa, pos, pos_counts_original)
     count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
 
-    contingency_table = [[count_aa_simulated, count_other_aa_simulated],
+    contingency_table = [[count_aa_original, count_other_aa_original],
                          [count_aa_model, count_other_aa_model]]
     _, p_value = stats.fisher_exact(contingency_table)
 
     return p_value
 
 
-def calculate_log_fold_change(aa, pos, pos_counts_simulated, pos_counts_model):
-    count_aa_simulated, count_other_aa_simulated = get_aa_counts(aa, pos, pos_counts_simulated)
+def calculate_log_fold_change(aa, pos, pos_counts_original, pos_counts_model):
+    count_aa_original, count_other_aa_original = get_aa_counts(aa, pos, pos_counts_original)
     count_aa_model, count_other_aa_model = get_aa_counts(aa, pos, pos_counts_model)
     # compute log fold change
     # current implementation avoids division by zero, it's just a hack. TO DO: find a better way
-    count_aa_simulated = count_aa_simulated if count_aa_simulated > 0 else 1e-10
+    count_aa_original = count_aa_original if count_aa_original > 0 else 1e-10
     fold_change = ((count_aa_model / (count_aa_model + count_other_aa_model)) /
-                   (count_aa_simulated / (count_aa_simulated + count_other_aa_simulated)))
+                   (count_aa_original / (count_aa_original + count_other_aa_original)))
     fold_change = fold_change if fold_change > 0 else 1e-10
     log_fold_change = np.log2(fold_change)
     return log_fold_change
@@ -175,8 +175,8 @@ def make_significance_df(df_model, significant_p_values):
     return significance_df
 
 
-def plot_logo_simulated(df_simulated, output_dir, num_sequences):
-    frequency_df = make_logo_df(df_simulated)
+def plot_logo_original(df_original, output_dir, num_sequences):
+    frequency_df = make_logo_df(df_original)
 
     # Create a color dictionary for the amino acids
     color_dict = get_aa_color_map()
@@ -191,10 +191,10 @@ def plot_logo_simulated(df_simulated, output_dir, num_sequences):
     logo.style_spines(visible=False)
     logo.style_spines(spines=['left', 'bottom'], visible=True)
     logo.style_xticks(rotation=90, fmt='%d')
-    plt.title(f"Amino Acid Frequency Logo for simulated sequences ({num_sequences} sequences)")
+    plt.title(f"Amino Acid Frequency Logo for original sequences ({num_sequences} sequences)")
     plt.ylabel("Frequency")
     plt.xlabel("Position")
-    plt.savefig(f"{output_dir}/simulated_logo.png")
+    plt.savefig(f"{output_dir}/original_logo.png")
 
 
 def plot_logo_model(df_model, significant_p_values, model_name, output_dir, num_sequences):
@@ -229,10 +229,10 @@ def plot_logo_model(df_model, significant_p_values, model_name, output_dir, num_
     plt.savefig(f"{output_dir}/{model_name}_logo.png")
 
 
-def plot_logo_with_background_frequencies(model_freq, simulated_freq, output_dir, model_name):
+def plot_logo_with_background_frequencies(model_freq, original_freq, output_dir, model_name):
     # TO DO: make two-directional logo
     foreground_df = make_logo_df(model_freq)
-    background_df = make_logo_df(simulated_freq)
+    background_df = make_logo_df(original_freq)
 
     # Create logo plot for foreground frequencies
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -245,7 +245,7 @@ def plot_log_fold_changes(log_fold_changes, output_dir, model_name):
 
     # Create a bar plot
     figure = px.bar(df_fold_changes, x='AA + pos', y='log(fold change)',
-                 title=f'Fold changes of significantly different amino acid counts for {model_name} vs. simulated',
+                 title=f'Fold changes of significantly different amino acid counts for {model_name} vs. original',
                  color_discrete_map=PlotlyUtil.get_amino_acid_color_map(),
                  labels={'log(fold change)': 'log(Fold Change)', 'AA + pos': 'Amino Acid and Position'})
 
@@ -271,7 +271,7 @@ def main():
     shared_region_type = get_shared_region_type(df1, df2)
 
     # Get dataframes for the two files
-    df_simulated, num_sequences_simulated = get_aa_counts_frequencies_df(df1, args.filtered_sequences_lengths, shared_region_type)
+    df_original, num_sequences_original = get_aa_counts_frequencies_df(df1, args.filtered_sequences_lengths, shared_region_type)
     df_model, num_sequences_model = get_aa_counts_frequencies_df(df2, args.filtered_sequences_lengths, shared_region_type)
 
     # Create output directory if it doesn't exist
@@ -279,16 +279,16 @@ def main():
         os.makedirs(args.output_dir)
 
     # if given length is not present, return log file
-    if df_simulated is None or df_model is None:
+    if df_original is None or df_model is None:
         with open(args.output_dir + "/aa_freq_plotting.log", "w") as f:
             f.write("No sequence data found for the given length.")
         return
 
     # Run Fisher's exact test
-    significant_p_values, fold_changes = find_significant_amino_acids(df_simulated, df_model)
+    significant_p_values, fold_changes = find_significant_amino_acids(df_original, df_model)
 
     # Plot logos
-    plot_logo_simulated(df_simulated, args.output_dir, num_sequences_simulated)
+    plot_logo_original(df_original, args.output_dir, num_sequences_original)
     plot_logo_model(df_model, significant_p_values, args.model_name, args.output_dir, num_sequences_model)
 
     # Plot log fold changes
