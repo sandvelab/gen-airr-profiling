@@ -1,0 +1,29 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    my_markov_model:
+      MarkovModel:
+        locus: beta
+        sequence_type: amino_acid
+        region_type: IMGT_JUNCTION
+  reports:
+    my_KLKmerCompare_report: KLKmerComparison
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: my_markov_model
+    gen_examples_count: 1000
+    number_of_processes: 4
+    reports:
+      - my_KLKmerCompare_report
