@@ -19,12 +19,11 @@ definitions:
         j_gene_embed_dim: 13
         latent_dim: 20
         linear_nodes_count: 75
-        num_epochs: 50
-        patience: 2 #0
-        pretrains: 0
+        num_epochs: 100
+        patience: 20
+        pretrains: 10
         v_gene_embed_dim: 30
         warmup_epochs: 20
-        # add region_type: ?
 
   reports:
     my_KLKmerCompare_report: KLKmerComparison
