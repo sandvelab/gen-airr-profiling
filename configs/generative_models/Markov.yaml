@@ -9,24 +9,21 @@ definitions:
         region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
-    my_sonnia_model:
-      SoNNia:
-        batch_size: 10000
-        epochs: 30 #50
-        default_model_name: 'humanIGH' #'humanTRB'
-        deep: True
-        include_joint_genes: True
-        n_gen_seqs: 50000
+    my_markov_model:
+      MarkovModel:
+        locus: beta
+        sequence_type: amino_acid
+        region_type: IMGT_JUNCTION
   reports:
     my_KLKmerCompare_report: KLKmerComparison
 
 instructions:
   gen_model:
     type: TrainGenModel
-    export_combined_dataset: True
+    export_combined_dataset: False
     dataset: dataset
-    method: my_sonnia_model
-    gen_examples_count: 10000
+    method: my_markov_model
+    gen_examples_count: 1000
     number_of_processes: 4
     reports:
       - my_KLKmerCompare_report
