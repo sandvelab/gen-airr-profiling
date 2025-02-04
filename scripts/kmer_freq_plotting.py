@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-import plotly.express as px
+import plotly.graph_objects as go
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 from scripts.utils import get_shared_region_type
@@ -80,27 +80,29 @@ def plot_kmers_distribution(kmer_comparison_df, name1, name2, output_dir, k=3):
 
     significant_count = kmer_comparison_df['significance'].value_counts().get(True, 0)
 
-    fig = px.scatter(
-        kmer_comparison_df,
-        x=f"pseudo_{name1}_freq",
-        y=f"pseudo_{name2}_freq",
-        hover_name="kmer",
-        color="significance",
-        color_discrete_map={True: "red", False: "blue"},
-        labels={f"pseudo_{name1}_freq": f"Pseudo-log {name1} frequency",
-                f"pseudo_{name2}_freq": f"Pseudo-log {name2} frequency"},
-        title=f"Scatter plot of {name1} vs {name2} {k}-mer frequencies ({significant_count} significantly different {k}-mers, {len(kmer_comparison_df)} tests)",
-        width=1000,
-        height=1000,
-        opacity=0.3,
-        text="label"
-    )
+    fig = go.Figure()
+
+    fig.add_trace(go.Scattergl(
+        x=kmer_comparison_df[f"pseudo_{name1}_freq"],
+        y=kmer_comparison_df[f"pseudo_{name2}_freq"],
+        mode='markers',
+        text=kmer_comparison_df["label"],
+        hovertext=kmer_comparison_df["kmer"],
+        hoverinfo="text",
+        marker = dict(
+            size=5,
+            opacity=0.3,
+            color=kmer_comparison_df["significance"].map({True: "red", False: "blue"})
+        )
+    ))
 
     fig.update_layout(
+        title=f"Scatter plot of {name1} vs {name2} {k}-mer frequencies ({significant_count} significantly different {k}-mers, {len(kmer_comparison_df)} tests)",
         xaxis_title=f"{name1} frequency (pseudo-log scale)",
-        yaxis_title=f"{name2} frequency (pseudo-log scale)"
+        yaxis_title=f"{name2} frequency (pseudo-log scale)",
+        width=1000,
+        height=1000
     )
-    fig.update_traces(textposition="bottom right")
 
     fig.write_html(output_dir + "/kmer_comparison.html")
 
