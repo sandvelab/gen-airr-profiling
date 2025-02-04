@@ -47,7 +47,7 @@ def plot_js_divergences_heatmap(js_divergence_matrix):
     sns.clustermap(js_divergence_matrix, annot=True, method='average', metric='euclidean')
     plt.title("Jensen-Shannon Divergence")
     plt.tight_layout()
-    plt.savefig('JS_divergence.png')
+    plt.savefig('JS_divergence_epi.png')
 
 
 def plot_js_divergences_hierarchical_clustering(js_divergence_df):
@@ -68,7 +68,8 @@ def plot_js_divergences_hierarchical_clustering(js_divergence_df):
     # Plot
     fig = go.Figure(data=[heatmap])
     fig.update_layout(title="Clustered Heatmap", xaxis_title="Columns", yaxis_title="Rows")
-    fig.show()
+    #fig.show()
+    fig.write_html("JS_divergence_hierarchical_clustering_epi.html")
 
 
 def plot_js_divergences_kmeans_clustering(js_divergence_df, n_clusters=3):
@@ -108,7 +109,8 @@ def plot_js_divergences_kmeans_clustering(js_divergence_df, n_clusters=3):
         xaxis_tickangle=-45
     )
 
-    fig.show()
+    #fig.show()
+    fig.write_html("JS_divergence_kmeans_clustering_epi.html")
 
 
 def run_sequence_overlap_analysis(generated1, generated2):
@@ -120,6 +122,7 @@ def run_sequence_overlap_analysis(generated1, generated2):
 
 
 def main():
+    # test on phenotype data
     # all_datasets = ['../results_experiments/6323_Spleen_CD8/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
     #             '../results_experiments/6323_Spleen_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
     #             '../results_experiments/6323_Spleen_Tconv/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
@@ -128,6 +131,17 @@ def main():
     #              '../results_experiments/6323_Spleen_Treg/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Treg/gen_model/exported_gen_dataset/SoNNiaDataset.tsv']
     #
     # all_datasets_names = ['Spleen_CD8_train', 'Spleen_CD8_SoNNia', 'Spleen_Tconv_train', 'Spleen_Tconv_SoNNia', 'Spleen_Treg_train', 'Spleen_Treg_SoNNia']
+
+    # all_datasets = [
+    #     '../../results_experiments/6323_intra-islet_CD4/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_intra-islet_CD4/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #     '../../results_experiments/6323_intra-islet_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_intra-islet_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #     '../../results_experiments/6323_SPL_B_cell/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_SPL_B_cell/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #     '../../results_experiments/6323_Spleen_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #     '../../results_experiments/6323_Spleen_Tconv/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Tconv/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #     '../../results_experiments/6323_Spleen_Treg/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Treg/gen_model/exported_gen_dataset/SoNNiaDataset.tsv']
+    #
+    # all_datasets_names = ['intra-islet_CD4_SoNNia', 'intra-islet_CD8_SoNNia', 'SPL_B_cell_SoNNia','Spleen_CD8_SoNNia', 'Spleen_Tconv_SoNNia',
+    #                       'Spleen_Treg_SoNNia']
 
     # Test on epitope-specific data
     all_datasets = ['../../results_experiments/IEDB_AVFDRKSDAK_human_TCR_filtered_sample1/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_IEDB_AVFDRKSDAK_human_TCR_filtered_sample1/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
@@ -157,8 +171,8 @@ def main():
     # Convert matrix to dataframe with all_datasets_names as index and columns
     js_divergences_matrix = pd.DataFrame(js_divergences_matrix, index=all_datasets_names, columns=all_datasets_names)
 
-    #plot_js_divergences_heatmap(js_divergences_matrix)
-    #plot_js_divergences_hierarchical_clustering(js_divergences_matrix)
+    plot_js_divergences_heatmap(js_divergences_matrix)
+    plot_js_divergences_hierarchical_clustering(js_divergences_matrix)
     plot_js_divergences_kmeans_clustering(js_divergences_matrix, n_clusters=3)
 
 

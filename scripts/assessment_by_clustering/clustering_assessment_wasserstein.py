@@ -58,14 +58,25 @@ def run_sequence_overlap_analysis(generated1, generated2):
 
 
 def main():
-    all_datasets = ['../results_experiments/6323_Spleen_CD8/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
-                '../results_experiments/6323_Spleen_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
-                '../results_experiments/6323_Spleen_Tconv/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
-                 '../results_experiments/6323_Spleen_Tconv/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Tconv/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
-                '../results_experiments/6323_Spleen_Treg/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
-                 '../results_experiments/6323_Spleen_Treg/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Treg/gen_model/exported_gen_dataset/SoNNiaDataset.tsv']
+    # all_datasets = ['../results_experiments/6323_Spleen_CD8/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
+    #             '../results_experiments/6323_Spleen_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #             '../results_experiments/6323_Spleen_Tconv/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
+    #              '../results_experiments/6323_Spleen_Tconv/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Tconv/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+    #             '../results_experiments/6323_Spleen_Treg/data_immuneml_format_with_junction/datasets/dataset/dataset.tsv',
+    #              '../results_experiments/6323_Spleen_Treg/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Treg/gen_model/exported_gen_dataset/SoNNiaDataset.tsv']
+    #
+    # all_datasets_names = ['Spleen_CD8_train', 'Spleen_CD8_SoNNia', 'Spleen_Tconv_train', 'Spleen_Tconv_SoNNia', 'Spleen_Treg_train', 'Spleen_Treg_SoNNia']
 
-    all_datasets_names = ['Spleen_CD8_train', 'Spleen_CD8_SoNNia', 'Spleen_Tconv_train', 'Spleen_Tconv_SoNNia', 'Spleen_Treg_train', 'Spleen_Treg_SoNNia']
+    all_datasets = [
+        '../../results_experiments/6323_intra-islet_CD4/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_intra-islet_CD4/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+        '../../results_experiments/6323_intra-islet_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_intra-islet_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+        '../../results_experiments/6323_SPL_B_cell/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_SPL_B_cell/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+        '../../results_experiments/6323_Spleen_CD8/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_CD8/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+        '../../results_experiments/6323_Spleen_Tconv/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Tconv/gen_model/exported_gen_dataset/SoNNiaDataset.tsv',
+        '../../results_experiments/6323_Spleen_Treg/models/soNNia_ngs50000_epoch50/soNNia_ngs50000_epoch50_6323_Spleen_Treg/gen_model/exported_gen_dataset/SoNNiaDataset.tsv']
+
+    all_datasets_names = ['intra-islet_CD4_SoNNia', 'intra-islet_CD8_SoNNia', 'SPL_B_cell_SoNNia','Spleen_CD8_SoNNia', 'Spleen_Tconv_SoNNia',
+                          'Spleen_Treg_SoNNia']
 
     wasserstein_distances_matrix = []
     for i in range(len(all_datasets)):
