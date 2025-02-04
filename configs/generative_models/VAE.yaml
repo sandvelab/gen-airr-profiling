@@ -24,6 +24,7 @@ definitions:
         pretrains: 10
         v_gene_embed_dim: 30
         warmup_epochs: 20
+        validation_split: 0.1
 
   reports:
     my_KLKmerCompare_report: KLKmerComparison
@@ -38,7 +39,7 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: my_vae_model
-    gen_examples_count: 10000
+    gen_examples_count: 1000
     number_of_processes: 4
     reports:
       - my_KLKmerCompare_report
