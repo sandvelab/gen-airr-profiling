@@ -12,12 +12,10 @@ definitions:
     my_sonia_model:
       SONIA:
         batch_size: 10000
-        epochs: 50 #50
-        default_model_name: 'humanTRB' #'humanIGH'
+        epochs: 50
+        default_model_name: 'humanIGL'
         include_joint_genes: True
         n_gen_seqs: 50000
-  reports:
-    my_KLKmerCompare_report: KLKmerComparison
 
 instructions:
   gen_model:
@@ -25,7 +23,5 @@ instructions:
     export_combined_dataset: True
     dataset: dataset
     method: my_sonia_model
-    gen_examples_count: 1000
+    gen_examples_count: 50000
     number_of_processes: 4
-    reports:
-      - my_KLKmerCompare_report

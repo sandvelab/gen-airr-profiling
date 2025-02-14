@@ -15,7 +15,6 @@ definitions:
         sequence_type: amino_acid
         region_type: IMGT_JUNCTION
   reports:
-    my_KLKmerCompare_report: KLKmerComparison
     my_pwm_report: PWMSummary
 
 instructions:
@@ -24,8 +23,7 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: my_pwm_model
-    gen_examples_count: 1000
+    gen_examples_count: 50000
     number_of_processes: 4
     reports:
-      - my_KLKmerCompare_report
       - my_pwm_report

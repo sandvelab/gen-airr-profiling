@@ -27,7 +27,6 @@ definitions:
         validation_split: 0.1
 
   reports:
-    my_KLKmerCompare_report: KLKmerComparison
     my_vae_report:
       VAESummary:
         dim_dist_cols: 4
@@ -39,8 +38,7 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: my_vae_model
-    gen_examples_count: 1000
+    gen_examples_count: 50000
     number_of_processes: 4
     reports:
-      - my_KLKmerCompare_report
       - my_vae_report
