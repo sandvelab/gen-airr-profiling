@@ -1,0 +1,46 @@
+# Parameters
+INPUT_DIR = "configs/sequence_characteristics_simulated"
+RESULT_DIR = "results/sequence_characteristics_simulated"
+# Wildcards parameters
+datasets = glob_wildcards(f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml").dataset
+models = glob_wildcards(f"{INPUT_DIR}/generative_models/{{model}}.yaml").model
+sim_num = range(5)
+
+rule all:
+    input:
+        expand(f"{RESULT_DIR}/{{dataset}}/simulations/phenotype_{{sim_num}}/",
+               dataset=datasets, sim_num=sim_num)
+
+rule run_data_simulations:
+    input:
+        f"{INPUT_DIR}/data_simulations/{{dataset}}.yaml"
+    output:
+        directory(f"{RESULT_DIR}/{{dataset}}/simulations/phenotype_{{sim_num}}/")
+    shell:
+        "simulate {input} {output}"
+
+# rule train_models:
+#     input:
+#         f"{INPUT_DIR}/generative_models/{{model}}.yaml",
+#         directory(f"{RESULT_DIR}/{{dataset}}/simulations/phenotype_{{phenotype}}_{{sim_num}}/")
+#     output:
+#         directory(f"{RESULT_DIR}/{{dataset}}/models/{{model}}_{{phenotype}}_{{sim_num}}/")
+#     shell:
+#         "train {input} {output}"
+#
+# rule sample_sequences:
+#     input:
+#         directory(f"{RESULT_DIR}/{{dataset}}/models/{{model}}_{{phenotype}}_{{sim_num}}/")
+#     output:
+#         f"{RESULT_DIR}/{{dataset}}/samples/samples_{{model}}_{{phenotype}}_{{sim_num}}.tsv"
+#     shell:
+#         "sample {input} {output}"
+#
+# rule cluster_and_plot:
+#     input:
+#         expand(f"{RESULT_DIR}/{{dataset}}/samples/samples_{{model}}_{{phenotype}}_{{sim_num}}.tsv",
+#                dataset=datasets, model=models, phenotype=["variantA", "variantB"], sim_num=sim_num)
+#     output:
+#         f"{RESULT_DIR}/plots/{{dataset}}.png"
+#     shell:
+#         "cluster_and_plot {input} {output}"
