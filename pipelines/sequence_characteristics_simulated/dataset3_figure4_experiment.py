@@ -12,7 +12,7 @@ def main():
     os.makedirs(helper_dir, exist_ok=True)
 
     for i in range(5):
-        generate_rare_and_frequent_olga_sequences(5, "humanTRB", i, f"{helper_dir}/olga_sequences_{i}.tsv", f"{helper_dir}/pgens_file_path_{i}.tsv",
+        generate_rare_and_frequent_olga_sequences(25000, "humanTRB", i, f"{helper_dir}/olga_sequences_{i}.tsv", f"{helper_dir}/pgens_file_path_{i}.tsv",
                                               f"{simulations_dir}/frequent_{i}.tsv", f"{simulations_dir}/rare_{i}.tsv")
 
     model_configs_dir = "model_configs"
