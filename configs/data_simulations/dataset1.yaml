@@ -18,10 +18,10 @@ definitions:
       sim_items:
         sig1:
           generative_model:
-            default_model_name: humanTRB  # humanIGH
+            default_model_name: humanTRB
             type: OLGA
           is_noise: false
-          number_of_examples: 100 # simulate 100 TCRs
+          number_of_examples: 100
           signals:
             signal1: 1
         noSig:
@@ -29,8 +29,8 @@ definitions:
             default_model_name: humanTRB
             type: OLGA
           is_noise: false
-          number_of_examples: 900 # simulate 900 TCRs
-          signals: {} # no signal
+          number_of_examples: 900
+          signals: {}
 
 instructions:
   dataset:
