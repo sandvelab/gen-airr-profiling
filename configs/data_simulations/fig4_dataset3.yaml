@@ -1,0 +1,167 @@
+definitions:
+  motifs:
+    motif1:
+      file_path: motif_patterns/motif1.jaspar
+      threshold: 2
+    motif2:
+      file_path: motif_patterns/motif2.jaspar
+      threshold: 2
+    motif3:
+      file_path: motif_patterns/motif3.jaspar
+      threshold: 2
+    motif4:
+      file_path: motif_patterns/motif4.jaspar
+      threshold: 2
+    motif5:
+      file_path: motif_patterns/motif5.jaspar
+      threshold: 2
+    motif6:
+      file_path: motif_patterns/motif6.jaspar
+      threshold: 2
+    motif7:
+      file_path: motif_patterns/motif7.jaspar
+      threshold: 2
+    motif8:
+      file_path: motif_patterns/motif8.jaspar
+      threshold: 2
+    motif9:
+      file_path: motif_patterns/motif9.jaspar
+      threshold: 2
+    motif10:
+      file_path: motif_patterns/motif10.jaspar
+      threshold: 2
+  signals:
+    signal1:
+      motifs:
+        - motif1
+    signal2:
+      motifs:
+        - motif2
+    signal3:
+      motifs:
+        - motif3
+    signal4:
+      motifs:
+        - motif4
+    signal5:
+      motifs:
+        - motif5
+    signal6:
+      motifs:
+        - motif6
+    signal7:
+      motifs:
+        - motif7
+    signal8:
+      motifs:
+        - motif8
+    signal9:
+      motifs:
+        - motif9
+    signal10:
+      motifs:
+        - motif10
+  simulations:
+    sim1:
+      is_repertoire: false
+      paired: false
+      sequence_type: amino_acid
+      simulation_strategy: Implanting
+      remove_seqs_with_signals: true
+      sim_items:
+        sig1:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal1: 1
+        sig2:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal2: 1
+        sig3:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal3: 1
+        sig4:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal4: 1
+        sig5:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal5: 1
+        sig6:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal6: 1
+        sig7:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal7: 1
+        sig8:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal8: 1
+        sig9:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal9: 1
+        sig10:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 1250
+          signals:
+            signal10: 1
+        noSig:
+          generative_model:
+            default_model_name: humanTRB
+            type: OLGA
+          is_noise: false
+          number_of_examples: 12500
+          signals: {}
+
+instructions:
+  dataset:
+    export_p_gens: false
+    max_iterations: 500000
+    number_of_processes: 10
+    sequence_batch_size: 1000000
+    simulation: sim1
+    type: LigoSim
