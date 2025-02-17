@@ -70,6 +70,7 @@ definitions:
       remove_seqs_with_signals: true
       sim_items:
         sig1:
+          seed: 1
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -78,6 +79,7 @@ definitions:
           signals:
             signal1: 1
         sig2:
+          seed: 2
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -86,6 +88,7 @@ definitions:
           signals:
             signal2: 1
         sig3:
+          seed: 3
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -94,6 +97,7 @@ definitions:
           signals:
             signal3: 1
         sig4:
+          seed: 4
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -102,6 +106,7 @@ definitions:
           signals:
             signal4: 1
         sig5:
+          seed: 5
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -110,6 +115,7 @@ definitions:
           signals:
             signal5: 1
         sig6:
+          seed: 6
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -118,6 +124,7 @@ definitions:
           signals:
             signal6: 1
         sig7:
+          seed: 7
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -126,6 +133,7 @@ definitions:
           signals:
             signal7: 1
         sig8:
+          seed: 8
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -134,6 +142,7 @@ definitions:
           signals:
             signal8: 1
         sig9:
+          seed: 9
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -142,6 +151,7 @@ definitions:
           signals:
             signal9: 1
         sig10:
+          seed: 10
           generative_model:
             default_model_name: humanTRB
             type: OLGA
@@ -150,6 +160,7 @@ definitions:
           signals:
             signal10: 1
         noSig:
+          seed: 11
           generative_model:
             default_model_name: humanTRB
             type: OLGA
