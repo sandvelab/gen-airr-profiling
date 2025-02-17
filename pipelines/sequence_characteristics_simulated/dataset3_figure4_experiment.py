@@ -1,8 +1,53 @@
 import os
-
-import numpy as np
+from pathlib import Path
 import pandas as pd
+import yaml
+from immuneML.app.ImmuneMLApp import ImmuneMLApp
 
+
+def main():
+    simulations_dir = "simulated_data"
+    helper_dir = "helper_data"
+    os.makedirs(simulations_dir, exist_ok=True)
+    os.makedirs(helper_dir, exist_ok=True)
+
+    for i in range(5):
+        generate_rare_and_frequent_olga_sequences(5, "humanTRB", i, f"{helper_dir}/olga_sequences_{i}.tsv", f"{helper_dir}/pgens_file_path_{i}.tsv",
+                                              f"{simulations_dir}/frequent_{i}.tsv", f"{simulations_dir}/rare_{i}.tsv")
+
+    model_configs_dir = "model_configs"
+    output_dir = "models"
+
+    for i in range(5):
+        for model in ["PWM", "soNNia"]:
+            os.makedirs(f"{model_configs_dir}/{model}", exist_ok=True)
+            write_immuneml_config(f"generative_models/{model}.yaml", f"{simulations_dir}/frequent_{i}.tsv", f"{model_configs_dir}/{model}/frequent_{i}.yaml")
+            write_immuneml_config(f"generative_models/{model}.yaml", f"{simulations_dir}/rare_{i}.tsv", f"{model_configs_dir}/{model}/rare_{i}.yaml")
+
+    for model in ["PWM", "soNNia"]:
+        model_configs_path = f"{model_configs_dir}/{model}"
+        immuneml_inputs = os.listdir(model_configs_path)
+        for input in immuneml_inputs:
+            run_immuneml_command(f"{model_configs_path}/{input}", f"{output_dir}/{model}/{input.strip('.yaml')}")
+
+def run_immuneml_app(input_file, output_dir):
+    app = ImmuneMLApp(specification_path=Path(input_file), result_path=Path(output_dir))
+    app.run()
+
+def run_immuneml_command(input_file, output_dir):
+    command = f"immune-ml {input_file} {output_dir} &"
+    exit_code = os.system(command)
+    if exit_code != 0:
+        raise RuntimeError(f"Running immuneML failed:{command}.")
+
+def write_immuneml_config(input_model_template, input_simulated_data, output_config_file):
+    with open(input_model_template, 'r') as file:
+        model_template_config = yaml.safe_load(file)
+
+    model_template_config['definitions']['datasets']['dataset']['params']['path'] = input_simulated_data
+
+    with open(output_config_file, 'w') as file:
+        yaml.safe_dump(model_template_config, file)
 
 def generate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, sequnces_file_path, pgens_file_path,
                                             frequent_sequences_file_path, rare_sequences_file_path):
@@ -37,35 +82,6 @@ def generate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, 
     frequent_filtered = olga_sequences[olga_sequences["junction_aa"].isin(frequent_sequences)]
     frequent_filtered.to_csv(frequent_sequences_file_path, sep='\t', index=False)
 
-
-
-def generate_experimental_and_olga_sequences(number_of_sequences, model, seed, olga_sequences_file_path,
-                                               experimental_data_file_path, experimental_sampled_data_file_path):
-    """
-    This function generates number_of_sequences sequences using Olga tool and samples number_of_sequences from
-    experimental data and stores them in mixed_sequences_file_path.
-    :param number_of_sequences: number of sequences to generate and sample from experimental data
-    :param model: olga model to use for generating sequences (for example: humanTRB)
-    :param seed: seed for random number generator
-    :param olga_sequences_file_path: path to the file where the olga generated sequences will be stored
-    :param experimental_data_file_path: path to the file with experimental data. The file should contain columns with
-    the following names: "sequence_aa", "v_call", "j_call" and should be in tsv format.
-    :param experimental_sampled_data_file_path: path to the file where the sampled experimental sequences will be stored
-    :return:
-    """
-    generate_pure_olga_sequences(number_of_sequences, model, olga_sequences_file_path, seed)
-
-    columns_to_read = ["sequence_aa", "v_call", "j_call"]
-    experimental_data = pd.read_csv(experimental_data_file_path, sep='\t', usecols=columns_to_read)
-    if len(experimental_data) < number_of_sequences:
-        raise ValueError(f"Not enough sequences! Requested {number_of_sequences}, but only {len(experimental_data)} "
-                         f"available.")
-
-    np.random.seed(seed)
-    experimental_sequences = experimental_data.sample(n=number_of_sequences, random_state=seed)
-    experimental_sequences.to_csv(experimental_sampled_data_file_path, sep='\t', index=False)
-
-
 def generate_pure_olga_sequences(number_of_sequences, model, output_file_path, seed):
     """
     This function generates number_of_sequences sequences using Olga tool and stores them in output_file_path.
@@ -95,3 +111,7 @@ def compute_pgen(sequences_file_path, pgens_file_path, model):
     exit_code = os.system(command)
     if exit_code != 0:
         raise RuntimeError(f"Running olga tool failed:{command}.")
+
+
+if __name__ == "__main__":
+    main()

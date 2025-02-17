@@ -1,0 +1,35 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        columns_to_load:
+          - junction_aa
+          - v_call
+          - j_call
+        separator: "\t"
+  ml_methods:
+    my_pwm_model:
+      PWM:
+        locus: beta
+        sequence_type: amino_acid
+        region_type: IMGT_JUNCTION
+  reports:
+    my_KLKmerCompare_report: KLKmerComparison
+    my_pwm_report: PWMSummary
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: my_pwm_model
+    gen_examples_count: 1000
+    number_of_processes: 4
+    reports:
+      - my_KLKmerCompare_report
+      - my_pwm_report
