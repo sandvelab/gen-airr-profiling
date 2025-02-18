@@ -1,4 +1,5 @@
 import os
+import multiprocessing
 from pathlib import Path
 import pandas as pd
 import yaml
@@ -11,9 +12,8 @@ def main():
     os.makedirs(simulations_dir, exist_ok=True)
     os.makedirs(helper_dir, exist_ok=True)
 
-    for i in range(5):
-        generate_rare_and_frequent_olga_sequences(25000, "humanTRB", i, f"{helper_dir}/olga_sequences_{i}.tsv", f"{helper_dir}/pgens_file_path_{i}.tsv",
-                                              f"{simulations_dir}/frequent_{i}.tsv", f"{simulations_dir}/rare_{i}.tsv")
+    with multiprocessing.Pool() as pool:
+        pool.map(execute, range(5))
 
     model_configs_dir = "model_configs"
     output_dir = "final/models"
@@ -48,6 +48,12 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
 
     with open(output_config_file, 'w') as file:
         yaml.safe_dump(model_template_config, file)
+
+def execute(i):
+    generate_rare_and_frequent_olga_sequences(25000, "humanTRB", i, f"helper_data/olga_sequences_{i}.tsv",
+                                                  f"helper_data/pgens_file_path_{i}.tsv",
+                                                  f"simulated_data/frequent_{i}.tsv",
+                                                  f"simulated_data/rare_{i}.tsv")
 
 def generate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, sequnces_file_path, pgens_file_path,
                                             frequent_sequences_file_path, rare_sequences_file_path):
