@@ -7,18 +7,13 @@ definitions:
         is_repertoire: False
         paired: False
         region_type: IMGT_JUNCTION
-        columns_to_load:
-          - junction_aa
-          - v_call
-          - j_call
         separator: "\t"
   ml_methods:
-    my_sonnia_model:
-      SoNNia:
+    my_sonia_model:
+      SONIA:
         batch_size: 10000
         epochs: 50 #50
         default_model_name: 'humanTRB'
-        deep: True
         include_joint_genes: True
         n_gen_seqs: 1000000 #500000
   reports:
@@ -29,7 +24,7 @@ instructions:
     type: TrainGenModel
     export_combined_dataset: True
     dataset: dataset
-    method: my_sonnia_model
+    method: my_sonia_model
     gen_examples_count: 50000
     number_of_processes: 4
     reports:
