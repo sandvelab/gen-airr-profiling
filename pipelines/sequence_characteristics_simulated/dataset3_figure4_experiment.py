@@ -16,15 +16,15 @@ def main():
                                               f"{simulations_dir}/frequent_{i}.tsv", f"{simulations_dir}/rare_{i}.tsv")
 
     model_configs_dir = "model_configs"
-    output_dir = "models"
+    output_dir = "final/models"
 
     for i in range(5):
-        for model in ["PWM", "soNNia"]:
+        for model in ["PWM"]:
             os.makedirs(f"{model_configs_dir}/{model}", exist_ok=True)
             write_immuneml_config(f"generative_models/{model}.yaml", f"{simulations_dir}/frequent_{i}.tsv", f"{model_configs_dir}/{model}/frequent_{i}.yaml")
             write_immuneml_config(f"generative_models/{model}.yaml", f"{simulations_dir}/rare_{i}.tsv", f"{model_configs_dir}/{model}/rare_{i}.yaml")
 
-    for model in ["PWM", "soNNia"]:
+    for model in ["PWM"]:
         model_configs_path = f"{model_configs_dir}/{model}"
         immuneml_inputs = os.listdir(model_configs_path)
         for input in immuneml_inputs:
@@ -65,7 +65,8 @@ def generate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, 
     :param rare_sequences_file_path: path to the file where the rare sequences will be stored
     :return:
     """
-    generate_pure_olga_sequences(number_of_sequences, model, sequnces_file_path, seed)
+    number_of_olga_sequences = number_of_sequences * 4
+    generate_pure_olga_sequences(number_of_olga_sequences, model, sequnces_file_path, seed)
     column_names_sequences = ["nucleotide", "junction_aa", "v_call", "j_call"]
     olga_sequences = pd.read_csv(sequnces_file_path, sep='\t', names=column_names_sequences)
 
@@ -78,7 +79,7 @@ def generate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, 
     rare_filtered = olga_sequences[olga_sequences["junction_aa"].isin(rare_sequences)]
     rare_filtered.to_csv(rare_sequences_file_path, sep='\t', index=False)
 
-    frequent_sequences = pgens.iloc[number_of_sequences - number_of_sequences:]["junction_aa"]
+    frequent_sequences = pgens.iloc[number_of_olga_sequences - number_of_sequences:]["junction_aa"]
     frequent_filtered = olga_sequences[olga_sequences["junction_aa"].isin(frequent_sequences)]
     frequent_filtered.to_csv(frequent_sequences_file_path, sep='\t', index=False)
 
