@@ -34,7 +34,7 @@ def run_compairr(model_dir, model_name):
             combined_sequences_filename = f"results/{model_name}/{gen_name1}_{gen_name2}_combined.tsv"
             write_unique_and_combined_sequence_datasets_to_file(generated1, generated2, unique_sequences_filename, combined_sequences_filename)
 
-            compairr_command = f"compairr -x {unique_sequences_filename} {combined_sequences_filename} -d 1 -f -t 8 -o results/{model_name}/{gen_name1}_{gen_name2}_rep_overlap.tsv -p results/{model_name}/{gen_name1}_{gen_name2}_rep_overlap_pairs.tsv --log results/{model_name}/{gen_name1}_{gen_name2}_log.txt --indels"
+            compairr_command = f"./compairr-1.13.0-linux-x86_64 -x {unique_sequences_filename} {combined_sequences_filename} -d 1 -f -t 8 -o results/{model_name}/{gen_name1}_{gen_name2}_rep_overlap.tsv -p results/{model_name}/{gen_name1}_{gen_name2}_rep_overlap_pairs.tsv --log results/{model_name}/{gen_name1}_{gen_name2}_log.txt --indels"
 
             if model_name == "PWM":
                 compairr_command += " -g"
