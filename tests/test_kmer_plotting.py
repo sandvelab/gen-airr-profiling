@@ -1,7 +1,7 @@
 from unittest import TestCase
 import shutil
 
-from scripts.kmer_freq_plotting import get_kmer_counts, find_significantly_different_kmers, run_kmer_analysis
+from gen_airr_bm.scripts.kmer_freq_plotting import get_kmer_counts, find_significantly_different_kmers, run_kmer_analysis
 from immuneML.util.PathBuilder import PathBuilder
 from immuneML.simulation.dataset_generation.RandomDatasetGenerator import RandomDatasetGenerator
 from immuneML.environment.EnvironmentSettings import EnvironmentSettings

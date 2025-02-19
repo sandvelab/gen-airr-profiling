@@ -1,11 +1,11 @@
 import glob
 from scripts.immuneml_formatting import write_immuneml_config
-from scripts.seq_len_comparing import plot_seq_len_distributions, plot_seq_len_distributions_multiple_datasets
+from gen_airr_bm.scripts.seq_len_comparing import plot_seq_len_distributions, plot_seq_len_distributions_multiple_datasets
 from scripts.seq_len_filtering import filter_by_cdr3_length
-from scripts.kmer_freq_plotting import run_kmer_analysis
+from gen_airr_bm.scripts.kmer_freq_plotting import run_kmer_analysis
 
 # Parameters
-INPUT_DIR = "configs"
+INPUT_DIR = "old_configs"
 RESULT_DIR = "results"
 # Wildcards parameters
 sim_num = range(10)
@@ -63,34 +63,34 @@ rule run_models:
     input:
         f"{RESULT_DIR}/{{dataset}}/model_configs/{{model}}/model_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_{{sim_num}}")
+        directory(f"{RESULT_DIR}/{{dataset}}/training/{{model}}/{{model}}_{{dataset}}_{{sim_num}}")
     shell:
-        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/models/{wildcards.model}/{wildcards.model}_{wildcards.dataset}_{wildcards.sim_num}"
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/training/{wildcards.model}/{wildcards.model}_{wildcards.dataset}_{wildcards.sim_num}"
 
 rule write_report_yaml_config_for_generated_data:
     input:
         report_template = f"{INPUT_DIR}/data_analysis/reports.yaml",
-        generated_sequences = f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_{{sim_num}}"
+        generated_sequences = f"{RESULT_DIR}/{{dataset}}/training/{{model}}/{{model}}_{{dataset}}_{{sim_num}}"
     output:
-        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/models/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
+        report_config_file = f"{RESULT_DIR}/{{dataset}}/report_configs/training/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
     run:
         input_file_name = glob.glob(input.generated_sequences + "/gen_model/exported_gen_dataset/*.tsv")[0]
         write_immuneml_config(input.report_template, input_file_name, output.report_config_file)
 
 rule run_reports_for_generated_data:
     input:
-        f"{RESULT_DIR}/{{dataset}}/report_configs/models/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
+        f"{RESULT_DIR}/{{dataset}}/report_configs/training/{{model}}/report_config_{{model}}_{{dataset}}_{{sim_num}}.yaml"
     output:
-        directory(f"{RESULT_DIR}/{{dataset}}/reports/models/{{model}}/reports_{{model}}_{{dataset}}_{{sim_num}}")
+        directory(f"{RESULT_DIR}/{{dataset}}/reports/training/{{model}}/reports_{{model}}_{{dataset}}_{{sim_num}}")
     shell:
-        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/models/{wildcards.model}/reports_{wildcards.model}_{wildcards.dataset}_{wildcards.sim_num}"
+        "immune-ml {input} {RESULT_DIR}/{wildcards.dataset}/reports/training/{wildcards.model}/reports_{wildcards.model}_{wildcards.dataset}_{wildcards.sim_num}"
 
 #TO DO: for now we always compare first model
 #TO DO: output also final dataframe as f.e. csv
 rule compare_sequence_length_distributions_generated_vs_train:
     input:
         report_simulated = f"{RESULT_DIR}/{{dataset}}/reports/simulated/train/reports_simulated_{{dataset}}_0",
-        report_generated = f"{RESULT_DIR}/{{dataset}}/reports/models/{{model}}/reports_{{model}}_{{dataset}}_0"
+        report_generated = f"{RESULT_DIR}/{{dataset}}/reports/training/{{model}}/reports_{{model}}_{{dataset}}_0"
     output:
         seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/train/seq_len/seq_len_plot_{{model}}_{{dataset}}_0.html"
     run:
@@ -102,7 +102,7 @@ rule compare_sequence_length_distributions_generated_vs_test:
     input:
         report_simulated = expand(f"{RESULT_DIR}/{{dataset}}/reports/simulated/test/reports_simulated_{{dataset}}_{{sim_num}}",
             dataset="{dataset}", sim_num=sim_num),
-        report_generated = expand(f"{RESULT_DIR}/{{dataset}}/reports/models/{{model}}/reports_{{model}}_{{dataset}}_{{sim_num}}",
+        report_generated = expand(f"{RESULT_DIR}/{{dataset}}/reports/training/{{model}}/reports_{{model}}_{{dataset}}_{{sim_num}}",
             dataset="{dataset}", model = "{model}", sim_num=sim_num)
     output:
         seq_len_plot = f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/test/seq_len/seq_len_plot_{{model}}_{{dataset}}.html"
@@ -118,7 +118,7 @@ rule compare_sequence_length_distributions_generated_vs_test:
 #TO DO: for now we always compare first simulation
 rule compare_kmer_distribution:
     input:
-        generated_data = f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0",
+        generated_data = f"{RESULT_DIR}/{{dataset}}/training/{{model}}/{{model}}_{{dataset}}_0",
         simulated_data = f"{RESULT_DIR}/{{dataset}}/simulations/{{data_split}}/simulation_0/dataset/"
     output:
         directory(f"{RESULT_DIR}/{{dataset}}/analyses/{{model}}/{{data_split}}/kmer_freq/kmer_compare_{{model}}_{{data_split}}_{{dataset}}_0")
@@ -141,7 +141,7 @@ rule split_simulated_data_by_sequence_length:
 #TO DO: for now we always compare first simulation
 rule split_model_data_by_sequence_length:
     input:
-        f"{RESULT_DIR}/{{dataset}}/models/{{model}}/{{model}}_{{dataset}}_0"
+        f"{RESULT_DIR}/{{dataset}}/training/{{model}}/{{model}}_{{dataset}}_0"
     output:
         f"{RESULT_DIR}/{{dataset}}/models_filtered/{{model}}/{{model}}_{{dataset}}_0_filtered/synthetic_dataset_len_{{filtered_sequences_lengths}}.tsv"
     run:

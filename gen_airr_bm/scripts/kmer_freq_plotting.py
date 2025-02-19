@@ -172,7 +172,7 @@ def run_kmer_analysis(dataset1, name1, dataset2, name2, output_dir, k=3, kmer_co
 
 
 def main():
-    dataset1 = "../results/dataset1/models/VAE/VAE_dataset1_0/gen_model/exported_gen_dataset/synthetic_my_vae_model_dataset.tsv"
+    dataset1 = "../results/dataset1/training/VAE/VAE_dataset1_0/gen_model/exported_gen_dataset/synthetic_my_vae_model_dataset.tsv"
     dataset2 = "../results/dataset1/simulations/train/simulation_0/dataset/simulated_dataset.tsv"
     output_dir = "output/"
     name1 = "VAE"
