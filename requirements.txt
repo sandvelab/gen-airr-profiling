@@ -1,6 +1,7 @@
 logomaker
 statsmodels
 pytest==8.0.0
+seaborn
 snakemake
 sonnia==0.1.5
 git+https://github.com/uio-bmi/immuneML.git@gen-airr-bm

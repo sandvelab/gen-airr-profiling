@@ -8,11 +8,11 @@ simulation_orchestrator = SimulationOrchestrator()
 training_orchestrator = TrainingOrchestrator()
 analysis_orchestrator = AnalysisOrchestrator()
 
-for simulation in config.simulation_configs:
-   simulation_orchestrator.run_simulation(simulation)
-
-for model in config.model_configs:
-   training_orchestrator.run_phenotypes_training(model, config.output_dir)
+# for simulation in config.simulation_configs:
+#    simulation_orchestrator.run_simulation(simulation)
+#
+# for model in config.model_configs:
+#    training_orchestrator.run_phenotypes_training(model, config.output_dir)
 
 for analysis in config.analysis_configs:
     analysis_orchestrator.run_analysis(analysis, config.output_dir)
