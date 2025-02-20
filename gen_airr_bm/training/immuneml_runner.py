@@ -16,7 +16,6 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
 
 def run_immuneml_command(input_file, output_dir):
     """Runs immuneML with the given input file and output directory."""
-    output_dir += "/immuneml"
     command = f"immune-ml {input_file} {output_dir}"
     exit_code = os.system(command)
     if exit_code != 0:

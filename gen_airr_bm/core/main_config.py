@@ -1,4 +1,6 @@
 import yaml
+
+from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.simulation_config import SimulationConfig
 from gen_airr_bm.core.model_config import ModelConfig
 
@@ -13,24 +15,32 @@ class MainConfig:
         self.output_dir = data["output_dir"]
         self.simulation_configs = []
         self.model_configs = []
+        self.analysis_configs = [AnalysisConfig(analysis["name"], analysis["model"], self.output_dir +
+                                                f"/analyses/{analysis['name']}/{analysis['model']}")
+                                 for analysis in data["analyses"]]
 
         base_seed = data["data_processing"]["simulation"]["seed"]
         for exp_idx in range(self.n_experiments):
             exp_seed = base_seed + exp_idx
-            exp_output_dir = self.output_dir + f"_{exp_idx}"
+            exp_output_dir = self.output_dir + f"/exp_{exp_idx}"
             sim_data = data["data_processing"]["simulation"]
             self.simulation_configs.append(
                 SimulationConfig(
                     method=sim_data["method"],
                     n_samples=sim_data["n_samples"],
                     model=sim_data["model"],
+                    experiment=exp_idx,
                     seed=exp_seed,
                     output_dir=exp_output_dir
                 )
             )
             self.model_configs.extend(
-                [ModelConfig(name, model_data["config"], exp_output_dir)
-                    for name, model_data in data["models"].items()]
+                [ModelConfig(
+                    name=model_data["name"],
+                    config=model_data["config"],
+                    experiment=exp_idx,
+                    output_dir=exp_output_dir)
+                    for model_data in data["models"]]
             )
 
     def __repr__(self):
