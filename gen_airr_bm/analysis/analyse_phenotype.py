@@ -4,15 +4,22 @@ import os
 import pandas as pd
 from matplotlib import pyplot as plt
 
+from gen_airr_bm.core.analysis_config import AnalysisConfig
 
-def preprocess_files_for_compairr(model_dir, preprocessed_model_dir):
-    generated_datasets = os.listdir(model_dir)
-    os.makedirs(f"{preprocessed_model_dir}", exist_ok=True)
+
+def run_phenotype_analysis(analysis_config: AnalysisConfig, output_dir: str):
+    generated_sequences_dir = f"{output_dir}/generated_sequences/{analysis_config.model_name}"
+    compairr_sequences_dir = f"{output_dir}/generated_compairr_sequences/{analysis_config.model_name}"
+    preprocess_files_for_compairr(generated_sequences_dir, compairr_sequences_dir)
+
+
+def preprocess_files_for_compairr(generated_sequences_dir, compairr_sequences_dir):
+    generated_datasets = os.listdir(generated_sequences_dir)
+    os.makedirs(f"{compairr_sequences_dir}", exist_ok=True)
     for dataset in generated_datasets:
-        file_name = glob.glob(f"{model_dir}/{dataset}/gen_model/exported_gen_dataset/*.tsv")[0]
-        data = pd.read_csv(file_name, sep='\t')
-        data['duplicate_count'].replace(-1, 1, inplace=True)
-        data.to_csv(f"{preprocessed_model_dir}/{dataset}.tsv", sep='\t', index=False)
+        data = pd.read_csv(f"{generated_sequences_dir}/{dataset}", sep='\t')
+        data.replace({'duplicate_count': {-1: 1}}, inplace=True)
+        data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
 
 
 def run_compairr(model_dir, model_name):
@@ -86,7 +93,3 @@ def run_cluster_analysis(models_dir, model_names):
                                              columns=dataset_names)
 
         plot_cluster_heatmap(f"results/{model}", similarities_df, model)
-
-
-def run_phenotype_analysis():
-    pass

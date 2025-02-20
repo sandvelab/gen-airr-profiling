@@ -15,4 +15,4 @@ for model in config.model_configs:
    training_orchestrator.run_phenotypes_training(model, config.output_dir)
 
 for analysis in config.analysis_configs:
-    analysis_orchestrator.run_analysis(analysis)
+    analysis_orchestrator.run_analysis(analysis, config.output_dir)

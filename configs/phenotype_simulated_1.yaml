@@ -1,4 +1,4 @@
-n_experiments: 3
+n_experiments: 2
 output_dir: "results/phenotype_simulated"
 data_processing:
   simulation:
