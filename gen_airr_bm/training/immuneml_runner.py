@@ -1,7 +1,6 @@
-from pathlib import Path
+import os
 
 import yaml
-from immuneML.app.ImmuneMLApp import ImmuneMLApp
 
 
 def write_immuneml_config(input_model_template, input_simulated_data, output_config_file):
@@ -15,6 +14,10 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
         yaml.safe_dump(model_template_config, file)
 
 
-def run_immuneml_app(input_file, output_dir):
-    app = ImmuneMLApp(specification_path=Path(input_file), result_path=Path(output_dir))
-    app.run()
+def run_immuneml_command(input_file, output_dir):
+    """Runs immuneML with the given input file and output directory."""
+    output_dir += "/immuneml"
+    command = f"immune-ml {input_file} {output_dir}"
+    exit_code = os.system(command)
+    if exit_code != 0:
+        raise RuntimeError(f"Running immuneML failed:{command}.")

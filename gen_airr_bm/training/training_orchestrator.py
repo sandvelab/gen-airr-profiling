@@ -2,7 +2,7 @@ import os
 
 from gen_airr_bm.core.model_config import ModelConfig
 from gen_airr_bm.scripts.immuneml_formatting import write_immuneml_config
-from gen_airr_bm.training.immuneml_runner import run_immuneml_app
+from gen_airr_bm.training.immuneml_runner import run_immuneml_command
 
 
 class TrainingOrchestrator:
@@ -10,10 +10,10 @@ class TrainingOrchestrator:
 
     def run_training(self, immuneml_config: str, data_path: str, output_dir: str):
         """Runs immuneML training for model in the config."""
-        output_immuneml_config = f"{output_dir}/immuneML_config.yaml"
+        output_immuneml_config = f"{output_dir}/immuneml_config.yaml"
 
         write_immuneml_config(immuneml_config, data_path, output_immuneml_config)
-        #run_immuneml_app(output_immuneml_config, output_dir)
+        run_immuneml_command(output_immuneml_config, output_dir)
 
     def run_phenotypes_training(self, model_config: ModelConfig):
         """Runs immuneML training for model in the config with phenotype data."""
