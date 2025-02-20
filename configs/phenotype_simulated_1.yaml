@@ -1,15 +1,13 @@
 n_experiments: 4
+output_dir: "results/phenotype_simulated/experiment"
 data_processing:
   simulation:
     method: "rare_and_frequent"
     n_samples: 5
     model: "humanTRB"
     seed: 42
-    output_dir: "results/phenotype_simulated/data"
 models:
-  sonnia:
+  sonia:
     config: "../../../configs/generative_models/SONIA.yaml"
-    output_dir: "results/phenotype_simulated/training/sonnia"
   pwm:
     config: "../../../configs/generative_models/PWM.yaml"
-    output_dir: "results/phenotype_simulated/training/pwm"

@@ -8,6 +8,6 @@ training_orchestrator = TrainingOrchestrator()
 
 for simulation in config.simulation_configs:
     simulation_orchestrator.run_simulation(simulation)
-    for model in config.models:
-        training_orchestrator.run_training(model, simulation.output_dir + "/frequent_sequences.tsv")
-        training_orchestrator.run_training(model, simulation.output_dir + "/rare_sequences.tsv")
+
+for model in config.model_configs:
+    training_orchestrator.run_phenotypes_training(model)

@@ -17,10 +17,12 @@ def simulate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, 
     :return:
     """
     os.makedirs(output_path, exist_ok=True)
-    sequnces_file_path = os.path.join(output_path, "olga_sequences.tsv")
-    pgens_file_path = os.path.join(output_path, "pgens.tsv")
-    frequent_sequences_file_path = os.path.join(output_path, "frequent_sequences.tsv")
-    rare_sequences_file_path = os.path.join(output_path, "rare_sequences.tsv")
+    output_path_helper_data = os.path.join(output_path, "helper_data")
+    os.makedirs(output_path_helper_data, exist_ok=True)
+    sequnces_file_path = os.path.join(output_path_helper_data, "olga_sequences.tsv")
+    pgens_file_path = os.path.join(output_path_helper_data, "pgens.tsv")
+    frequent_sequences_file_path = os.path.join(output_path, "frequent.tsv")
+    rare_sequences_file_path = os.path.join(output_path, "rare.tsv")
 
     number_of_olga_sequences = 4 * number_of_sequences
     simulate_pure_olga_sequences(number_of_olga_sequences, model, sequnces_file_path, seed)
