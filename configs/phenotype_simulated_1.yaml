@@ -1,9 +1,9 @@
-n_experiments: 2
+n_experiments: 5
 output_dir: "results/phenotype_simulated"
 data_processing:
   simulation:
     method: "rare_and_frequent"
-    n_samples: 5
+    n_samples: 25000
     model: "humanTRB"
     seed: 42
 models:

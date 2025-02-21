@@ -15,7 +15,7 @@ definitions:
         epochs: 50 #50
         default_model_name: 'humanTRB'
         include_joint_genes: True
-        n_gen_seqs: 1000 #500000
+        n_gen_seqs: 100000 #500000
   reports:
     my_KLKmerCompare_report: KLKmerComparison
 
@@ -25,7 +25,7 @@ instructions:
     export_combined_dataset: True
     dataset: dataset
     method: my_sonia_model
-    gen_examples_count: 1000
+    gen_examples_count: 50000
     number_of_processes: 4
     reports:
       - my_KLKmerCompare_report
