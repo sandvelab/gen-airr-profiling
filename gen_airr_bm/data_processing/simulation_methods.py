@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 
+#TODO: This function can be rafactored
 def simulate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, output_path):
     """
     This function first generates pure Olga sequences and then computes lower and upper 25% of the sequences based
