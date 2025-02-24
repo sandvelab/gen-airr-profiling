@@ -3,7 +3,7 @@ import concurrent.futures
 
 from gen_airr_bm.analysis.analysis_orchestrator import AnalysisOrchestrator
 from gen_airr_bm.core.main_config import MainConfig
-from gen_airr_bm.data_processing.simulation_orchestrator import SimulationOrchestrator
+from gen_airr_bm.data_processing.data_generation_orchestrator import SimulationOrchestrator
 from gen_airr_bm.training.training_orchestrator import TrainingOrchestrator
 
 
@@ -30,7 +30,7 @@ def main(config_path):
     analysis_orchestrator = AnalysisOrchestrator()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(lambda sim: run_simulation(sim, simulation_orchestrator), config.simulation_configs)
+        executor.map(lambda sim: run_simulation(sim, simulation_orchestrator), config.data_generation_configs)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(lambda model: train_model(model, training_orchestrator, config.output_dir), config.model_configs)
@@ -42,7 +42,8 @@ def main(config_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run AIRR benchmark pipeline.")
-    parser.add_argument("config", type=str, help="Path to the configuration YAML file.")
+    parser.add_argument("config", type=str, nargs="?", help="Path to the configuration YAML file.",
+                        default="/Users/marimam/PycharmProjects/gen-air-benchmark/configs/phenotype_simulated_1.yaml")
     args = parser.parse_args()
 
     main(args.config)
