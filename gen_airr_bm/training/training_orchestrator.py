@@ -7,7 +7,7 @@ from gen_airr_bm.training.immuneml_runner import run_immuneml_command, write_imm
 class TrainingOrchestrator:
     """Orchestrates the immuneML training process."""
 
-    def run_training(self, immuneml_config: str, data_path: str, output_dir: str):
+    def run_single_training(self, immuneml_config: str, data_path: str, output_dir: str):
         """Runs immuneML training for model in the config."""
         output_immuneml_config = f"{output_dir}/immuneml_config.yaml"
         output_immuneml_dir = f"{output_dir}/immuneml"
@@ -15,20 +15,24 @@ class TrainingOrchestrator:
         write_immuneml_config(immuneml_config, data_path, output_immuneml_config)
         run_immuneml_command(output_immuneml_config, output_immuneml_dir)
 
-    def run_phenotypes_training(self, model_config: ModelConfig, output_dir: str):
+    #TODO: It became spaghetti code. We might want to refactor this method.
+    def run_training(self, model_config: ModelConfig, output_dir: str):
         """Runs immuneML training for model in the config with phenotype data."""
-        phenotype_files = [f for f in os.listdir(model_config.output_dir) if
-                           os.path.isfile(os.path.join(model_config.output_dir, f))]
-        for phenotype_file in phenotype_files:
-            phenotype = phenotype_file.split('.')[0]
-            phenotype_output_dir = f"{model_config.output_dir}/{model_config.name}/{phenotype}"
-            phenotype_full_path = f"{model_config.output_dir}/{phenotype_file}"
-            os.makedirs(phenotype_output_dir, exist_ok=True)
+        train_data_dir = os.path.join(model_config.output_dir, model_config.train_dir)
+        train_data_files = [f for f in os.listdir(train_data_dir) if
+                            os.path.isfile(os.path.join(train_data_dir, f))]
+        for train_data_file in train_data_files:
+            data_file_name = train_data_file.split('.')[0]
+            model_output_dir = f"{model_config.output_dir}/{model_config.name}/{data_file_name}"
+            train_data_full_path = f"{train_data_dir}/{train_data_file}"
+            os.makedirs(model_output_dir, exist_ok=True)
 
-            self.run_training(model_config.config, phenotype_full_path, phenotype_output_dir)
+            self.run_single_training(model_config.config, train_data_full_path, model_output_dir)
 
-            immuneml_generated_sequences_dir = f"{phenotype_output_dir}/immuneml/gen_model/generated_sequences"
-            #Generated sequences files might have different names, so we need to find the correct one
+            # Copy generated sequences to the output directory
+            # The generated sequences are stored in a subdirectory of the immuneML output directory (always static path)
+            immuneml_generated_sequences_dir = f"{model_output_dir}/immuneml/gen_model/generated_sequences"
+            # Generated sequences files might have different names, so we need to find the correct one
             immuneml_generated_sequences_file = [
                 f for f in os.listdir(immuneml_generated_sequences_dir)
                 if f.endswith(".tsv") and os.path.isfile(os.path.join(immuneml_generated_sequences_dir, f))
@@ -36,4 +40,4 @@ class TrainingOrchestrator:
             generated_sequences_dir = f"{output_dir}/generated_sequences/{model_config.name}"
             os.makedirs(generated_sequences_dir, exist_ok=True)
             os.system(f"cp {immuneml_generated_sequences_dir}/{immuneml_generated_sequences_file} "
-                      f"{generated_sequences_dir}/{phenotype}_{model_config.experiment}.tsv")
+                      f"{generated_sequences_dir}/{data_file_name}_{model_config.experiment}.tsv")

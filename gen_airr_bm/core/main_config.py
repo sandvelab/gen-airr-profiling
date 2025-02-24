@@ -56,6 +56,7 @@ class MainConfig:
                         name=model_data["name"],
                         config=model_data["config"],
                         experiment=exp_idx,
+                        train_dir=model_data.get("train_dir", ""),
                         output_dir=exp_output_dir)
                         for model_data in data["models"]]
                 )

@@ -3,20 +3,23 @@ import os
 import numpy as np
 import pandas as pd
 
+from gen_airr_bm.core.data_generation_config import DataGenerationConfig
+
 
 #TODO: This function can be rafactored
-def simulate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, output_path, input_path, input_columns):
+def simulate_rare_and_frequent_olga_sequences(config: DataGenerationConfig):
     """
     This function first generates pure Olga sequences and then computes lower and upper 25% of the sequences based
     on pgen values. As result a file with frequent sequences and a file with rare sequences are generated.
     Both files contain number_of_sequences sequences.
 
-    :param number_of_sequences: number of sequences to generate for each rare and frequent group
-    :param model: olga model to use for generating sequences (for example: humanTRB)
-    :param seed: seed for random number generator
-    :param output_path: path to the directory where the output files will be stored
+    :param config: DataGenerationConfig object with the following attributes:
     :return:
     """
+    number_of_sequences = config.n_samples
+    output_path = config.output_dir
+    model = config.model
+    seed = config.seed
     os.makedirs(output_path, exist_ok=True)
     output_path_helper_data = os.path.join(output_path, "helper_data")
     os.makedirs(output_path_helper_data, exist_ok=True)
@@ -71,23 +74,24 @@ def simulate_experimental_and_olga_sequences(number_of_sequences, model, seed, o
     experimental_sequences.to_csv(experimental_sampled_data_file_path, sep='\t', index=False)
 
 
-def preprocess_experimental_data(number_of_sequences, model, seed, output_path, input_path, input_columns):
+def preprocess_experimental_data(config: DataGenerationConfig):
     """
     This function preprocesses experimental data by sampling number_of_sequences sequences from the input data.
-    :param number_of_sequences: number of sequences to sample
-    :param model: olga model to use for generating sequences (for example: humanTRB)
-    :param seed: seed for random number generator
-    :param output_path: path to the directory where the output files will be stored
-    :param input_path: path to the file with experimental data
-    :param input_columns: columns to read from the input file
+    :param config: DataGenerationConfig object with the following attributes:
     :return:
     """
+    number_of_sequences = config.n_samples
+    output_path = config.output_dir
+    input_path = config.data_file
+    seed = config.seed
+    input_columns = config.input_columns
+
     train_dir = os.path.join(output_path, "train")
     test_dir = os.path.join(output_path, "test")
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(test_dir, exist_ok=True)
-    experimental_train_file_path = os.path.join(train_dir, "experimental_data.tsv")
-    experimental_test_file_path = os.path.join(test_dir, "experimental_data.tsv")
+    experimental_train_file_path = os.path.join(train_dir, "experimental.tsv")
+    experimental_test_file_path = os.path.join(test_dir, "experimental.tsv")
     experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
     experimental_data = experimental_data.drop_duplicates()
 
