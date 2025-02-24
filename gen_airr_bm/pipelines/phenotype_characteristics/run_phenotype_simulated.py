@@ -1,18 +1,48 @@
+import argparse
+import concurrent.futures
+
 from gen_airr_bm.analysis.analysis_orchestrator import AnalysisOrchestrator
 from gen_airr_bm.core.main_config import MainConfig
 from gen_airr_bm.data_processing.simulation_orchestrator import SimulationOrchestrator
 from gen_airr_bm.training.training_orchestrator import TrainingOrchestrator
 
-config = MainConfig("/Users/marimam/PycharmProjects/gen-air-benchmark/configs/phenotype_simulated_1.yaml")
-simulation_orchestrator = SimulationOrchestrator()
-training_orchestrator = TrainingOrchestrator()
-analysis_orchestrator = AnalysisOrchestrator()
 
-for simulation in config.simulation_configs:
-   simulation_orchestrator.run_simulation(simulation)
+def run_simulation(simulation, orchestrator):
+    print(f"Running simulation: {simulation}")
+    orchestrator.run_simulation(simulation)
 
-for model in config.model_configs:
-   training_orchestrator.run_phenotypes_training(model, config.output_dir)
 
-for analysis in config.analysis_configs:
-    analysis_orchestrator.run_analysis(analysis, config.output_dir)
+def train_model(model, orchestrator, output_dir):
+    print(f"Training model: {model}")
+    orchestrator.run_phenotypes_training(model, output_dir)
+
+
+def run_analysis(analysis, orchestrator, output_dir):
+    print(f"Running analysis: {analysis}")
+    orchestrator.run_analysis(analysis, output_dir)
+
+
+def main(config_path):
+    config = MainConfig(config_path)
+
+    simulation_orchestrator = SimulationOrchestrator()
+    training_orchestrator = TrainingOrchestrator()
+    analysis_orchestrator = AnalysisOrchestrator()
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(lambda sim: run_simulation(sim, simulation_orchestrator), config.simulation_configs)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(lambda model: train_model(model, training_orchestrator, config.output_dir), config.model_configs)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator, config.output_dir),
+                     config.analysis_configs)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run AIRR benchmark pipeline.")
+    parser.add_argument("config", type=str, help="Path to the configuration YAML file.")
+    args = parser.parse_args()
+
+    main(args.config)
