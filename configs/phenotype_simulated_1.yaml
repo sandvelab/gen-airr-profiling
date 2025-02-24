@@ -13,6 +13,6 @@ models:
       config: "../../../configs/generative_models/PWM.yaml"
 analyses:
     - name: "phenotype"
-      model: "sonia"
-    - name: "phenotype"
       model: "pwm"
+    - name: "phenotype"
+      model: "sonia"

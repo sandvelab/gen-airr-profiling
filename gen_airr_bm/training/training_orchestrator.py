@@ -1,7 +1,7 @@
 import os
 
 from gen_airr_bm.core.model_config import ModelConfig
-from gen_airr_bm.scripts.immuneml_formatting import write_immuneml_config
+from old_scripts import write_immuneml_config
 from gen_airr_bm.training.immuneml_runner import run_immuneml_command
 
 
