@@ -1,8 +1,7 @@
 import os
 
 from gen_airr_bm.core.model_config import ModelConfig
-from old_scripts import write_immuneml_config
-from gen_airr_bm.training.immuneml_runner import run_immuneml_command
+from gen_airr_bm.training.immuneml_runner import run_immuneml_command, write_immuneml_config
 
 
 class TrainingOrchestrator:
