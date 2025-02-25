@@ -1,0 +1,36 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: results/dataset1/simulation/my_sim_inst/batch1.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_CDR3
+        separator: "\t"
+  ml_methods:
+    my_lstm_model:
+        SimpleLSTM:
+            chain: beta
+            sequence_type: amino_acid
+            num_epochs: 15
+            batch_size: 10000
+            device: cpu
+            hidden_size: 8
+            learning_rate: 0.001
+            embed_size: 4
+            temperature: 0.4
+            num_layers: 2
+  reports:
+    my_KLKmerCompare_report: KLKmerComparison
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: my_lstm_model
+    gen_examples_count: 1000
+    number_of_processes: 4
+    reports:
+      - my_KLKmerCompare_report

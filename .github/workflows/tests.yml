@@ -1,5 +1,5 @@
 # Simple workflow for deploying static content to GitHub Pages
-name: Run tests
+name: Run old_tests
 
 on: [push]
 
@@ -17,5 +17,5 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install -r requirements.txt
 
-      - name: Run tests
-        run: python3 -m pytest tests
+      - name: Run old_tests
+        run: python3 -m pytest old_tests
