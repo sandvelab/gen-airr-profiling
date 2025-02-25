@@ -20,8 +20,9 @@ class MainConfig:
         self.model_configs = []
         # if analyses are not present in the config, we want empty list
         self.analysis_configs = [
-            AnalysisConfig(analysis["name"], analysis["model"],
-                           f"{self.output_dir}/analyses/{analysis['name']}/{analysis['model']}",
+            AnalysisConfig(analysis["name"], analysis["model_names"],
+                           f"{self.output_dir}/analyses/{analysis['name']}/"
+                           f"{'_'.join(m.lower() for m in analysis['model_names'])}",
                            self.output_dir, analysis["default_model_name"])
             for analysis in data.get("analyses", [])
         ] if data.get("analyses") else []

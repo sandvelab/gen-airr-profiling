@@ -8,10 +8,10 @@ from gen_airr_bm.utils.olga_utils import compute_pgen
 
 
 def run_pgen_analysis(analysis_config: AnalysisConfig, output_dir: str):
-    train_sequences_dir = f"{output_dir}/train_sequences/{analysis_config.model_name}"
-    model_sequences_dir = f"{output_dir}/generated_sequences/{analysis_config.model_name}"
+    train_sequences_dir = f"{output_dir}/train_sequences/{analysis_config.model_names}"
+    model_sequences_dir = f"{output_dir}/generated_sequences/{analysis_config.model_names}"
 
-    olga_inputs = get_datasets(model_sequences_dir, output_dir, analysis_config.model_name, )
+    olga_inputs = get_datasets(model_sequences_dir, output_dir, analysis_config.model_names, )
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(compute_pgen, seq_file, pgen_file, model) for seq_file, pgen_file, model in olga_inputs]
 

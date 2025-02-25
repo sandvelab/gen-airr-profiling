@@ -43,5 +43,3 @@ class TrainingOrchestrator:
             os.makedirs(generated_sequences_dir, exist_ok=True)
             os.system(f"cp {immuneml_generated_sequences_dir}/{immuneml_generated_sequences_file} "
                       f"{generated_sequences_dir}/{data_file_name}_{model_config.experiment}.tsv")
-
-

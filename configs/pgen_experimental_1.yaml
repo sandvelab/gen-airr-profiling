@@ -17,6 +17,6 @@ models:
       train_dir: "train"
 analyses:
     - name: "pgen"
-      model: "pwm"
+      model_names: ["pwm"]
     - name: "pgen"
-      model: "sonia"
+      model_names: ["sonia"]
