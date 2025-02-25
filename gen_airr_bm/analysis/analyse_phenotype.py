@@ -1,6 +1,9 @@
 import os
 
 import pandas as pd
+#TODO: We need to find more elegant solution for setting the backend
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import seaborn as sns
 
