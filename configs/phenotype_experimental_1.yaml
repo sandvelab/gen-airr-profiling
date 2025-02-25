@@ -1,0 +1,26 @@
+n_experiments: 10
+output_dir: "results/experimental"
+input_dir: "data"
+seed: 42
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 25000
+  default_model_name: "humanTRB"
+  input_columns: ["junction_aa", "v_call", "j_call"]
+models:
+    - name: "pwm"
+      config: "configs/generative_models/PWM.yaml"
+      train_dir: "train"
+      test_dir: "test"
+    - name: "sonia"
+      config: "configs/generative_models/SONIA.yaml"
+      train_dir: "train"
+      test_dir: "test"
+analyses:
+    - name: "phenotype"
+      model_names: ["pwm"]
+      default_model_name: "humanTRB"
+    - name: "phenotype"
+      model_names: ["sonia"]
+      default_model_name: "humanTRB"
