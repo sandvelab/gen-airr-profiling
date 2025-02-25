@@ -5,20 +5,19 @@ seed: 42
 data_generation:
   experimental: True
   method: "experimental"
-  n_samples: 2
+  n_samples: 10
   default_model_name: "humanTRB"
   input_columns: ["junction_aa", "v_call", "j_call"]
 models:
     - name: "pwm"
       config: "configs/generative_models/PWM.yaml"
       train_dir: "train"
+      test_dir: "test"
     - name: "sonia"
       config: "configs/generative_models/SONIA.yaml"
       train_dir: "train"
+      test_dir: "test"
 analyses:
     - name: "pgen"
-      model_names: ["pwm"]
-      default_model_name: "humanTRB"
-    - name: "pgen"
-      model_names: ["sonia"]
+      model_names: ["pwm", "sonia"]
       default_model_name: "humanTRB"
