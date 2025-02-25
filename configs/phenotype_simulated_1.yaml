@@ -6,7 +6,7 @@ data_generation:
   experimental: True
   method: "experimental"
   n_samples: 2
-  model: "humanTRB"
+  default_model_name: "humanTRB"
   input_columns: ["junction_aa", "v_call", "j_call"]
 models:
     - name: "pwm"
@@ -18,5 +18,7 @@ models:
 analyses:
     - name: "phenotype"
       model: "pwm"
+      default_model_name: "humanTRB"
     - name: "phenotype"
       model: "sonia"
+      default_model_name: "humanTRB"

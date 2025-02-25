@@ -22,7 +22,7 @@ class MainConfig:
         self.analysis_configs = [
             AnalysisConfig(analysis["name"], analysis["model"],
                            f"{self.output_dir}/analyses/{analysis['name']}/{analysis['model']}",
-                           self.output_dir)
+                           self.output_dir, analysis["default_model_name"])
             for analysis in data.get("analyses", [])
         ] if data.get("analyses") else []
 
@@ -44,7 +44,7 @@ class MainConfig:
                         n_samples=data_generation["n_samples"],
                         data_file=experimental_dataset,
                         experimental=data_generation["experimental"],
-                        model=data_generation["model"],
+                        default_model_name=data_generation["default_model_name"],
                         experiment=exp_idx,
                         seed=exp_seed,
                         output_dir=exp_output_dir,
