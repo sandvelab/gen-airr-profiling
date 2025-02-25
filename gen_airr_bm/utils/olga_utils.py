@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+
 
 def compute_pgen(sequences_file_path, pgens_file_path, default_model_name):
     """
@@ -9,8 +11,15 @@ def compute_pgen(sequences_file_path, pgens_file_path, default_model_name):
     :param default_model_name: olga model used for generating sequences (for example: humanTRB)
     :return:
     """
-    command = 'olga-compute_pgen --' + default_model_name + ' -i ' + sequences_file_path + ' -o ' + pgens_file_path \
-              + ' --seq_type_out aaseq --seq_in 1 --v_in 2 --j_in 3 --display_off'
+
+    sequences_df = pd.read_csv(sequences_file_path, sep='\t', header=None)
+    if sequences_df[2].isnull().values.any() or sequences_df[3].isnull().values.any():
+        command = 'olga-compute_pgen --' + default_model_name + ' -i ' + sequences_file_path + ' -o ' + pgens_file_path \
+              + ' --seq_type_out aaseq --seq_in 1 --display_off'
+    else:
+        command = 'olga-compute_pgen --' + default_model_name + ' -i ' + sequences_file_path + ' -o ' + pgens_file_path \
+                  + ' --seq_type_out aaseq --seq_in 1 --v_in 2 --j_in 3 --display_off'
+
     exit_code = os.system(command)
     if exit_code != 0:
         raise RuntimeError(f"Running olga tool failed:{command}.")
