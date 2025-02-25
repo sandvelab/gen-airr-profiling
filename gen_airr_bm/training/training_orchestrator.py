@@ -28,6 +28,15 @@ class TrainingOrchestrator:
             os.makedirs(f"{output_dir}/train_sequences/{model_config.name}", exist_ok=True)
             os.system(f"cp {train_data_full_path} {output_dir}/train_sequences/{model_config.name}/{data_file_name}_{model_config.experiment}.tsv")
 
+            #TODO: this is a quick dirty solution. We need to refactor this part.
+            if model_config.test_dir:
+                os.makedirs(f"{output_dir}/test_sequences/{model_config.name}", exist_ok=True)
+                # Copy test data to the output directory
+                test_data_dir = os.path.join(model_config.output_dir, model_config.test_dir)
+                test_data_files = [f for f in os.listdir(test_data_dir) if os.path.isfile(os.path.join(test_data_dir, f))]
+                for test_data_file in test_data_files:
+                    os.system(f"cp {test_data_dir}/{test_data_file} {output_dir}/test_sequences/{model_config.name}/{test_data_file.split('.')[0]}_{model_config.experiment}.tsv")
+
             os.makedirs(model_output_dir, exist_ok=True)
             self.run_single_training(model_config.config, train_data_full_path, model_output_dir)
 
