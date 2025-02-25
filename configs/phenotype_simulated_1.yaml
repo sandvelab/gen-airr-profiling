@@ -1,6 +1,6 @@
 n_experiments: 2
-output_dir: "../../../results2/phenotype_simulated"
-input_dir: "../../../data"
+output_dir: "results2/phenotype_simulated"
+input_dir: "data"
 seed: 42
 data_generation:
   experimental: True
@@ -10,10 +10,10 @@ data_generation:
   input_columns: ["junction_aa", "v_call", "j_call"]
 models:
     - name: "pwm"
-      config: "../../../configs/generative_models/PWM.yaml"
+      config: "configs/generative_models/PWM.yaml"
       train_dir: "train"
     - name: "sonia"
-      config: "../../../configs/generative_models/SONIA.yaml"
+      config: "configs/generative_models/SONIA.yaml"
       train_dir: "train"
 analyses:
     - name: "phenotype"
