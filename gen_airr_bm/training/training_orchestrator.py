@@ -25,8 +25,10 @@ class TrainingOrchestrator:
             data_file_name = train_data_file.split('.')[0]
             model_output_dir = f"{model_config.output_dir}/{model_config.name}/{data_file_name}"
             train_data_full_path = f"{train_data_dir}/{train_data_file}"
-            os.makedirs(model_output_dir, exist_ok=True)
+            os.makedirs(f"{output_dir}/train_sequences/{model_config.name}", exist_ok=True)
+            os.system(f"cp {train_data_full_path} {output_dir}/train_sequences/{model_config.name}/{data_file_name}_{model_config.experiment}.tsv")
 
+            os.makedirs(model_output_dir, exist_ok=True)
             self.run_single_training(model_config.config, train_data_full_path, model_output_dir)
 
             # Copy generated sequences to the output directory
@@ -41,3 +43,5 @@ class TrainingOrchestrator:
             os.makedirs(generated_sequences_dir, exist_ok=True)
             os.system(f"cp {immuneml_generated_sequences_dir}/{immuneml_generated_sequences_file} "
                       f"{generated_sequences_dir}/{data_file_name}_{model_config.experiment}.tsv")
+
+
