@@ -10,16 +10,17 @@ import seaborn as sns
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
-def run_phenotype_analysis(analysis_config: AnalysisConfig, output_dir: str):
-    generated_sequences_dir = f"{output_dir}/generated_sequences/{analysis_config.model_name}"
-    compairr_sequences_dir = f"{output_dir}/generated_compairr_sequences/{analysis_config.model_name}"
+def run_phenotype_analysis(analysis_config: AnalysisConfig):
+    print(f"Running phenotype analysis for {analysis_config}")
+    generated_sequences_dir = f"{analysis_config.root_output_dir}/generated_sequences/{analysis_config.model_name}"
+    compairr_sequences_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{analysis_config.model_name}"
     preprocess_files_for_compairr(generated_sequences_dir, compairr_sequences_dir)
     similarities_matrix, dataset_names = calculate_similarities_matrix(compairr_sequences_dir,
-                                                                       analysis_config.output_dir,
+                                                                       analysis_config.analysis_output_dir,
                                                                        analysis_config.model_name)
 
     similarities_df = pd.DataFrame(similarities_matrix, index=dataset_names, columns=dataset_names)
-    plot_cluster_heatmap(analysis_config.output_dir, similarities_df, analysis_config.model_name)
+    plot_cluster_heatmap(analysis_config.analysis_output_dir, similarities_df, analysis_config.model_name)
 
 
 def preprocess_files_for_compairr(generated_sequences_dir, compairr_sequences_dir):
