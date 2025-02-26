@@ -3,7 +3,8 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
+import plotly.graph_objects as go
+
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -19,7 +20,7 @@ def run_length_distribution_analysis(analysis_config: AnalysisConfig):
         length_comparison_pairs = []
 
         generated_sequences_dir = f"{analysis_config.root_output_dir}/generated_sequences/{model}"
-        reference_sequences_dir = f"{analysis_config.root_output_dir}/{analysis_config.reference_data}_sequences/{model}"
+        reference_sequences_dir = f"{analysis_config.root_output_dir}/{analysis_config.reference_data}_sequences"
 
         # Generated sequences and train sequences files have same names
         generated_sequences_files = set(os.listdir(generated_sequences_dir))
@@ -46,7 +47,7 @@ def run_length_distribution_analysis(analysis_config: AnalysisConfig):
         std_divergence_scores_dict[model] = np.std(divergence_scores)
 
     plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, analysis_config.analysis_output_dir,
-                    analysis_config.reference_data)
+                    analysis_config.reference_data, analysis_config.analysis)
 
 
 def compute_jsd(dist1, dist2):
@@ -58,25 +59,32 @@ def compute_jsd(dist1, dist2):
     return jensenshannon(p, q, base=2)
 
 
-def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, refernce_data):
-    os.makedirs(output_dir, exist_ok=True)
+def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, reference_data, analysis_type):
+    file_name = f"{analysis_type}.png"
+    fig_dir = os.path.join(output_dir, reference_data)
+    os.makedirs(fig_dir, exist_ok=True)
+
     models, scores = zip(*sorted(mean_divergence_scores_dict.items(), key=lambda x: x[1]))
     errors = [std_divergence_scores_dict[model] for model in models]
 
-    plt.figure(figsize=(10, 5))
-    plt.bar(
-        models, scores,
-        yerr=errors,
-        capsize=8,
-        color='skyblue',
-        alpha=0.7,
-        error_kw={'capsize': 5, 'capthick': 1, 'elinewidth': 1}
-    )
-    plt.xlabel("Models")
-    plt.ylabel("Mean JSD for Length Distributions")
-    plt.title(f"JSD Scores Comparing Length Distributions Across Models and {refernce_data.capitalize()} Data")
-    plt.xticks(rotation=45)
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
-    plt.tight_layout()
+    fig = go.Figure()
 
-    plt.savefig(f"{output_dir}/length_distribution.png")
+    fig.add_trace(go.Bar(
+        x=models,
+        y=scores,
+        error_y=dict(type='data', array=errors, visible=True),
+        marker=dict(color='skyblue'),
+    ))
+
+    fig.update_layout(
+        title=f"JSD Scores Comparing Length Distributions Across Models and {reference_data.capitalize()} Data",
+        xaxis_title="Models",
+        yaxis_title="Mean JSD for Length Distributions",
+        xaxis_tickangle=-45,
+        template="plotly_white"
+    )
+
+    png_path = os.path.join(fig_dir, file_name)
+    fig.write_image(png_path)
+
+    print(f"Plot saved as PNG at: {png_path}")
