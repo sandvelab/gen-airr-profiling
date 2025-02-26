@@ -32,3 +32,6 @@ analyses:
       model_names: [ "pwm", "sonia" ]
       default_model_name: "humanTRB"
       reference_data: "test"
+    - name: "pgen"
+      model_names: [ "pwm", "sonia" ]
+      default_model_name: "humanTRB"
