@@ -31,10 +31,12 @@ def simulate_rare_and_frequent_olga_sequences(config: DataGenerationConfig):
 
     number_of_olga_sequences = 4 * number_of_sequences
     simulate_pure_olga_sequences(number_of_olga_sequences, default_model_name, sequnces_file_path, seed)
-    column_names_sequences = ["nucleotide", "junction_aa", "v_call", "j_call"]
+    column_names_sequences = ["junction_aa", "v_call", "j_call"]
     olga_sequences = pd.read_csv(sequnces_file_path, sep='\t', names=column_names_sequences)
+    sequences_file_path_drop_nucleotides = os.path.join(output_path_helper_data, "olga_sequences_drop_nucleotides.tsv")
+    olga_sequences.to_csv(sequences_file_path_drop_nucleotides, sep='\t', index=False, header=False)
 
-    compute_pgen(sequnces_file_path, pgens_file_path, default_model_name)
+    compute_pgen(sequences_file_path_drop_nucleotides, pgens_file_path, default_model_name)
     column_names_pgens = ["junction_aa", "pgen"]
     pgens = pd.read_csv(pgens_file_path, sep='\t', names=column_names_pgens)
     pgens.sort_values(by="pgen", inplace=True)
