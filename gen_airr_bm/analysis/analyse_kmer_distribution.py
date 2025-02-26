@@ -44,8 +44,9 @@ def run_kmer_distribution_analysis(analysis_config: AnalysisConfig):
         mean_divergence_scores_dict[model] = np.mean(divergence_scores)
         std_divergence_scores_dict[model] = np.std(divergence_scores)
 
+    file_name = f"{analysis_config.analysis}.png"
     plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, analysis_config.analysis_output_dir,
-                        analysis_config.reference_data, analysis_config.analysis, "kmer")
+                        analysis_config.reference_data, file_name, "kmer")
 
 def compute_kmer_distribution(sequences, k):
     """Computes normalized k-mer frequency distribution."""

@@ -30,3 +30,7 @@ analyses:
       model_names: [ "pwm", "sonia" ]
       default_model_name: "humanTRB"
       reference_data: "train"
+    - name: "aminoacid_distribution"
+      model_names: [ "pwm", "sonia" ]
+      default_model_name: "humanTRB"
+      reference_data: "train"

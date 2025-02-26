@@ -3,9 +3,8 @@ import os
 import plotly.graph_objects as go
 
 
-def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, reference_data, analysis_type,
+def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, reference_data, file_name,
                     distribution_type):
-    file_name = f"{analysis_type}.png"
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
