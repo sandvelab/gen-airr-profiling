@@ -3,11 +3,11 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
 
 
 def run_length_distribution_analysis(analysis_config: AnalysisConfig):
@@ -31,9 +31,9 @@ def run_length_distribution_analysis(analysis_config: AnalysisConfig):
         ])
 
         divergence_scores = []
-        for generated_file, training_file in length_comparison_pairs:
+        for generated_file, reference_file in length_comparison_pairs:
             generated_data_df = pd.read_csv(generated_file, sep='\t', usecols=["junction_aa"])
-            training_data_df = pd.read_csv(training_file, sep='\t', usecols=["junction_aa"])
+            training_data_df = pd.read_csv(reference_file, sep='\t', usecols=["junction_aa"])
 
             generated_lengths = generated_data_df["junction_aa"].apply(len).tolist()
             training_lengths = training_data_df["junction_aa"].apply(len).tolist()
@@ -47,7 +47,7 @@ def run_length_distribution_analysis(analysis_config: AnalysisConfig):
         std_divergence_scores_dict[model] = np.std(divergence_scores)
 
     plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, analysis_config.analysis_output_dir,
-                    analysis_config.reference_data, analysis_config.analysis)
+                    analysis_config.reference_data, analysis_config.analysis, "length")
 
 
 def compute_jsd(dist1, dist2):
@@ -57,34 +57,3 @@ def compute_jsd(dist1, dist2):
     q = [dist2.get(k, 0) for k in all_lengths]
 
     return jensenshannon(p, q, base=2)
-
-
-def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, reference_data, analysis_type):
-    file_name = f"{analysis_type}.png"
-    fig_dir = os.path.join(output_dir, reference_data)
-    os.makedirs(fig_dir, exist_ok=True)
-
-    models, scores = zip(*sorted(mean_divergence_scores_dict.items(), key=lambda x: x[1]))
-    errors = [std_divergence_scores_dict[model] for model in models]
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=models,
-        y=scores,
-        error_y=dict(type='data', array=errors, visible=True),
-        marker=dict(color='skyblue'),
-    ))
-
-    fig.update_layout(
-        title=f"JSD Scores Comparing Length Distributions Across Models and {reference_data.capitalize()} Data",
-        xaxis_title="Models",
-        yaxis_title="Mean JSD for Length Distributions",
-        xaxis_tickangle=-45,
-        template="plotly_white"
-    )
-
-    png_path = os.path.join(fig_dir, file_name)
-    fig.write_image(png_path)
-
-    print(f"Plot saved as PNG at: {png_path}")

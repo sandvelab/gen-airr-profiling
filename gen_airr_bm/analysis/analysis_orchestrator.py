@@ -1,3 +1,4 @@
+from gen_airr_bm.analysis.analyse_kmer_distribution import run_kmer_distribution_analysis
 from gen_airr_bm.analysis.analyse_length_distribution import run_length_distribution_analysis
 from gen_airr_bm.analysis.analyse_phenotype import run_phenotype_analysis
 from gen_airr_bm.analysis.analyse_pgen import run_pgen_analysis
@@ -9,7 +10,8 @@ class AnalysisOrchestrator:
     ANALYSES_METHODS = {
         "phenotype": run_phenotype_analysis,
         "pgen": run_pgen_analysis,
-        "length_distribution": run_length_distribution_analysis
+        "length_distribution": run_length_distribution_analysis,
+        "kmer_distribution": run_kmer_distribution_analysis
     }
 
     def run_analysis(self, analysis_config: AnalysisConfig):
