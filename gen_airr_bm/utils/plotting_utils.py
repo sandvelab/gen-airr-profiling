@@ -24,7 +24,7 @@ def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, out
         title=f"JSD Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
               f"{reference_data.capitalize()} Data",
         xaxis_title="Models",
-        yaxis_title="Mean JSD for Length Distributions",
+        yaxis_title=f"Mean JSD for {distribution_type.capitalize()} Distributions",
         xaxis_tickangle=-45,
         template="plotly_white"
     )
