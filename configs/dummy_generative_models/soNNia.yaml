@@ -9,20 +9,22 @@ definitions:
         region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
-    my_pwm_model:
-      PWM:
-        locus: beta
-        sequence_type: amino_acid
-        region_type: IMGT_JUNCTION
+    my_sonnia_model:
+      SoNNia:
+        batch_size: 10000
+        epochs: 50 #50
+        default_model_name: 'humanTRB'
+        deep: True
+        include_joint_genes: True
+        n_gen_seqs: 1000 #500000
   reports:
     my_KLKmerCompare_report: KLKmerComparison
-    my_pwm_report: PWMSummary
 
 instructions:
   gen_model:
     type: TrainGenModel
-    export_combined_dataset: False
+    export_combined_dataset: True
     dataset: dataset
-    method: my_pwm_model
-    gen_examples_count: 50000
+    method: my_sonnia_model
+    gen_examples_count: 1000
     number_of_processes: 4

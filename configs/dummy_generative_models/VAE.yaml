@@ -39,5 +39,5 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: my_vae_model
-    gen_examples_count: 50000
+    gen_examples_count: 1000
     number_of_processes: 4
