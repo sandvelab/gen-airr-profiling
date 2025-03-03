@@ -1,11 +1,11 @@
-n_experiments: 2
+n_experiments: 1
 output_dir: "results_dummy/experimental"
 input_dir: "data"
 seed: 42
 data_generation:
   experimental: True
   method: "experimental"
-  n_samples: 2
+  n_samples: 20
   default_model_name: "humanTRB"
   input_columns: ["junction_aa", "v_call", "j_call"]
 models:
