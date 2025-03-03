@@ -1,4 +1,5 @@
 import concurrent.futures
+import re
 from pathlib import Path
 
 import numpy as np
@@ -49,6 +50,13 @@ def get_datasets(dataset_dir, olga_helper_data_dir, model_names, default_model_n
             sequences_file_path = f"{dataset_dir}/{model_name}/{dataset}"
             sequences_df = pd.read_csv(sequences_file_path, sep='\t')[["junction_aa", "v_call", "j_call"]]
 
+            # TODO: preprocess files in data generation to get format compatible with olga
+            # # remove rows with * in the sequence
+            # sequences_df = sequences_df[~sequences_df["junction_aa"].str.contains("\*")]
+            # # if nan not found in v_call or j_call for row, apply map of clean_gene_names
+            # sequences_df["v_call"] = sequences_df["v_call"].apply(lambda x: clean_gene_names(x) if not pd.isna(x) else x)
+            # sequences_df["j_call"] = sequences_df["j_call"].apply(lambda x: clean_gene_names(x) if not pd.isna(x) else x)
+
             sequence_file_path_olga = f"{olga_helper_data_dir}/{model_name}/{dataset.split('.')[0]}_olga_sequences.tsv"
             sequences_df.to_csv(sequence_file_path_olga, sep='\t', index=False, header=False)
 
@@ -56,6 +64,18 @@ def get_datasets(dataset_dir, olga_helper_data_dir, model_names, default_model_n
             olga_inputs.append([sequence_file_path_olga, pgens_file_path, default_model_name])
 
     return olga_inputs
+
+
+def clean_gene_names(gene):
+    """Remove the asterisk and the number from the gene name."""
+    # if ", or " in str then only keep the first gene
+    if ", or " in gene:
+        gene = gene.split(", or ")[0]
+
+    if "/" in gene:
+        gene = gene.split("/")[0]
+
+    return re.sub(r"\*\d+", "", gene)
 
 
 def get_plotting_data(olga_helper_data_dir, model_names):
@@ -84,7 +104,7 @@ def plot_pgen_distributions(plotting_data, analysis_dir):
         for file_name, pgen_values in experiments:
             log_pgen_values = [np.log(pgen) for pgen in pgen_values]
             all_pgen_values.append(log_pgen_values)
-            labels.append(f"{model}_{file_name}")
+            labels.append(f"{model}_{file_name.strip('_pgen')}")
             colors.append(model_colors[model])
 
     fig = ff.create_distplot(all_pgen_values, labels, show_hist=False, show_rug=True, colors=colors)
@@ -92,7 +112,9 @@ def plot_pgen_distributions(plotting_data, analysis_dir):
                       xaxis_title='Pgen values',
                       yaxis_title='Frequency')
 
-    fig.write_html(f"{analysis_dir}/pgen_distribution.html")
+    png_path = os.path.join(analysis_dir, "pgen_distribution.png")
+    fig.write_image(png_path)
+    print(f"Plot saved as PNG at: {png_path}")
 
 
 def compute_legal_proportions(olga_helper_data_dir, model_names):
@@ -139,5 +161,7 @@ def plot_legal_proportions(olga_helper_data_dir, model_names, analysis_dir):
         yaxis_title="Avg. Proportion of Legal Generation Probability Values",
     )
 
-    fig.write_html(f"{analysis_dir}/legal_sequences.html")
+    png_path = os.path.join(analysis_dir, "legal_sequences.png")
+    fig.write_image(png_path)
+    print(f"Plot saved as PNG at: {png_path}")
 
