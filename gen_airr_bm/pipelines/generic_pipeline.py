@@ -41,7 +41,7 @@ def main(config_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run AIRR benchmark pipeline.")
+    parser = argparse.ArgumentParser(description="Run AIRR benchmark pipelines.")
     parser.add_argument("config", type=str, help="Path to the configuration YAML file.")
     args = parser.parse_args()
 
