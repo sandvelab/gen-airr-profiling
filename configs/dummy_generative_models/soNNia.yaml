@@ -17,8 +17,6 @@ definitions:
         deep: True
         include_joint_genes: True
         n_gen_seqs: 1000 #500000
-  reports:
-    my_KLKmerCompare_report: KLKmerComparison
 
 instructions:
   gen_model:

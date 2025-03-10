@@ -14,9 +14,6 @@ definitions:
         locus: beta
         sequence_type: amino_acid
         region_type: IMGT_JUNCTION
-  reports:
-    my_KLKmerCompare_report: KLKmerComparison
-    my_pwm_report: PWMSummary
 
 instructions:
   gen_model:
