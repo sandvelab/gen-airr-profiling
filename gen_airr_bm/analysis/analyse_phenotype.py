@@ -63,8 +63,16 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
     return similarities_matrix, generated_datasets_names
 
 
+# def plot_cluster_heatmap(output_dir, similarities_matrix, model_name):
+#     sns.clustermap(similarities_matrix, annot=True, method='average', metric='euclidean')
+#     plt.title(f"Jaccard similarity: {model_name}")
+#     plt.tight_layout()
+#     plt.savefig(f"{output_dir}/cluster_heatmap.png")
+
+
 def plot_cluster_heatmap(output_dir, similarities_matrix, model_name):
-    sns.clustermap(similarities_matrix, annot=True, method='average', metric='euclidean')
-    plt.title(f"Jaccard similarity: {model_name}")
-    plt.tight_layout()
-    plt.savefig(f"{output_dir}/cluster_heatmap.png")
+    g = sns.clustermap(similarities_matrix, annot=True, method='average', metric='euclidean')
+    g.fig.suptitle(f"Jaccard Similarity: {model_name}", fontsize=14, fontweight='bold', y=1.0)
+    #g.fig.suptitle(f"Jaccard similarity: {model_name}")
+    g.savefig(f"{output_dir}/cluster_heatmap.png")
+    plt.close(g.fig)
