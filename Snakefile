@@ -8,7 +8,7 @@ from scripts.kmer_freq_plotting import run_kmer_analysis
 INPUT_DIR = "configs"
 RESULT_DIR = "results"
 # Wildcards parameters
-sim_num = range(10)
+sim_num = range(2)
 data_split = ["train", "test"]
 filtered_sequences_lengths = [10, 15, 20]
 
