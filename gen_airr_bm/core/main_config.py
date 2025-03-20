@@ -20,8 +20,10 @@ class MainConfig:
         self.model_configs = []
         # if analyses are not present in the config, we want empty list
         self.analysis_configs = [
-            AnalysisConfig(analysis["name"], analysis["model"],
-                           f"{self.output_dir}/analyses/{analysis['name']}/{analysis['model']}")
+            AnalysisConfig(analysis["name"], analysis["model_names"],
+                           f"{self.output_dir}/analyses/{analysis['name']}/"
+                           f"{'_'.join(m.lower() for m in analysis['model_names'])}",
+                           self.output_dir, analysis["default_model_name"], analysis.get("reference_data", None))
             for analysis in data.get("analyses", [])
         ] if data.get("analyses") else []
 
@@ -43,7 +45,7 @@ class MainConfig:
                         n_samples=data_generation["n_samples"],
                         data_file=experimental_dataset,
                         experimental=data_generation["experimental"],
-                        model=data_generation["model"],
+                        default_model_name=data_generation["default_model_name"],
                         experiment=exp_idx,
                         seed=exp_seed,
                         output_dir=exp_output_dir,
@@ -57,6 +59,7 @@ class MainConfig:
                         config=model_data["config"],
                         experiment=exp_idx,
                         train_dir=model_data.get("train_dir", ""),
+                        test_dir=model_data.get("test_dir", None),
                         output_dir=exp_output_dir)
                         for model_data in data["models"]]
                 )

@@ -1,0 +1,23 @@
+definitions:
+  datasets:
+    dataset:
+      format: Generic
+      params:
+        path: data.tsv
+        is_repertoire: false
+        paired: false
+        separator: "\t"
+        region_type: IMGT_CDR3
+        columns_to_load:
+          - v_call
+          - j_call
+          - junction_aa
+
+instructions:
+  data_export:
+    type: DatasetExport
+    datasets:
+      - dataset
+    number_of_processes: 4
+    export_formats:
+      - AIRR

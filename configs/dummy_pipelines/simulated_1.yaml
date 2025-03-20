@@ -1,0 +1,42 @@
+n_experiments: 2
+output_dir: "results_dummy/simulated"
+input_dir: "data/simulated"
+seed: 42
+data_generation:
+  experimental: False
+  method: "rare_and_frequent"
+  n_samples: 10
+  default_model_name: "humanTRB"
+  input_columns: ["junction_aa", "v_call", "j_call"]
+models:
+    - name: "pwm"
+      config: "configs/dummy_generative_models/PWM.yaml"
+      train_dir: ""
+    - name: "sonnia"
+      config: "configs/dummy_generative_models/soNNia.yaml"
+      train_dir: ""
+    - name: "vae"
+      config: "configs/dummy_generative_models/VAE.yaml"
+      train_dir: ""
+analyses:
+    - name: "phenotype"
+      model_names: ["pwm"]
+      default_model_name: "humanTRB"
+    - name: "phenotype"
+      model_names: ["sonnia"]
+      default_model_name: "humanTRB"
+    - name: "phenotype"
+      model_names: [ "vae" ]
+      default_model_name: "humanTRB"
+    - name: "length_distribution"
+      model_names: [ "pwm", "sonnia", "vae"]
+      default_model_name: "humanTRB"
+      reference_data: "train"
+    - name: "kmer_distribution"
+      model_names: [ "pwm", "sonnia", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "train"
+    - name: "aminoacid_distribution"
+      model_names: [ "pwm", "sonnia", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "train"

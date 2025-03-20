@@ -19,7 +19,7 @@ def simulate_rare_and_frequent_olga_sequences(config: DataGenerationConfig):
     """
     number_of_sequences = config.n_samples
     output_path = config.output_dir
-    model = config.model
+    default_model_name = config.default_model_name
     seed = config.seed
     os.makedirs(output_path, exist_ok=True)
     output_path_helper_data = os.path.join(output_path, "helper_data")
@@ -30,11 +30,13 @@ def simulate_rare_and_frequent_olga_sequences(config: DataGenerationConfig):
     rare_sequences_file_path = os.path.join(output_path, "rare.tsv")
 
     number_of_olga_sequences = 4 * number_of_sequences
-    simulate_pure_olga_sequences(number_of_olga_sequences, model, sequnces_file_path, seed)
-    column_names_sequences = ["nucleotide", "junction_aa", "v_call", "j_call"]
+    simulate_pure_olga_sequences(number_of_olga_sequences, default_model_name, sequnces_file_path, seed)
+    column_names_sequences = ["junction_aa", "v_call", "j_call"]
     olga_sequences = pd.read_csv(sequnces_file_path, sep='\t', names=column_names_sequences)
+    sequences_file_path_drop_nucleotides = os.path.join(output_path_helper_data, "olga_sequences_drop_nucleotides.tsv")
+    olga_sequences.to_csv(sequences_file_path_drop_nucleotides, sep='\t', index=False, header=False)
 
-    compute_pgen(sequnces_file_path, pgens_file_path, model)
+    compute_pgen(sequences_file_path_drop_nucleotides, pgens_file_path, default_model_name)
     column_names_pgens = ["junction_aa", "pgen"]
     pgens = pd.read_csv(pgens_file_path, sep='\t', names=column_names_pgens)
     pgens.sort_values(by="pgen", inplace=True)
@@ -91,8 +93,9 @@ def preprocess_experimental_data(config: DataGenerationConfig):
     test_dir = os.path.join(output_path, "test")
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(test_dir, exist_ok=True)
-    experimental_train_file_path = os.path.join(train_dir, "experimental.tsv")
-    experimental_test_file_path = os.path.join(test_dir, "experimental.tsv")
+    input_path_file_name = os.path.basename(input_path)
+    experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
+    experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
     experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
     experimental_data = experimental_data.drop_duplicates()
 
@@ -122,16 +125,3 @@ def simulate_pure_olga_sequences(number_of_sequences, model, output_file_path, s
     exit_code = os.system(command)
     if exit_code != 0:
         raise RuntimeError(f"Running olga tool failed:{command}.")
-
-
-def main():
-    number_of_sequences = 1000
-    model = "humanTRB"
-    seed = 42
-    os.makedirs("results", exist_ok=True)
-    sequnces_file_path = "/results"
-    simulate_rare_and_frequent_olga_sequences(number_of_sequences, model, seed, sequnces_file_path)
-
-
-if __name__ == "__main__":
-    main()
