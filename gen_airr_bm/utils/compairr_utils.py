@@ -6,7 +6,7 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
     datasets = os.listdir(sequences_dir)
     os.makedirs(f"{compairr_sequences_dir}", exist_ok=True)
     for dataset in datasets:
-        data = pd.read_csv(f"{sequences_dir}/{dataset}", sep='\t')
+        data = pd.read_csv(sequences_dir / dataset, sep='\t')
 
         if 'duplicate_count' in data.columns:
             data.replace({'duplicate_count': {-1: 1}}, inplace=True)
@@ -22,11 +22,11 @@ def run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_pa
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
     compairr_command = (f"compairr -x {unique_sequences_path} {concat_sequences_path} -d 1 -f -t 8 -u -o "
                         f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
-                        f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
+                        f"--log {compairr_output_dir}/{file_name}_log.txt --indels -g")
 
     # TODO: Add better support for PWM model
-    if model_name == "pwm":
-        compairr_command += " -g"
+    # if model_name == "pwm":
+    #     compairr_command += " -g"
     os.system(compairr_command)
 
 

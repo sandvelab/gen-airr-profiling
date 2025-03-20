@@ -5,8 +5,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import preprocess_files_for_compairr
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr
+from gen_airr_bm.utils.compairr_utils import preprocess_files_for_compairr, process_and_save_sequences, run_compairr
 
 
 def run_novelty_analysis(analysis_config: AnalysisConfig):
