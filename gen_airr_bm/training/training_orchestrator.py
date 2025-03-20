@@ -2,6 +2,7 @@ import os
 
 from gen_airr_bm.core.model_config import ModelConfig
 from gen_airr_bm.training.immuneml_runner import run_immuneml_command, write_immuneml_config
+from gen_airr_bm.utils.compairr_utils import preprocess_files_for_compairr
 
 
 class TrainingOrchestrator:
@@ -27,6 +28,8 @@ class TrainingOrchestrator:
             train_data_full_path = f"{train_data_dir}/{train_data_file}"
             os.makedirs(f"{output_dir}/train_sequences", exist_ok=True)
             os.system(f"cp {train_data_full_path} {output_dir}/train_sequences/{data_file_name}_{model_config.experiment}.tsv")
+            compairr_train_dir = f"{output_dir}/train_compairr_sequences"
+            preprocess_files_for_compairr(f"{output_dir}/train_sequences", compairr_train_dir)
 
             #TODO: this is a quick dirty solution. We need to refactor this part.
             if model_config.test_dir:
@@ -36,6 +39,8 @@ class TrainingOrchestrator:
                 test_data_files = [f for f in os.listdir(test_data_dir) if os.path.isfile(os.path.join(test_data_dir, f))]
                 for test_data_file in test_data_files:
                     os.system(f"cp {test_data_dir}/{test_data_file} {output_dir}/test_sequences/{test_data_file.split('.')[0]}_{model_config.experiment}.tsv")
+                    compairr_test_dir = f"{output_dir}/test_compairr_sequences"
+                    preprocess_files_for_compairr(f"{output_dir}/test_sequences", compairr_test_dir)
 
             os.makedirs(model_output_dir, exist_ok=True)
             self.run_single_training(model_config.config, train_data_full_path, model_output_dir)
@@ -52,3 +57,7 @@ class TrainingOrchestrator:
             os.makedirs(generated_sequences_dir, exist_ok=True)
             os.system(f"cp {immuneml_generated_sequences_dir}/{immuneml_generated_sequences_file} "
                       f"{generated_sequences_dir}/{data_file_name}_{model_config.experiment}.tsv")
+
+            # process files for CompAIRR
+            compairr_model_dir = f"{output_dir}/generated_compairr_sequences/{model_config.name}"
+            preprocess_files_for_compairr(generated_sequences_dir, compairr_model_dir)
