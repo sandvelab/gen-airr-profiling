@@ -1,6 +1,6 @@
-n_experiments: 1
+n_experiments: 2
 output_dir: "results_dummy/experimental"
-input_dir: "data"
+input_dir: "data/experimental"
 seed: 42
 data_generation:
   experimental: True
@@ -22,6 +22,9 @@ models:
       train_dir: "train"
       test_dir: "test"
 analyses:
+    - name: "novelty"
+      model_names: ["pwm", "sonnia"]
+      default_model_name: "humanTRB"
     - name: "phenotype"
       model_names: ["pwm"]
       default_model_name: "humanTRB"

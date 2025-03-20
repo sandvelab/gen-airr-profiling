@@ -1,6 +1,6 @@
 n_experiments: 2
 output_dir: "results_dummy/simulated"
-input_dir: "data"
+input_dir: "data/simulated"
 seed: 42
 data_generation:
   experimental: False
