@@ -75,7 +75,7 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
 def run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name):
     os.makedirs(compairr_output_dir, exist_ok=True)
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
-    compairr_command = (f"compairr -x {unique_sequences_path} {concat_sequences_path} -d 1 -f -t 8 -o "
+    compairr_command = (f"./compairr-1.13.0-linux-x86_64 -x {unique_sequences_path} {concat_sequences_path} -d 1 -f -t 8 -o "
                         f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
 
