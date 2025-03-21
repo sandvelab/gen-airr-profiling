@@ -34,6 +34,10 @@ analyses:
     - name: "phenotype"
       model_names: [ "vae" ]
       default_model_name: "humanTRB"
+    - name: "single_distribution"
+      model_names: [ "pwm", "sonnia", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "train"
     - name: "length_distribution"
       model_names: [ "pwm", "sonnia", "vae" ]
       default_model_name: "humanTRB"
