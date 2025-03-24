@@ -1,6 +1,7 @@
 from enum import Enum
 
+
 class DistributionType(Enum):
-    AA = "aa"
+    AA = "aminoacid"
     KMER = "kmer"
     LENGTH = "length"

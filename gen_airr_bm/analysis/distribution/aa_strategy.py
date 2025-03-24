@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_strategy import DistributionStrategy
+from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
 
 
 class AADistributionStrategy(DistributionStrategy):
@@ -16,6 +17,28 @@ class AADistributionStrategy(DistributionStrategy):
             ref_dist = compute_positional_aa_dist(ref_filtered)
             scores[length].append(compute_jsd_aa(gen_dist, ref_dist))
         return scores
+
+    def init_mean_std_scores(self):
+        return defaultdict(dict), defaultdict(dict)
+
+    def init_divergence_scores(self):
+        return defaultdict(list)
+
+    def update_divergence_scores(self, divergence_scores, new_scores):
+        for length, value in new_scores.items():
+            divergence_scores[length].extend(value)
+
+    def update_mean_std_scores(self, divergence_scores, model_name, mean_scores, std_scores):
+        for length, scores in divergence_scores.items():
+            mean_scores[length][model_name] = np.mean(scores)
+            std_scores[length][model_name] = np.std(scores)
+
+    def plot_scores(self, mean_scores, std_scores, analysis_config, distribution_type):
+        for length in range(10, 21):
+            file_name = f"{distribution_type}_{length}.png"
+            plot_jsd_scores(mean_scores[length], std_scores[length],
+                            analysis_config.analysis_output_dir, analysis_config.reference_data, file_name,
+                            f"{distribution_type} {length}")
 
 
 def compute_positional_aa_dist(sequences):
