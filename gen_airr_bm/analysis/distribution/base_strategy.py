@@ -1,12 +1,15 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
 
 
-class DistributionStrategy:
+class DistributionStrategy(ABC):
+    @abstractmethod
     def compute_divergence(self, gen_seqs, ref_seqs):
-        raise NotImplementedError
+        pass
 
     def init_mean_std_scores(self):
         return {}, {}
