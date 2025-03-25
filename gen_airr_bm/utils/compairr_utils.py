@@ -45,3 +45,9 @@ def process_and_save_sequences(data1_path, data2_path, output_file_unique, outpu
 
     concat_data = pd.concat([data1, data2])
     concat_data.to_csv(output_file_concat, sep='\t', index=False)
+
+
+def setup_directories(analysis_config, dataset_type):
+    """Collect preprocessed directories for train/test sequences."""
+    compairr_dir = f"{analysis_config.root_output_dir}/{dataset_type}_compairr_sequences"
+    return compairr_dir, os.listdir(compairr_dir)

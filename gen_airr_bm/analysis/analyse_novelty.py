@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr
+from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr, setup_directories
 
 
 def run_novelty_analysis(analysis_config: AnalysisConfig):
@@ -36,12 +36,6 @@ def run_novelty_analysis(analysis_config: AnalysisConfig):
 
     plot_results(memorization_results, output_dir, "train_memorization.png", "train")
     plot_results(novelty_results, output_dir, "test_novelty.png", "test")
-
-
-def setup_directories(analysis_config, dataset_type):
-    """Collect preprocessed directories for train/test sequences."""
-    compairr_dir = f"{analysis_config.root_output_dir}/{dataset_type}_compairr_sequences"
-    return compairr_dir, os.listdir(compairr_dir)
 
 
 def compute_and_store_jaccard(results_df, dataset_name, model_name, ref_path, gen_path, output_dir, comparison_type):
