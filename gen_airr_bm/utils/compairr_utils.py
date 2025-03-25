@@ -16,7 +16,7 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
         data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
 
 
-def run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name):
+def run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name=None):
     os.makedirs(compairr_output_dir, exist_ok=True)
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
