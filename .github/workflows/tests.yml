@@ -17,5 +17,8 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install -r requirements.txt
 
-      - name: Run old_tests
-        run: python3 -m pytest old_tests
+      - name: Install dev dependencies
+        run: python3 -m pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python3 -m pytest tests

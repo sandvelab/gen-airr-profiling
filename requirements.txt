@@ -1,7 +1,6 @@
 logomaker
 kaleido
 statsmodels
-pytest==8.0.0
 seaborn
 snakemake
 sonnia==0.1.5
