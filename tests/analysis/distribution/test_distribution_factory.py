@@ -1,9 +1,9 @@
 import pytest
 
-from gen_airr_bm.analysis.distribution.aa_strategy import AADistributionStrategy
+from gen_airr_bm.analysis.distribution.aa_distribution_strategy import AADistributionStrategy
 from gen_airr_bm.analysis.distribution.distribution_factory import get_distribution_strategy
-from gen_airr_bm.analysis.distribution.kmer_strategy import KmerDistributionStrategy
-from gen_airr_bm.analysis.distribution.length_strategy import LengthDistributionStrategy
+from gen_airr_bm.analysis.distribution.kmer_distribution_strategy import KmerDistributionStrategy
+from gen_airr_bm.analysis.distribution.length_distribution_strategy import LengthDistributionStrategy
 from gen_airr_bm.constants.distribution_type import DistributionType
 
 

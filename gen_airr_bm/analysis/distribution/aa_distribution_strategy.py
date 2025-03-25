@@ -3,11 +3,11 @@ from collections import defaultdict
 import numpy as np
 from scipy.spatial.distance import jensenshannon
 
-from gen_airr_bm.analysis.distribution.base_strategy import DistributionStrategy
+from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
 from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
 
 
-class AADistributionStrategy(DistributionStrategy):
+class AADistributionStrategy(BaseDistributionStrategy):
     def compute_divergence(self, gen_seqs, ref_seqs):
         scores = defaultdict(list)
         for length in range(10, 21):

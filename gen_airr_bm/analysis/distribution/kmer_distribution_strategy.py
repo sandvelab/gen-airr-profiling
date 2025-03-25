@@ -3,10 +3,10 @@ from collections import Counter
 import numpy as np
 from scipy.spatial.distance import jensenshannon
 
-from gen_airr_bm.analysis.distribution.base_strategy import DistributionStrategy
+from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
 
 
-class KmerDistributionStrategy(DistributionStrategy):
+class KmerDistributionStrategy(BaseDistributionStrategy):
     def __init__(self, k):
         self.k = k
 

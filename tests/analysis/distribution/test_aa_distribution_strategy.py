@@ -1,6 +1,6 @@
 import pytest
 
-from gen_airr_bm.analysis.distribution.aa_strategy import AADistributionStrategy
+from gen_airr_bm.analysis.distribution.aa_distribution_strategy import AADistributionStrategy
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 

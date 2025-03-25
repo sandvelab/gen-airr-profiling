@@ -7,7 +7,7 @@ from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
 
 
-class DistributionStrategy(ABC):
+class BaseDistributionStrategy(ABC):
     @abstractmethod
     def compute_divergence(self, gen_seqs: list[str], ref_seqs: list[str]) -> Any:
         pass

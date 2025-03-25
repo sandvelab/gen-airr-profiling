@@ -1,7 +1,7 @@
 import pytest
 from collections import Counter
 
-from gen_airr_bm.analysis.distribution.length_strategy import (
+from gen_airr_bm.analysis.distribution.length_distribution_strategy import (
     LengthDistributionStrategy,
     compute_jsd_length
 )
