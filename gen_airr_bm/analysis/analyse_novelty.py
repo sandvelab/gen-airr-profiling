@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr, setup_directories
+from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence, setup_directories
 
 
 def run_novelty_analysis(analysis_config: AnalysisConfig):
@@ -56,7 +56,7 @@ def compute_jaccard_similarity(compairr_helper_files, reference_path, model_path
     process_and_save_sequences(reference_path, model_path, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
-    run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
+    run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
 
     overlap_df = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t')
     n_nonzero_rows = overlap_df[(overlap_df['dataset_1'] != 0) & (overlap_df['dataset_2'] != 0)].shape[0]

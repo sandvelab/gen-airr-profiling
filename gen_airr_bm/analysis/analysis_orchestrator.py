@@ -1,4 +1,4 @@
-from gen_airr_bm.analysis.analyse_connectivity import run_connectivity_analysis
+from gen_airr_bm.analysis.analyse_network import run_network_analysis
 from gen_airr_bm.analysis.analyse_phenotype import run_phenotype_analysis
 from gen_airr_bm.analysis.analyse_pgen import run_pgen_analysis
 from gen_airr_bm.analysis.analyse_novelty import run_novelty_analysis
@@ -13,7 +13,7 @@ class AnalysisOrchestrator:
         "pgen": run_pgen_analysis,
         "reduced_dimensionality": run_reduced_dimensionality_analyses,
         "novelty": run_novelty_analysis,
-        "connectivity": run_connectivity_analysis
+        "network": run_network_analysis
     }
 
     def run_analysis(self, analysis_config: AnalysisConfig):
