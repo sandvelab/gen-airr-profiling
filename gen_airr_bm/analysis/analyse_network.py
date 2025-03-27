@@ -1,11 +1,11 @@
 import os
-from collections import defaultdict
 
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import entropy
 
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.plotting_utils import plot_jsd_scores, plot_degree_distribution, plot_diversity_bar_chart
 from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence, run_compairr_cluster
@@ -21,85 +21,74 @@ def run_network_analysis(analysis_config: AnalysisConfig):
     for directory in [output_dir, compairr_output_helper_dir, compairr_output_dir]:
         os.makedirs(directory, exist_ok=True)
 
-    # calculate diversity scores
-    mean_diversity = defaultdict(dict)
-    std_diversity = defaultdict(dict)
-
-    for model in analysis_config.model_names:
-        diversity_scores = []
-        gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model}"
-        gen_files = [os.path.join(gen_dir, file) for file in set(os.listdir(gen_dir))]
-        for file in gen_files:
-            dataset_name = os.path.splitext(os.path.basename(file))[0]
-            diversity_scores.append(
-                compute_diversity(file, compairr_output_dir, f"{dataset_name}_{model}_clustering"))
-        mean_diversity[model] = np.mean(diversity_scores)
-        std_diversity[model] = np.std(diversity_scores)
-
-    for label in ["train", "test"]:
-        diversity_scores = []
-        dir = f"{analysis_config.root_output_dir}/{label}_compairr_sequences"
-        files = [os.path.join(dir, file) for file in set(os.listdir(dir))]
-        for file in files:
-            dataset_name = os.path.splitext(os.path.basename(file))[0]
-            diversity_scores.append(
-                compute_diversity(file, compairr_output_dir, f"{dataset_name}_{label}_clustering"))
-        mean_diversity[label] = np.mean(diversity_scores)
-        std_diversity[label] = np.std(diversity_scores)
-
-    plot_diversity_bar_chart(mean_diversity, std_diversity, f"{output_dir}/diversity.png")
+    compute_and_plot_diversity_scores(analysis_config, compairr_output_dir)
 
     # calculate connectivity scores
-    mean_scores_train, std_scores_train = {}, {}
-    mean_scores_test, std_scores_test = {}, {}
+    compute_and_plot_connectivity_scores(analysis_config, compairr_output_dir, compairr_output_helper_dir)
+
+
+def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
+    def collect_diversity_scores(dir_path, label):
+        scores = []
+        for file in set(os.listdir(dir_path)):
+            path = os.path.join(dir_path, file)
+            name = os.path.splitext(file)[0]
+            scores.append(compute_diversity(path, compairr_output_dir, f"{name}_{label}_clustering"))
+        return scores
+
+    mean_diversity, std_diversity = {}, {}
+
+    for model in analysis_config.model_names:
+        dir_path = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model}"
+        scores = collect_diversity_scores(dir_path, model)
+        mean_diversity[model], std_diversity[model] = np.mean(scores), np.std(scores)
+
+    for label in ["train", "test"]:
+        dir_path = f"{analysis_config.root_output_dir}/{label}_compairr_sequences"
+        scores = collect_diversity_scores(dir_path, label)
+        mean_diversity[label], std_diversity[label] = np.mean(scores), np.std(scores)
+
+    plot_diversity_bar_chart(mean_diversity, std_diversity, f"{analysis_config.analysis_output_dir}/diversity.png")
+
+
+def compute_and_plot_connectivity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str,
+                                         compairr_output_helper_dir: str):
+    dataset_splits = DatasetSplit.train_and_test()
+    mean_scores = {split: {} for split in dataset_splits}
+    std_scores = {split: {} for split in dataset_splits}
     for model in analysis_config.model_names:
         comparison_sets = get_sequence_file_sets(analysis_config, model)
-
-        divergence_scores_train, divergence_scores_test = [], []
+        divergence_scores = {split: [] for split in dataset_splits}
 
         for gen_file, train_file, test_file in comparison_sets:
-            file_label_pairs = list(zip((gen_file, train_file, test_file), (model, "train", "test")))
             dataset_name = os.path.splitext(os.path.basename(gen_file))[0]
+            files = {
+                DatasetSplit.TRAIN: train_file,
+                DatasetSplit.TEST: test_file,
+                model: gen_file
+            }
 
-            # compute and collect JS divergence
-            divergence_score_train, divergence_score_test = compute_and_plot_degree_distribution(file_label_pairs,
-                                                                                                  compairr_output_helper_dir,
-                                                                                                  compairr_output_dir,
-                                                                                                  output_dir,
-                                                                                                  model,
-                                                                                                  dataset_name)
-            divergence_scores_train.extend(divergence_score_train)
-            divergence_scores_test.extend(divergence_score_test)
+            compairr_connectivity_results = {
+                label: compute_compairr_connectivity(f, compairr_output_helper_dir, compairr_output_dir, label)
+                for label, f in files.items()
+            }
 
-        mean_scores_train[model] = np.mean(divergence_scores_train)
-        std_scores_train[model] = np.std(divergence_scores_train)
+            degree_distributions = {label: get_node_degree_distribution(result)
+                                    for label, result in compairr_connectivity_results.items()}
 
-        mean_scores_test[model] = np.mean(divergence_scores_test)
-        std_scores_test[model] = np.std(divergence_scores_test)
+            for split in dataset_splits:
+                plot_degree_distribution(degree_distributions[model], degree_distributions[split],
+                                         analysis_config.analysis_output_dir, model, split.value, dataset_name)
+                divergence_scores[split].extend(compute_divergence(degree_distributions[model],
+                                                                   degree_distributions[split]))
 
-    # plot the mean and standard deviation of the divergence scores
-    plot_scores(mean_scores_train, std_scores_train, analysis_config.analysis_output_dir, "train", "connectivity")
-    plot_scores(mean_scores_test, std_scores_test, analysis_config.analysis_output_dir, "test", "connectivity")
+        for split in dataset_splits:
+            mean_scores[split][model] = np.mean(divergence_scores[split])
+            std_scores[split][model] = np.std(divergence_scores[split])
 
-
-# TODO: code from run_network_analysis was quickly dumped here, needs to be refactored
-def compute_and_plot_degree_distribution(file_label_pairs, compairr_output_helper_dir, compairr_output_dir, output_dir, model, dataset_name):
-    gen_compairr_result, train_compairr_result, test_compairr_result = [
-        compute_compairr_results(file, compairr_output_helper_dir, compairr_output_dir, label)
-        for file, label in file_label_pairs
-    ]
-
-    gen_degree_dist, train_degree_dist, test_degree_dist = map(get_node_degree_distribution,
-                                                               [gen_compairr_result,
-                                                                train_compairr_result,
-                                                                test_compairr_result])
-
-    plot_degree_distribution(gen_degree_dist, train_degree_dist, output_dir, model,
-                             "train", dataset_name)
-    plot_degree_distribution(gen_degree_dist, test_degree_dist, output_dir, model,
-                             "test", dataset_name)
-
-    return compute_divergence(gen_degree_dist, train_degree_dist), compute_divergence(gen_degree_dist, test_degree_dist)
+    for split in dataset_splits:
+        plot_connectivity_scores(mean_scores[split], std_scores[split], analysis_config.analysis_output_dir,
+                                 split.value, "connectivity")
 
 
 def compute_diversity(data_file, compairr_output_dir, file_name):
@@ -112,7 +101,8 @@ def compute_diversity(data_file, compairr_output_dir, file_name):
     return shannon_entropy
 
 
-def compute_compairr_results(input_sequences_path, compairr_output_helper_dir, compairr_output_dir, dataset_type):
+def compute_compairr_connectivity(input_sequences_path, compairr_output_helper_dir, compairr_output_dir, dataset_type):
+    dataset_type = dataset_type.value if isinstance(dataset_type, DatasetSplit) else dataset_type
     file_name = f"{os.path.splitext(os.path.basename(input_sequences_path))[0]}_{dataset_type}"
     unique_sequences_path = f"{compairr_output_helper_dir}/{file_name}_unique.tsv"
     concat_sequences_path = f"{compairr_output_helper_dir}/{file_name}_concat.tsv"
@@ -159,8 +149,8 @@ def compute_divergence(gen_node_degree_distribution, ref_node_degree_distributio
     return [jsd]
 
 
-def plot_scores(mean_scores: dict, std_scores: dict, output_dir: str, reference_data: str,
-                distribution_type: str) -> None:
+def plot_connectivity_scores(mean_scores: dict, std_scores: dict, output_dir: str, reference_data: str,
+                             distribution_type: str) -> None:
     """Plot the mean and standard deviation of the divergence scores."""
     file_name = f"{distribution_type}.png"
     plot_jsd_scores(mean_scores, std_scores, output_dir, reference_data,
