@@ -8,8 +8,8 @@ from gen_airr_bm.analysis.distribution.kmer_distribution_strategy import (
 
 def test_kmer_distribution_strategy_divergence(mocker):
     mock_compute_kmer_distribution = mocker.patch(
-        "gen_airr_bm.analysis.distribution.kmer_strategy.compute_kmer_distribution")
-    mock_compute_jsd_kmers = mocker.patch("gen_airr_bm.analysis.distribution.kmer_strategy.compute_jsd_kmers")
+        "gen_airr_bm.analysis.distribution.kmer_distribution_strategy.compute_kmer_distribution")
+    mock_compute_jsd_kmers = mocker.patch("gen_airr_bm.analysis.distribution.kmer_distribution_strategy.compute_jsd_kmers")
 
     strategy = KmerDistributionStrategy(k=3)
     gen = ["ABCDEF", "GHIJKL"]
