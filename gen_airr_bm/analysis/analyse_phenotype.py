@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr
+from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence
 
 
 def run_phenotype_analysis(analysis_config: AnalysisConfig):
@@ -49,7 +49,7 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
             process_and_save_sequences(dataset1_path, dataset2_path, unique_sequences_path, concat_sequences_path)
 
             compairr_output_dir = f"{output_dir}/compairr_output"
-            run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
+            run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
 
             overlap_df = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t')
             n_nonzero_rows = overlap_df[(overlap_df['dataset_1'] != 0) & (overlap_df['dataset_2'] != 0)].shape[0]

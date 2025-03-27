@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr
+from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence, setup_directories
 
 
 def run_novelty_analysis(analysis_config: AnalysisConfig):
@@ -38,12 +38,6 @@ def run_novelty_analysis(analysis_config: AnalysisConfig):
     plot_results(novelty_results, output_dir, "test_novelty.png", "test")
 
 
-def setup_directories(analysis_config, dataset_type):
-    """Collect preprocessed directories for train/test sequences."""
-    compairr_dir = f"{analysis_config.root_output_dir}/{dataset_type}_compairr_sequences"
-    return compairr_dir, os.listdir(compairr_dir)
-
-
 def compute_and_store_jaccard(results_df, dataset_name, model_name, ref_path, gen_path, output_dir, comparison_type):
     """Computes Jaccard similarity and stores results in DataFrame."""
     helper_dir = f"{output_dir}/compairr_helper_files"
@@ -62,7 +56,7 @@ def compute_jaccard_similarity(compairr_helper_files, reference_path, model_path
     process_and_save_sequences(reference_path, model_path, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
-    run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
+    run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
 
     overlap_df = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t')
     n_nonzero_rows = overlap_df[(overlap_df['dataset_1'] != 0) & (overlap_df['dataset_2'] != 0)].shape[0]

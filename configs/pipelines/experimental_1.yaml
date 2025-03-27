@@ -1,6 +1,6 @@
-n_experiments: 8
-output_dir: "results/experimental"
-input_dir: "data"
+n_experiments: 5
+output_dir: "results_mar27/experimental"
+input_dir: "data/naive_cd4_clean/"
 seed: 42
 data_generation:
   experimental: True
@@ -17,44 +17,23 @@ models:
       config: "configs/generative_models/soNNia.yaml"
       train_dir: "train"
       test_dir: "test"
-    - name: "vae"
-      config: "configs/generative_models/VAE.yaml"
-      train_dir: "train"
-      test_dir: "test"
+#    - name: "vae"
+#      config: "configs/generative_models/VAE.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
 analyses:
-    - name: "phenotype"
-      model_names: ["pwm"]
+    - name: "network"
+      model_names: ["pwm", "sonnia"]
       default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: ["sonnia"]
+    - name: "novelty"
+      model_names: [ "pwm", "sonnia" ]
       default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: [ "vae" ]
-      default_model_name: "humanTRB"
-    - name: "length_distribution"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "train"
-    - name: "length_distribution"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "test"
-    - name: "kmer_distribution"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "train"
-    - name: "kmer_distribution"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "test"
-    - name: "pgen"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-    - name: "aminoacid_distribution"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "train"
-    - name: "aminoacid_distribution"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "test"
+#    - name: "phenotype"
+#      model_names: ["pwm"]
+#      default_model_name: "humanTRB"
+#    - name: "phenotype"
+#      model_names: ["sonnia"]
+#      default_model_name: "humanTRB"
+#    - name: "phenotype"
+#      model_names: [ "vae" ]
+#      default_model_name: "humanTRB"

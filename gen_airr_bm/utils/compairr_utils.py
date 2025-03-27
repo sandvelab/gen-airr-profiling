@@ -16,7 +16,7 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
         data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
 
 
-def run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name):
+def run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name=None):
     os.makedirs(compairr_output_dir, exist_ok=True)
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
@@ -28,6 +28,14 @@ def run_compairr(compairr_output_dir, unique_sequences_path, concat_sequences_pa
     # TODO: Add better support for PWM model
     # if model_name == "pwm":
     #     compairr_command += " -g"
+    os.system(compairr_command)
+
+
+def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name):
+    os.makedirs(compairr_output_dir, exist_ok=True)
+    # TODO: Maybe replace -u method ignoring illegal characters in sequences
+    compairr_command = (f"compairr -c {sequnces_path} -o {compairr_output_dir}/{file_name}.tsv -g -d 1 -u "
+                        f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
     os.system(compairr_command)
 
 
@@ -45,3 +53,9 @@ def process_and_save_sequences(data1_path, data2_path, output_file_unique, outpu
 
     concat_data = pd.concat([data1, data2])
     concat_data.to_csv(output_file_concat, sep='\t', index=False)
+
+
+def setup_directories(analysis_config, dataset_type):
+    """Collect preprocessed directories for train/test sequences."""
+    compairr_dir = f"{analysis_config.root_output_dir}/{dataset_type}_compairr_sequences"
+    return compairr_dir, os.listdir(compairr_dir)

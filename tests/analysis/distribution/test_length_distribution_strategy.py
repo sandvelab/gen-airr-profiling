@@ -8,8 +8,8 @@ from gen_airr_bm.analysis.distribution.length_distribution_strategy import (
 
 
 def test_length_distribution_strategy_divergence(mocker):
-    mock_counter = mocker.patch("gen_airr_bm.analysis.distribution.length_strategy.Counter")
-    mock_compute_jsd_length = mocker.patch("gen_airr_bm.analysis.distribution.length_strategy.compute_jsd_length")
+    mock_counter = mocker.patch("gen_airr_bm.analysis.distribution.length_distribution_strategy.Counter")
+    mock_compute_jsd_length = mocker.patch("gen_airr_bm.analysis.distribution.length_distribution_strategy.compute_jsd_length")
     strategy = LengthDistributionStrategy()
 
     gen = ["AAAAA", "BBBB", "CCC"]     # lengths: 5, 4, 3

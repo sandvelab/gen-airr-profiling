@@ -7,8 +7,8 @@ from gen_airr_bm.core.analysis_config import AnalysisConfig
 # TO DO: Cover whole AA distribution strategy with tests
 def test_aa_distribution_strategy_compute_divergence(mocker):
     mock_compute_positional_aa_dist = mocker.patch(
-        "gen_airr_bm.analysis.distribution.aa_strategy.compute_positional_aa_dist")
-    mock_compute_jsd_aa = mocker.patch("gen_airr_bm.analysis.distribution.aa_strategy.compute_jsd_aa")
+        "gen_airr_bm.analysis.distribution.aa_distribution_strategy.compute_positional_aa_dist")
+    mock_compute_jsd_aa = mocker.patch("gen_airr_bm.analysis.distribution.aa_distribution_strategy.compute_jsd_aa")
     mock_compute_jsd_aa.return_value = 0.5
 
     strategy = AADistributionStrategy()
@@ -61,7 +61,7 @@ def test_aa_distribution_strategy_update_mean_std_scores():
 
 
 def test_aa_distribution_strategy_plot_scores(mocker):
-    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.aa_strategy.plot_jsd_scores")
+    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.aa_distribution_strategy.plot_jsd_scores")
 
     strategy = AADistributionStrategy()
     mean_scores = {length: {"model": 0.5} for length in range(10, 21)}

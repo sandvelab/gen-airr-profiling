@@ -12,6 +12,7 @@ definitions:
           - v_call
           - j_call
           - junction_aa
+          - sequence_id
 
 instructions:
   data_export:
