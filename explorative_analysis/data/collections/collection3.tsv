@@ -1,0 +1,10 @@
+repertoire_id	study_id	subject_id	sample_id	ir_sequence_count	study_group_description	tissue_label	cell_subset_label	pcr_target_locus	library_generation_method
+64189b4a7c7dc3feb341f9cc	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD4+CD127+ Tconv	80551	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b457c7dc3feb341f9ba	DOI:10.1172/JCI.insight.88242	6254	6254_pancreatic lymph node_CD4+CD127+ Tconv	70450	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b317c7dc3feb341f97a	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD4+CD127+ Tconv	69047	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b357c7dc3feb341f988	DOI:10.1172/JCI.insight.88242	6278	6278_spleen_CD4+CD127+ Tconv	114216	No Diabetes	spleen	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b2e7c7dc3feb341f972	DOI:10.1172/JCI.insight.88242	6289	6289_spleen_CD4+CD127+ Tconv	110037	No Diabetes	spleen	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b4f7c7dc3feb341f9db	DOI:10.1172/JCI.insight.88242	6288	6288_spleen_CD4+CD127+ Tconv	94184	No Diabetes	spleen	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b407c7dc3feb341f9aa	DOI:10.1172/JCI.insight.88242	6279	6279_spleen_CD4+CD127+ Tconv	79385	No Diabetes	spleen	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b487c7dc3feb341f9c3	DOI:10.1172/JCI.insight.88242	6271	6271_spleen_CD4+CD127+ Tconv	44325	No Diabetes	spleen	CD4-positive, alpha-beta T cell	TRB	PCR
+64189b4b7c7dc3feb341f9cd	DOI:10.1172/JCI.insight.88242	6254	6254_spleen_CD4+CD127+ Tconv	39667	No Diabetes	spleen	CD4-positive, alpha-beta T cell	TRB	PCR
