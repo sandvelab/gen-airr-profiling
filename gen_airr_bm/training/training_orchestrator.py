@@ -27,7 +27,7 @@ class TrainingOrchestrator:
             model_output_dir = f"{model_config.output_dir}/{model_config.name}/{data_file_name}"
             train_data_full_path = f"{train_data_dir}/{train_data_file}"
             os.makedirs(f"{output_dir}/train_sequences", exist_ok=True)
-            os.system(f"cp {train_data_full_path} {output_dir}/train_sequences/{data_file_name}_{model_config.experiment}.tsv")
+            os.system(f"cp -n {train_data_full_path} {output_dir}/train_sequences/{data_file_name}_{model_config.experiment}.tsv")
             compairr_train_dir = f"{output_dir}/train_compairr_sequences"
             preprocess_files_for_compairr(f"{output_dir}/train_sequences", compairr_train_dir)
 
@@ -38,7 +38,7 @@ class TrainingOrchestrator:
                 test_data_dir = os.path.join(model_config.output_dir, model_config.test_dir)
                 test_data_files = [f for f in os.listdir(test_data_dir) if os.path.isfile(os.path.join(test_data_dir, f))]
                 for test_data_file in test_data_files:
-                    os.system(f"cp {test_data_dir}/{test_data_file} {output_dir}/test_sequences/{test_data_file.split('.')[0]}_{model_config.experiment}.tsv")
+                    os.system(f"cp -n {test_data_dir}/{test_data_file} {output_dir}/test_sequences/{test_data_file.split('.')[0]}_{model_config.experiment}.tsv")
                     compairr_test_dir = f"{output_dir}/test_compairr_sequences"
                     preprocess_files_for_compairr(f"{output_dir}/test_sequences", compairr_test_dir)
 
@@ -55,7 +55,7 @@ class TrainingOrchestrator:
             ][0]
             generated_sequences_dir = f"{output_dir}/generated_sequences/{model_config.name}"
             os.makedirs(generated_sequences_dir, exist_ok=True)
-            os.system(f"cp {immuneml_generated_sequences_dir}/{immuneml_generated_sequences_file} "
+            os.system(f"cp -n {immuneml_generated_sequences_dir}/{immuneml_generated_sequences_file} "
                       f"{generated_sequences_dir}/{data_file_name}_{model_config.experiment}.tsv")
 
             # process files for CompAIRR

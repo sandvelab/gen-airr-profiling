@@ -11,7 +11,7 @@ definitions:
   ml_methods:
     my_vae_model:
       SimpleVAE:
-        batch_size: 100
+        batch_size: 1000
         beta: 0.75
         cdr3_embed_dim: 21
         locus: beta
@@ -39,5 +39,5 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: my_vae_model
-    gen_examples_count: 50000
+    gen_examples_count: 1000000
     number_of_processes: 4

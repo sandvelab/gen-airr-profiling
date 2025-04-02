@@ -9,17 +9,24 @@ definitions:
         region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
-    my_pwm_model:
-      PWM:
-        locus: beta
-        sequence_type: amino_acid
-        region_type: IMGT_JUNCTION
+    my_lstm_model:
+        SimpleLSTM:
+            chain: beta
+            sequence_type: amino_acid
+            num_epochs: 500
+            batch_size: 1000
+            device: cpu
+            hidden_size: 64
+            learning_rate: 0.001
+            embed_size: 4
+            temperature: 0.4
+            num_layers: 2
 
 instructions:
   gen_model:
     type: TrainGenModel
     export_combined_dataset: False
     dataset: dataset
-    method: my_pwm_model
+    method: my_lstm_model
     gen_examples_count: 1000000
     number_of_processes: 4
