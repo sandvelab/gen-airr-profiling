@@ -76,7 +76,8 @@ def main():
     os.makedirs(ihub_dir, exist_ok=True)
     filename_mappings = []
 
-    for phenotype in ["pancreatic_lymph_node", "spleen", "naive_cd4", "memory_cd4"]:
+    #for phenotype in ["pancreatic_lymph_node", "spleen", "naive_cd4", "memory_cd4"]:
+    for phenotype in ["cd4_Treg", "cd8"]:
         ir_download_folders = f"../data/ir_download_folders/{phenotype}"
         ir_phenotype_datasets = f"../data/ir_phenotype_datasets/{phenotype}"
         os.makedirs(ir_phenotype_datasets, exist_ok=True)
@@ -103,6 +104,10 @@ def main():
 
     # save mappings file
     df = pd.DataFrame(filename_mappings)
+    filename_mappings_path = "../data/ir_filename_mapping.csv"
+    if os.path.exists(filename_mappings_path):
+        df = pd.concat([pd.read_csv(filename_mappings_path), df], ignore_index=True)
+
     df.to_csv("../data/ir_filename_mapping.csv", index=False)
 
 
