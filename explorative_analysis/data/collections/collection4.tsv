@@ -1,14 +1,14 @@
-repertoire_id	study_id	subject_id	sample_id	ir_sequence_count	study_group_description	tissue_label	cell_subset_label	pcr_target_locus	library_generation_method
-64189b4a7c7dc3feb341f9cc	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD4+CD127+ Tconv	80551	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR
-64189b457c7dc3feb341f9ba	DOI:10.1172/JCI.insight.88242	6254	6254_pancreatic lymph node_CD4+CD127+ Tconv	70450	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR
-64189b317c7dc3feb341f97a	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD4+CD127+ Tconv	69047	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR
-64189b4d7c7dc3feb341f9d4	DOI:10.1172/JCI.insight.88242	6174	6174_pancreatic lymph node_CD4+CD127–CD25+ Treg	128213	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR
-64189b2c7c7dc3feb341f96a	DOI:10.1172/JCI.insight.88242	6289	6289_pancreatic lymph node_CD4+CD127–CD25+ Treg	81171	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR
-64189b497c7dc3feb341f9c7	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD4+CD127–CD25+ Treg	61689	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR
-64189b337c7dc3feb341f983	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD4+CD127–CD25+ Treg	59894	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR
-64189b487c7dc3feb341f9c6	DOI:10.1172/JCI.insight.88242	6288	6288_pancreatic lymph node_CD4+CD127–CD25+ Treg	58610	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR
-64189b507c7dc3feb341f9de	DOI:10.1172/JCI.insight.88242	6174	6174_pancreatic lymph node_CD8+ T cell	66235	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR
-64189b4b7c7dc3feb341f9ce	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD8+ T cell	65531	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR
-64189b367c7dc3feb341f98a	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD8+ T cell	57642	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR
-64189b4e7c7dc3feb341f9d9	DOI:10.1172/JCI.insight.88242	6254	6254_pancreatic lymph node_CD8+ T cell	55220	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR
-64189b4e7c7dc3feb341f9d7	DOI:10.1172/JCI.insight.88242	6288	6288_pancreatic lymph node_CD8+ T cell	40835	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR
+repertoire_id	study_id	subject_id	sample_id	ir_sequence_count	study_group_description	tissue_label	cell_subset_label	pcr_target_locus	library_generation_method	mapped_filename
+64189b4a7c7dc3feb341f9cc	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD4+CD127+ Tconv	80551	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR	pancreatic_lymph_node_2.tsv
+64189b457c7dc3feb341f9ba	DOI:10.1172/JCI.insight.88242	6254	6254_pancreatic lymph node_CD4+CD127+ Tconv	70450	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR	pancreatic_lymph_node_1.tsv
+64189b317c7dc3feb341f97a	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD4+CD127+ Tconv	69047	No Diabetes	pancreatic lymph node	CD4-positive, alpha-beta T cell	TRB	PCR	pancreatic_lymph_node_0.tsv
+64189b4d7c7dc3feb341f9d4	DOI:10.1172/JCI.insight.88242	6174	6174_pancreatic lymph node_CD4+CD127–CD25+ Treg	128213	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR	cd4_Treg_1.tsv
+64189b2c7c7dc3feb341f96a	DOI:10.1172/JCI.insight.88242	6289	6289_pancreatic lymph node_CD4+CD127–CD25+ Treg	81171	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR	cd4_Treg_4.tsv
+64189b497c7dc3feb341f9c7	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD4+CD127–CD25+ Treg	61689	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR	cd4_Treg_3.tsv
+64189b337c7dc3feb341f983	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD4+CD127–CD25+ Treg	59894	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR	cd4_Treg_0.tsv
+64189b487c7dc3feb341f9c6	DOI:10.1172/JCI.insight.88242	6288	6288_pancreatic lymph node_CD4+CD127–CD25+ Treg	58610	No Diabetes	pancreatic lymph node	regulatory T cell	TRB	PCR	cd4_Treg_2.tsv
+64189b507c7dc3feb341f9de	DOI:10.1172/JCI.insight.88242	6174	6174_pancreatic lymph node_CD8+ T cell	66235	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR	cd8_1.tsv
+64189b4b7c7dc3feb341f9ce	DOI:10.1172/JCI.insight.88242	6271	6271_pancreatic lymph node_CD8+ T cell	65531	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR	cd8_0.tsv
+64189b367c7dc3feb341f98a	DOI:10.1172/JCI.insight.88242	6279	6279_pancreatic lymph node_CD8+ T cell	57642	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR	cd8_3.tsv
+64189b4e7c7dc3feb341f9d9	DOI:10.1172/JCI.insight.88242	6254	6254_pancreatic lymph node_CD8+ T cell	55220	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR	cd8_2.tsv
+64189b4e7c7dc3feb341f9d7	DOI:10.1172/JCI.insight.88242	6288	6288_pancreatic lymph node_CD8+ T cell	40835	No Diabetes	pancreatic lymph node	CD8-positive, alpha-beta T cell	TRB	PCR	

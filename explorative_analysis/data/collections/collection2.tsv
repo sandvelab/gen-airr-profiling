@@ -1,11 +1,11 @@
-repertoire_id	study_id	subject_id	sample_id	ir_sequence_count	study_group_description	tissue_label	cell_subset_label	pcr_target_locus	library_generation_method
-6623f3e2229fedfad25d829e	IR-T1D-000001	CerosalettiLab0168	wb93354616	234786	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3ec229fedfad25d82bc	IR-T1D-000001	CerosalettiLab0246	wb36503716	109203	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3ea229fedfad25d82b4	IR-T1D-000001	CerosalettiLab0245	wb38769032	97911	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3e6229fedfad25d82a8	IR-T1D-000001	CerosalettiLab0207	wb32419318	92942	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3e8229fedfad25d82b0	IR-T1D-000001	CerosalettiLab0030	wb16703410	91914	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3f2229fedfad25d82cc	IR-T1D-000001	CerosalettiLab0088	wb72887488	82335	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3e8229fedfad25d82af	IR-T1D-000001	CerosalettiLab0030	wb16703410	80719	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3ee229fedfad25d82c0	IR-T1D-000001	CerosalettiLab0246	wb98202936	78841	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3ef229fedfad25d82c3	IR-T1D-000001	CerosalettiLab0247	wb88715424	76680	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR
-6623f3e2229fedfad25d829d	IR-T1D-000001	CerosalettiLab0168	wb93354616	70069	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR
+repertoire_id	study_id	subject_id	sample_id	ir_sequence_count	study_group_description	tissue_label	cell_subset_label	pcr_target_locus	library_generation_method	mapped_filename
+6623f3e2229fedfad25d829e	IR-T1D-000001	CerosalettiLab0168	wb93354616	234786	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR	naive_cd4_0.tsv
+6623f3ec229fedfad25d82bc	IR-T1D-000001	CerosalettiLab0246	wb36503716	109203	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR	naive_cd4_1.tsv
+6623f3ea229fedfad25d82b4	IR-T1D-000001	CerosalettiLab0245	wb38769032	97911	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR	naive_cd4_4.tsv
+6623f3e6229fedfad25d82a8	IR-T1D-000001	CerosalettiLab0207	wb32419318	92942	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR	naive_cd4_2.tsv
+6623f3e8229fedfad25d82b0	IR-T1D-000001	CerosalettiLab0030	wb16703410	91914	Control (non-diabetic)	blood	naive thymus-derived CD4-positive, alpha-beta T cell	TRB	PCR	naive_cd4_3.tsv
+6623f3f2229fedfad25d82cc	IR-T1D-000001	CerosalettiLab0088	wb72887488	82335	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR	memory_cd4_3.tsv
+6623f3e8229fedfad25d82af	IR-T1D-000001	CerosalettiLab0030	wb16703410	80719	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR	memory_cd4_2.tsv
+6623f3ee229fedfad25d82c0	IR-T1D-000001	CerosalettiLab0246	wb98202936	78841	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR	memory_cd4_1.tsv
+6623f3ef229fedfad25d82c3	IR-T1D-000001	CerosalettiLab0247	wb88715424	76680	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR	memory_cd4_4.tsv
+6623f3e2229fedfad25d829d	IR-T1D-000001	CerosalettiLab0168	wb93354616	70069	Control (non-diabetic)	blood	central memory CD4-positive, alpha-beta T cell	TRB	PCR	memory_cd4_0.tsv
