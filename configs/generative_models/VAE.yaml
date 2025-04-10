@@ -11,28 +11,20 @@ definitions:
   ml_methods:
     my_vae_model:
       SimpleVAE:
-        batch_size: 1000
+        batch_size: 512
         beta: 0.75
         cdr3_embed_dim: 21
         locus: beta
         device: cpu
         j_gene_embed_dim: 13
-        latent_dim: 20
-        linear_nodes_count: 75
-        num_epochs: 500
+        latent_dim: 30
+        linear_nodes_count: 256
+        num_epochs: 1000
         patience: 20
-        pretrains: 10
+        pretrains: 5
         v_gene_embed_dim: 30
         warmup_epochs: 20
         validation_split: 0.1
-
-  reports:
-    my_KLKmerCompare_report: KLKmerComparison
-    my_vae_report:
-      VAESummary:
-        dim_dist_cols: 4
-        dim_dist_rows: None
-
 instructions:
   gen_model:
     type: TrainGenModel
@@ -40,4 +32,4 @@ instructions:
     dataset: dataset
     method: my_vae_model
     gen_examples_count: 1000000
-    number_of_processes: 4
+    number_of_processes: 1
