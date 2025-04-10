@@ -11,7 +11,7 @@ definitions:
   ml_methods:
     my_lstm_model:
         SimpleLSTM:
-            chain: beta
+            locus: beta
             sequence_type: amino_acid
             num_epochs: 500
             batch_size: 1000

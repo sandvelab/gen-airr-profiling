@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import yaml
 
@@ -16,7 +17,7 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
 
 def run_immuneml_command(input_file, output_dir):
     """Runs immuneML with the given input file and output directory."""
-    command = f"immune-ml {input_file} {output_dir}"
-    exit_code = os.system(command)
-    if exit_code != 0:
-        raise RuntimeError(f"Running immuneML failed:{command}.")
+    command = ["immune-ml", input_file, output_dir]
+    process = subprocess.Popen(command)
+    print(f"Started PID {process.pid}")
+    process.wait()

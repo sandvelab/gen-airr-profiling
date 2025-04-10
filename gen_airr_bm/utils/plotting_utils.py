@@ -9,7 +9,7 @@ def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, out
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
-    models, scores = zip(*sorted(mean_divergence_scores_dict.items(), key=lambda x: x[1]))
+    models, scores = zip(*sorted(mean_divergence_scores_dict.items(), key=lambda x: x[0]))
     errors = [std_divergence_scores_dict[model] for model in models]
 
     fig = go.Figure()
