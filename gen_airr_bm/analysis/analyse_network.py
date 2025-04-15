@@ -8,7 +8,8 @@ from scipy.stats import entropy
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.plotting_utils import plot_jsd_scores, plot_degree_distribution, plot_diversity_bar_chart
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence, run_compairr_cluster
+from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets, run_compairr_existence, \
+    run_compairr_cluster, deduplicate_single_dataset
 
 
 def run_network_analysis(analysis_config: AnalysisConfig):
@@ -105,16 +106,16 @@ def compute_compairr_connectivity(input_sequences_path, compairr_output_helper_d
     dataset_type = dataset_type.value if isinstance(dataset_type, DatasetSplit) else dataset_type
     file_name = f"{os.path.splitext(os.path.basename(input_sequences_path))[0]}_{dataset_type}"
     unique_sequences_path = f"{compairr_output_helper_dir}/{file_name}_unique.tsv"
-    concat_sequences_path = f"{compairr_output_helper_dir}/{file_name}_concat.tsv"
-    process_and_save_sequences(input_sequences_path, input_sequences_path, unique_sequences_path, concat_sequences_path)
-    run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name)
-    compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t')
+    deduplicate_single_dataset(input_sequences_path, unique_sequences_path)
+    run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name)
+    compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
+                                  names=['sequence_id', 'overlap_count'], header=0)
     return compairr_result
 
 
 def get_node_degree_distribution(compairr_result):
-    compairr_result['dataset_1'] -= 1
-    node_degree_distribution = compairr_result['dataset_1'].value_counts()
+    compairr_result['overlap_count'] -= 1
+    node_degree_distribution = compairr_result['overlap_count'].value_counts()
     return node_degree_distribution
 
 

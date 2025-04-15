@@ -16,12 +16,12 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
         data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
 
 
-def run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name=None):
+def run_compairr_existence(compairr_output_dir, search_sequences_path, reference_sequences_path, file_name, model_name=None):
     os.makedirs(compairr_output_dir, exist_ok=True)
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
     #TODO: update to compairr binary
-    compairr_command = (f"compairr -x {unique_sequences_path} {concat_sequences_path} -d 1 -f -t 8 -u -g -o "
+    compairr_command = (f"compairr -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
                         f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
 
@@ -39,7 +39,7 @@ def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name):
     os.system(compairr_command)
 
 
-def process_and_save_sequences(data1_path, data2_path, output_file_unique, output_file_concat):
+def deduplicate_and_merge_two_datasets(data1_path, data2_path, output_file_unique, output_file_concat):
     data1 = pd.read_csv(data1_path, sep='\t')
     data2 = pd.read_csv(data2_path, sep='\t')
     data1['sequence_id'] = [f"dataset_1_{i + 1}" for i in range(len(data1))]
@@ -53,6 +53,14 @@ def process_and_save_sequences(data1_path, data2_path, output_file_unique, outpu
 
     concat_data = pd.concat([data1, data2])
     concat_data.to_csv(output_file_concat, sep='\t', index=False)
+
+
+def deduplicate_single_dataset(input_sequences_path, output_file_unique):
+    data = pd.read_csv(input_sequences_path, sep='\t')
+    data['sequence_id'] = [f"dataset_{i + 1}" for i in range(len(data))]
+
+    unique_sequences = data.drop_duplicates(subset=['junction_aa'])
+    unique_sequences.to_csv(output_file_unique, sep='\t', index=False)
 
 
 def setup_directories(analysis_config, dataset_type):
