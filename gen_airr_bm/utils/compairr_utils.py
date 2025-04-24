@@ -21,6 +21,7 @@ def run_compairr_existence(compairr_output_dir, search_sequences_path, reference
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
     #TODO: update to compairr binary
+    #TODO: Maybe we don't need to run it if the results exist already
     compairr_command = (f"compairr -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
                         f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
@@ -59,6 +60,7 @@ def deduplicate_single_dataset(input_sequences_path, output_file_unique):
     data = pd.read_csv(input_sequences_path, sep='\t')
     data['sequence_id'] = [f"dataset_{i + 1}" for i in range(len(data))]
 
+    #TODO: We need to decide if we want to include v,j genes in the deduplication
     unique_sequences = data.drop_duplicates(subset=['junction_aa'])
     unique_sequences.to_csv(output_file_unique, sep='\t', index=False)
 
