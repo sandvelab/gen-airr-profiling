@@ -21,7 +21,6 @@ def run_compairr_existence(compairr_output_dir, search_sequences_path, reference
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
     #TODO: update to compairr binary
-    #TODO: Maybe we don't need to run it if the results exist already
     compairr_command = (f"compairr -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
                         f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
@@ -29,7 +28,11 @@ def run_compairr_existence(compairr_output_dir, search_sequences_path, reference
     # TODO: Add better support for PWM model
     # if model_name == "pwm":
     #     compairr_command += " -g"
-    os.system(compairr_command)
+
+    if os.path.exists(f"{compairr_output_dir}/{file_name}_overlap.tsv"):
+        print(f"Compairr output already exists for {file_name}. Skipping execution.")
+    else:
+        os.system(compairr_command)
 
 
 def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name):
