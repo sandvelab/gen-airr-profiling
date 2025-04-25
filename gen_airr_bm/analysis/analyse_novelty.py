@@ -4,7 +4,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence, setup_directories
+from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets, run_compairr_existence, setup_directories
 
 
 def run_novelty_analysis(analysis_config: AnalysisConfig):
@@ -53,7 +53,7 @@ def compute_and_store_jaccard(results_df, dataset_name, model_name, ref_path, ge
 def compute_jaccard_similarity(compairr_helper_files, reference_path, model_path, file_name, output_dir, model_name):
     unique_sequences_path = f"{compairr_helper_files}/{file_name}_unique.tsv"
     concat_sequences_path = f"{compairr_helper_files}/{file_name}_concat.tsv"
-    process_and_save_sequences(reference_path, model_path, unique_sequences_path, concat_sequences_path)
+    deduplicate_and_merge_two_datasets(reference_path, model_path, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
     run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)

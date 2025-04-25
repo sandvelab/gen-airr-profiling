@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import process_and_save_sequences, run_compairr_existence
+from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets, run_compairr_existence
 
 
 def run_phenotype_analysis(analysis_config: AnalysisConfig):
@@ -46,7 +46,7 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
             file_name = f"{dataset1_name}_{dataset2_name}"
             unique_sequences_path = f"{helper_dir}/{file_name}_unique.tsv"
             concat_sequences_path = f"{helper_dir}/{file_name}_concat.tsv"
-            process_and_save_sequences(dataset1_path, dataset2_path, unique_sequences_path, concat_sequences_path)
+            deduplicate_and_merge_two_datasets(dataset1_path, dataset2_path, unique_sequences_path, concat_sequences_path)
 
             compairr_output_dir = f"{output_dir}/compairr_output"
             run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
