@@ -39,7 +39,7 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
         similarities = []
         for dataset2 in generated_datasets:
             dataset1_path, dataset2_path = f"{sequences_dir}/{dataset1}", f"{sequences_dir}/{dataset2}"
-            dataset1_name, dataset2_name = dataset1.strip('.tsv'), dataset2.strip('.tsv')
+            dataset1_name, dataset2_name = dataset1.removesuffix('.tsv'), dataset2.removesuffix('.tsv')
 
             helper_dir = f"{output_dir}/compairr_helper_files"
             os.makedirs(helper_dir, exist_ok=True)
