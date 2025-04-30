@@ -49,15 +49,15 @@ def process_raw_ir_files(large_data_file, metadata_file, output_dir):
         subject_id = row['subject_id']
         sample_id = row['sample_id']
         sample_id = sample_id.replace(" ", "_")
-        data = data.loc[data['repertoire_id'] == repertoire_id]
-        data = data[data['junction_aa'].notna()]
-        data = data[~data.junction_aa.str.contains("\*")]
-        data = data[data['junction_aa'] != '']
-        data['v_call'] = data['v_call'].str.split(',').str[0]
-        data['j_call'] = data['j_call'].str.split(',').str[0]
-        data = data.drop_duplicates()
+        extracted_data = data.loc[data['repertoire_id'] == repertoire_id]
+        extracted_data = extracted_data[extracted_data['junction_aa'].notna()]
+        extracted_data = extracted_data[~extracted_data.junction_aa.str.contains("\*")]
+        extracted_data = extracted_data[extracted_data['junction_aa'] != '']
+        extracted_data['v_call'] = extracted_data['v_call'].str.split(',').str[0]
+        extracted_data['j_call'] = extracted_data['j_call'].str.split(',').str[0]
+        extracted_data = extracted_data.drop_duplicates()
         file_name = f"{repertoire_id}_{subject_id}_{sample_id}.tsv"
-        data.to_csv(f"{output_dir}/{file_name}", sep='\t', index=False)
+        extracted_data.to_csv(f"{output_dir}/{file_name}", sep='\t', index=False)
 
 
 def airr_export_with_immuneml(raw_data_dir, immuneml_config, output_dir):
@@ -76,8 +76,7 @@ def main():
     os.makedirs(ihub_dir, exist_ok=True)
     filename_mappings = []
 
-    #for phenotype in ["pancreatic_lymph_node", "spleen", "naive_cd4", "memory_cd4"]:
-    for phenotype in ["cd4_Treg", "cd8"]:
+    for phenotype in ["pancreatic_lymph_node", "spleen", "naive_cd4", "memory_cd4", "cd4_Treg", "cd8"]:
         ir_download_folders = f"../data/ir_download_folders/{phenotype}"
         ir_phenotype_datasets = f"../data/ir_phenotype_datasets/{phenotype}"
         os.makedirs(ir_phenotype_datasets, exist_ok=True)
