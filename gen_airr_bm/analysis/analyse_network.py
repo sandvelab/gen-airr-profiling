@@ -105,7 +105,10 @@ def compute_diversity(data_file, compairr_output_dir, file_name):
 def compute_compairr_connectivity(input_sequences_path, compairr_output_helper_dir, compairr_output_dir, dataset_type):
     file_name = f"{os.path.splitext(os.path.basename(input_sequences_path))[0]}_{dataset_type}"
     unique_sequences_path = f"{compairr_output_helper_dir}/{file_name}_unique.tsv"
-    deduplicate_single_dataset(input_sequences_path, unique_sequences_path)
+    if os.path.exists(unique_sequences_path):
+        print(f"Unique sequences already exist for {file_name}. Skipping execution.")
+    else:
+        deduplicate_single_dataset(input_sequences_path, unique_sequences_path)
     run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)

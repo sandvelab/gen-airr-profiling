@@ -46,7 +46,10 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
             file_name = f"{dataset1_name}_{dataset2_name}"
             unique_sequences_path = f"{helper_dir}/{file_name}_unique.tsv"
             concat_sequences_path = f"{helper_dir}/{file_name}_concat.tsv"
-            deduplicate_and_merge_two_datasets(dataset1_path, dataset2_path, unique_sequences_path, concat_sequences_path)
+            if os.path.exists(unique_sequences_path) and os.path.exists(concat_sequences_path):
+                print(f"Compairr helper files already exist for {file_name}. Skipping execution.")
+            else:
+                deduplicate_and_merge_two_datasets(dataset1_path, dataset2_path, unique_sequences_path, concat_sequences_path)
 
             compairr_output_dir = f"{output_dir}/compairr_output"
             run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name, model_name)
