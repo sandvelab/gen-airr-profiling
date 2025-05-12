@@ -1,6 +1,6 @@
 n_experiments: 2
 output_dir: "results_dummy/experimental"
-input_dir: "data/experimental"
+input_dir: "data/experimental/dummy/"
 seed: 42
 data_generation:
   experimental: True
@@ -13,14 +13,17 @@ models:
       config: "configs/dummy_generative_models/PWM.yaml"
       train_dir: "train"
       test_dir: "test"
+      n_subset_samples: 10
     - name: "sonnia"
       config: "configs/dummy_generative_models/soNNia.yaml"
       train_dir: "train"
       test_dir: "test"
+      n_subset_samples: 10
     - name: "vae"
       config: "configs/dummy_generative_models/VAE.yaml"
       train_dir: "train"
       test_dir: "test"
+      n_subset_samples: 10
 analyses:
     - name: "novelty"
       model_names: ["pwm", "sonnia", "vae"]
@@ -42,9 +45,9 @@ analyses:
       model_names: [ "pwm", "sonnia", "vae" ]
       default_model_name: "humanTRB"
       reference_data: "test"
-#    - name: "pgen"
-#      model_names: [ "pwm", "sonnia", "vae" ]
-#      default_model_name: "humanTRB"
+    - name: "pgen"
+      model_names: [ "pwm", "sonnia", "vae" ]
+      default_model_name: "humanTRB"
     - name: "network"
       model_names: [ "pwm", "sonnia", "vae" ]
       default_model_name: "humanTRB"
