@@ -1,7 +1,6 @@
 import os
 import json
 import pandas as pd
-
 from gen_airr_bm.training.immuneml_runner import write_immuneml_config, run_immuneml_command
 
 
@@ -43,20 +42,22 @@ def process_raw_ir_files(large_data_file, metadata_file, output_dir):
     os.makedirs(output_dir, exist_ok=True)
     metadata = pd.read_csv(metadata_file, sep='\t')
     data = pd.read_csv(large_data_file, sep='\t', header=0,
-                       usecols=["repertoire_id", "junction_aa", "v_call", "j_call"])
+                       usecols=["repertoire_id", "sequence_id", "junction_aa", "v_call", "j_call", "duplicate_count"])
     for index, row in metadata.iterrows():
         repertoire_id = row['repertoire_id']
         subject_id = row['subject_id']
         sample_id = row['sample_id']
-        sample_id = sample_id.replace(" ", "_")
+        sample_id = sample_id.replace('\u00A0', ' ')  # replace NBSP with regular space
+        sample_id = sample_id.replace(' ', '_')
         extracted_data = data.loc[data['repertoire_id'] == repertoire_id]
         extracted_data = extracted_data[extracted_data['junction_aa'].notna()]
         extracted_data = extracted_data[~extracted_data.junction_aa.str.contains("\*")]
-        extracted_data = extracted_data[extracted_data['junction_aa'] != '']
+
+        # Only keep first gene when two are given
         extracted_data['v_call'] = extracted_data['v_call'].str.split(',').str[0]
         extracted_data['j_call'] = extracted_data['j_call'].str.split(',').str[0]
-        extracted_data = extracted_data.drop_duplicates()
-        file_name = f"{repertoire_id}_{subject_id}_{sample_id}.tsv"
+
+        file_name = f"{repertoire_id}_{sample_id}_{subject_id}.tsv"
         extracted_data.to_csv(f"{output_dir}/{file_name}", sep='\t', index=False)
 
 
@@ -72,42 +73,46 @@ def airr_export_with_immuneml(raw_data_dir, immuneml_config, output_dir):
 
 
 def main():
-    ihub_dir = "../data/ihub_uploads"
-    os.makedirs(ihub_dir, exist_ok=True)
+    data_dir = "../data"
+    ihub_result_dir = f"{data_dir}/ihub_uploads"
+    immuneml_base_config = f"../configs/data_experimental/import_ireceptor.yaml"
+    os.makedirs(ihub_result_dir, exist_ok=True)
     filename_mappings = []
 
-    for phenotype in ["pancreatic_lymph_node", "spleen", "naive_cd4", "memory_cd4", "cd4_Treg", "cd8"]:
-        ir_download_folders = f"../data/ir_download_folders/{phenotype}"
-        ir_phenotype_datasets = f"../data/ir_phenotype_datasets/{phenotype}"
-        os.makedirs(ir_phenotype_datasets, exist_ok=True)
+    for phenotype in os.listdir(f"{data_dir}/ir_download_folders"):
+        ir_download_phenotype_folders = f"{data_dir}/ir_download_folders/{phenotype}"
+        ir_extracted_datasets = f"{data_dir}/ir_extracted_datasets/{phenotype}"
+        os.makedirs(ir_extracted_datasets, exist_ok=True)
 
-        for ir_dir in os.listdir(ir_download_folders):
-            ir_data_dir = os.path.join(ir_download_folders, ir_dir)
+        # Extract data files from iReceptor folders
+        for ir_dir in os.listdir(ir_download_phenotype_folders):
+            ir_data_dir = os.path.join(ir_download_phenotype_folders, ir_dir)
             extract_metadata_from_ireceptor_json(f"{ir_data_dir}/t1d-metadata.json",
                                                  f"{ir_data_dir}/t1d_extracted_metadata.tsv")
             process_raw_ir_files(f"{ir_data_dir}/t1d.tsv",
-                                           f"{ir_data_dir}/t1d_extracted_metadata.tsv",
-                                           ir_phenotype_datasets)
+                                 f"{ir_data_dir}/t1d_extracted_metadata.tsv",
+                                 ir_extracted_datasets)
 
-        immuneml_base_config = f"../configs/data_experimental/import_ireceptor.yaml"
-        immuneml_export_dir = f"../data/immuneml_export/{phenotype}"
+        # Export data with immuneml
+        immuneml_export_dir = f"{data_dir}/immuneml_export/{phenotype}"
         os.makedirs(immuneml_export_dir, exist_ok=True)
-        airr_export_with_immuneml(ir_phenotype_datasets, immuneml_base_config, immuneml_export_dir)
+        airr_export_with_immuneml(ir_extracted_datasets, immuneml_base_config, immuneml_export_dir)
 
+        # Copy files to ihub result directory and save file name mappings
         for i, immuneml_result_dir in enumerate(os.listdir(immuneml_export_dir)):
+            subject_id = immuneml_result_dir.split("_")[-1]
             immuneml_result_dir_path = os.path.join(immuneml_export_dir, immuneml_result_dir)
             immuneml_data_path = f"{immuneml_result_dir_path}/immuneml/data_export/dataset/AIRR/dataset.tsv"
-            new_file_name = f"{phenotype}_{i}.tsv"
-            os.system(f"cp {immuneml_data_path} {ihub_dir}/{new_file_name}")
+            new_file_name = f"{phenotype}_{subject_id}.tsv"
+            os.system(f"cp {immuneml_data_path} {ihub_result_dir}/{new_file_name}")
             filename_mappings.append({"Original_dataset_name": immuneml_result_dir, "Mapped_Filename": new_file_name})
 
-    # save mappings file
+    # save file name mappings to csv
     df = pd.DataFrame(filename_mappings)
-    filename_mappings_path = "../data/ir_filename_mapping.csv"
+    filename_mappings_path = f"{data_dir}/ir_filename_mapping.csv"
     if os.path.exists(filename_mappings_path):
         df = pd.concat([pd.read_csv(filename_mappings_path), df], ignore_index=True)
-
-    df.to_csv("../data/ir_filename_mapping.csv", index=False)
+    df.to_csv(f"{data_dir}/ir_filename_mapping.csv", index=False)
 
 
 if __name__ == "__main__":
