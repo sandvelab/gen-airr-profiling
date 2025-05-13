@@ -60,7 +60,8 @@ class MainConfig:
                         experiment=exp_idx,
                         train_dir=model_data.get("train_dir", ""),
                         test_dir=model_data.get("test_dir", None),
-                        output_dir=exp_output_dir)
+                        output_dir=exp_output_dir,
+                        n_subset_samples=model_data.get("n_subset_samples", None))
                         for model_data in data["models"]]
                 )
 
