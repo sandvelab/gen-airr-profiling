@@ -97,7 +97,6 @@ def preprocess_experimental_data(config: DataGenerationConfig):
     experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
     experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
     experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
-    experimental_data = experimental_data.drop_duplicates()
 
     # we need at least 2 * number_of_sequences sequences to split them into train and test
     if len(experimental_data) < 2 * number_of_sequences:
@@ -107,6 +106,17 @@ def preprocess_experimental_data(config: DataGenerationConfig):
     experimental_sequences = experimental_data.sample(n=2*number_of_sequences, random_state=seed)
     experimental_train = experimental_sequences.iloc[:number_of_sequences].reset_index(drop=True)
     experimental_test = experimental_sequences.iloc[number_of_sequences:].reset_index(drop=True)
+    experimental_train = experimental_train.drop_duplicates()
+    experimental_test = experimental_test.drop_duplicates()
+
+    # log number of duplicates to file
+    num_duplicates_train = number_of_sequences - len(experimental_train)
+    num_duplicates_test = number_of_sequences - len(experimental_test)
+    with open(os.path.join(output_path, "duplicates_log.txt"), "w") as log_file:
+        log_file.write(f"=== Duplicates for file: {input_path} ===\n")
+        log_file.write(f"Number of duplicates in train: {num_duplicates_train}\n")
+        log_file.write(f"Number of duplicates in test: {num_duplicates_test}\n")
+
     experimental_train.to_csv(experimental_train_file_path, sep='\t', index=False)
     experimental_test.to_csv(experimental_test_file_path, sep='\t', index=False)
 
