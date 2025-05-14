@@ -1,4 +1,5 @@
 import os
+import re
 from collections import defaultdict
 
 import numpy as np
@@ -24,6 +25,7 @@ def run_network_analysis(analysis_config: AnalysisConfig):
     compute_and_plot_diversity_scores(analysis_config, compairr_output_dir)
 
     compute_and_plot_connectivity_scores(analysis_config, compairr_output_dir, compairr_output_helper_dir)
+
 
 # We are considering removing this metric
 def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
@@ -53,43 +55,48 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, compairr_
 def compute_and_plot_connectivity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str,
                                          compairr_output_helper_dir: str):
     reference_data = analysis_config.reference_data
-    mean_scores = defaultdict(list)
-    std_scores = defaultdict(list)
+    mean_scores = defaultdict(lambda: defaultdict(list))
+    std_scores = defaultdict(lambda: defaultdict(list))
     for model in analysis_config.model_names:
-        comparison_sets = get_sequence_file_sets(analysis_config, model, reference_data)
-        divergence_scores = []
+        comparison_files_dir = get_sequence_files(analysis_config, model, reference_data)
 
-        for gen_file, ref_file in comparison_sets:
-            dataset_name = os.path.splitext(os.path.basename(gen_file))[0]
+        for ref_file, gen_files in comparison_files_dir.items():
+            divergence_scores = []
+            dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-            gen_degree_dist, ref_degree_dist = run_compairr_and_get_degree_distributions(gen_file, ref_file,
-                                                                                         compairr_output_helper_dir,
-                                                                                         compairr_output_dir,
-                                                                                         model, reference_data)
+            ref_degree_dist, gen_degree_dists = run_compairr_and_get_degree_distributions(ref_file, gen_files,
+                                                                                          compairr_output_helper_dir,
+                                                                                          compairr_output_dir,
+                                                                                          model, reference_data)
 
-            plot_degree_distribution(gen_degree_dist, ref_degree_dist, analysis_config.analysis_output_dir, model,
+            plot_degree_distribution(ref_degree_dist, gen_degree_dists, analysis_config.analysis_output_dir, model,
                                      reference_data, dataset_name)
 
-            divergence_scores.extend(compute_divergence(gen_degree_dist, ref_degree_dist))
+            for gen_degree_dist in gen_degree_dists:
+                divergence_scores.extend(compute_divergence(gen_degree_dist, ref_degree_dist))
 
-        mean_scores[model] = np.mean(divergence_scores)
-        std_scores[model] = np.std(divergence_scores)
+            mean_scores[dataset_name][model] = np.mean(divergence_scores)
+            std_scores[dataset_name][model] = np.std(divergence_scores)
 
-    plot_connectivity_scores(mean_scores, std_scores, analysis_config.analysis_output_dir, reference_data,
-                             "connectivity")
+    for dataset in mean_scores:
+        plot_connectivity_scores(mean_scores[dataset], std_scores[dataset], analysis_config.analysis_output_dir,
+                                 reference_data, "connectivity", f"{dataset}_connectivity.png")
 
 
-def run_compairr_and_get_degree_distributions(gen_file, ref_file, compairr_output_helper_dir, compairr_output_dir,
+def run_compairr_and_get_degree_distributions(ref_file, gen_files, compairr_output_helper_dir, compairr_output_dir,
                                               model, ref_name):
-    gen_connectivity = compute_compairr_connectivity(gen_file, compairr_output_helper_dir, compairr_output_dir,
-                                                     model)
+    gen_degree_dists = []
+    for gen_file in gen_files:
+        gen_connectivity = compute_compairr_connectivity(gen_file, compairr_output_helper_dir, compairr_output_dir,
+                                                         model)
+        gen_degree_dist = get_node_degree_distribution(gen_connectivity)
+        gen_degree_dists.append(gen_degree_dist)
+
     ref_connectivity = compute_compairr_connectivity(ref_file, compairr_output_helper_dir, compairr_output_dir,
                                                      ref_name)
-
-    gen_degree_dist = get_node_degree_distribution(gen_connectivity)
     ref_degree_dist = get_node_degree_distribution(ref_connectivity)
 
-    return gen_degree_dist, ref_degree_dist
+    return ref_degree_dist, gen_degree_dists
 
 
 def compute_diversity(data_file, compairr_output_dir, file_name):
@@ -121,20 +128,28 @@ def get_node_degree_distribution(compairr_result):
     return node_degree_distribution
 
 
-def get_sequence_file_sets(analysis_config: AnalysisConfig, model: str, reference_data: str):
-    comparison_sets = []
+def get_sequence_files(analysis_config: AnalysisConfig, model: str, reference_data: str):
+    comparison_files_dir = defaultdict(set)
 
-    gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model}"
     ref_dir = f"{analysis_config.root_output_dir}/{reference_data}_compairr_sequences"
+    gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
 
+    ref_files = set(os.listdir(ref_dir))
     gen_files = set(os.listdir(gen_dir))
 
-    comparison_sets.extend([
-        (os.path.join(gen_dir, file), os.path.join(ref_dir, file))
-        for file in gen_files
-    ])
+    for file in ref_files:
+        base_name = os.path.splitext(file)[0]
+        filtered_gen_files = sorted([f for f in gen_files if base_name in f],
+                                    key=lambda x: int(re.search(r'_(\d+)\.tsv$', x).group(1)))
 
-    return comparison_sets
+        if len(filtered_gen_files) < analysis_config.n_subsets:
+            raise ValueError(
+                f"Not enough generated files for {base_name} in {gen_dir}. Expected {analysis_config.n_subsets}, found {len(filtered_gen_files)}.")
+
+        comparison_files_dir[os.path.join(ref_dir, file)] = set(
+            [os.path.join(gen_dir, f) for f in filtered_gen_files[:analysis_config.n_subsets]])
+
+    return comparison_files_dir
 
 
 def compute_divergence(gen_node_degree_distribution, ref_node_degree_distribution):
@@ -152,8 +167,7 @@ def compute_divergence(gen_node_degree_distribution, ref_node_degree_distributio
 
 
 def plot_connectivity_scores(mean_scores: dict, std_scores: dict, output_dir: str, reference_data: str,
-                             distribution_type: str) -> None:
+                             distribution_type: str, file_name: str) -> None:
     """Plot the mean and standard deviation of the divergence scores."""
-    file_name = f"{distribution_type}.png"
     plot_jsd_scores(mean_scores, std_scores, output_dir, reference_data,
                     file_name, distribution_type)

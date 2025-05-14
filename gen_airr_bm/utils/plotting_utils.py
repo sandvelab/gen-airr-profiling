@@ -36,18 +36,32 @@ def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, out
     print(f"Plot saved as PNG at: {png_path}")
 
 
-def plot_degree_distribution(gen_node_degree_distribution, ref_node_degree_distribution, output_dir, model_name, reference_data,
-                    dataset_name):
-    """Plot histograms of the two node degree distributions in one plot."""
+import os
+import pandas as pd
+import plotly.graph_objects as go
+
+def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distributions, output_dir, model_name, reference_data,
+                              dataset_name):
+    """Plot histograms of the two node degree distributions in one plot (with error bars for generated)."""
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
-    merged_df = pd.merge(gen_node_degree_distribution, ref_node_degree_distribution, how='outer',
-                         suffixes=('_gen', '_ref'),
-                         left_index=True, right_index=True).fillna(0)
+    # Normalize the reference distribution
+    ref_freq = ref_node_degree_distribution / ref_node_degree_distribution.sum()
+    ref_freq = ref_freq.rename("freq_ref").to_frame()
 
-    merged_df["freq_gen"] = merged_df["count_gen"] / merged_df["count_gen"].sum()
-    merged_df["freq_ref"] = merged_df["count_ref"] / merged_df["count_ref"].sum()
+    # Normalize and collect all generated distributions
+    freq_dfs = []
+    for i, dist in enumerate(gen_node_degree_distributions):
+        norm = dist / dist.sum()
+        freq_dfs.append(norm.rename(f"freq_{i}").to_frame())
+
+    gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
+    gen_merged["freq_gen"] = gen_merged.mean(axis=1)
+    gen_merged["std_gen"] = gen_merged.std(axis=1)
+
+    merged_df = pd.merge(ref_freq, gen_merged[["freq_gen", "std_gen"]], left_index=True, right_index=True, how='outer').fillna(0)
+    merged_df = merged_df.sort_index()
 
     fig = go.Figure()
 
@@ -55,7 +69,8 @@ def plot_degree_distribution(gen_node_degree_distribution, ref_node_degree_distr
         x=merged_df.index,
         y=merged_df["freq_gen"],
         name=model_name,
-        marker=dict(color='skyblue')
+        marker=dict(color='skyblue'),
+        error_y=dict(type='data', array=merged_df["std_gen"], visible=True)
     ))
 
     fig.add_trace(go.Bar(
@@ -68,7 +83,8 @@ def plot_degree_distribution(gen_node_degree_distribution, ref_node_degree_distr
     fig.update_layout(
         title="Comparison of Connectivity Distributions",
         xaxis_title="Number of neighbors",
-        yaxis_title="Frequency",
+        yaxis_title="Frequency (log scale)",
+        yaxis_type="log",
         barmode="group"
     )
 
