@@ -11,6 +11,10 @@ def divide_generated_sequences(generated_sequences_dir: str, generated_sequences
                                n_samples: int, dedup_fields: list = None):
     os.makedirs(output_dir, exist_ok=True)
     generated_sequences = pd.read_csv(f"{generated_sequences_dir}/{generated_sequences_filename}.tsv", sep='\t')
+    if len(generated_sequences) < n_samples:
+        raise ValueError(
+            f"Not enough samples to split: {len(generated_sequences)} rows found, but {n_samples} required."
+        )
     n_datasets = len(generated_sequences) // n_samples
     for i in range(n_datasets):
         start_idx = i * n_samples
