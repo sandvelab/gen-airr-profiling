@@ -1,5 +1,16 @@
 import os
+import subprocess
 import pandas as pd
+
+
+def run_command(cmd):
+    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+    print(f"=== Starting: {cmd} ===")
+    for line in process.stdout:
+        print(f"[{cmd[:20]}...] {line.strip()}")
+    process.wait()
+    print(f"=== Finished: {cmd} ===\n")
 
 
 def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
@@ -32,16 +43,20 @@ def run_compairr_existence(compairr_output_dir, search_sequences_path, reference
     if os.path.exists(f"{compairr_output_dir}/{file_name}_overlap.tsv"):
         print(f"Compairr output already exists for {file_name}. Skipping execution.")
     else:
-        os.system(compairr_command)
+        run_command(compairr_command)
 
 
-def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name):
+def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name, model_name=None):
     os.makedirs(compairr_output_dir, exist_ok=True)
     # TODO: Maybe replace -u method ignoring illegal characters in sequences
     compairr_command = (f"compairr -c {sequnces_path} -o {compairr_output_dir}/{file_name}.tsv -g -d 1 -u "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
     os.system(compairr_command)
 
+    if os.path.exists(f"{compairr_output_dir}/{file_name}.tsv"):
+        print(f"Compairr output already exists for {file_name}. Skipping execution.")
+    else:
+        run_command(compairr_command)
 
 def deduplicate_and_merge_two_datasets(data1_path, data2_path, output_file_unique, output_file_concat):
     data1 = pd.read_csv(data1_path, sep='\t')
