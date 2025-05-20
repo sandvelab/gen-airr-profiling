@@ -8,6 +8,7 @@ from scipy.spatial.distance import jensenshannon
 from scipy.stats import entropy
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.plotting_utils import plot_jsd_scores, plot_degree_distribution, plot_diversity_bar_chart
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_compairr_cluster, deduplicate_single_dataset
 
@@ -126,30 +127,6 @@ def get_node_degree_distribution(compairr_result):
     compairr_result['overlap_count'] -= 1
     node_degree_distribution = compairr_result['overlap_count'].value_counts()
     return node_degree_distribution
-
-
-def get_sequence_files(analysis_config: AnalysisConfig, model: str, reference_data: str):
-    comparison_files_dir = defaultdict(set)
-
-    ref_dir = f"{analysis_config.root_output_dir}/{reference_data}_compairr_sequences"
-    gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
-
-    ref_files = set(os.listdir(ref_dir))
-    gen_files = set(os.listdir(gen_dir))
-
-    for file in ref_files:
-        base_name = os.path.splitext(file)[0]
-        filtered_gen_files = sorted([f for f in gen_files if base_name in f],
-                                    key=lambda x: int(re.search(r'_(\d+)\.tsv$', x).group(1)))
-
-        if len(filtered_gen_files) < analysis_config.n_subsets:
-            raise ValueError(
-                f"Not enough generated files for {base_name} in {gen_dir}. Expected {analysis_config.n_subsets}, found {len(filtered_gen_files)}.")
-
-        comparison_files_dir[os.path.join(ref_dir, file)] = set(
-            [os.path.join(gen_dir, f) for f in filtered_gen_files[:analysis_config.n_subsets]])
-
-    return comparison_files_dir
 
 
 def compute_divergence(gen_node_degree_distribution, ref_node_degree_distribution):
