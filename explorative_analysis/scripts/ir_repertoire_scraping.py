@@ -31,7 +31,7 @@ def return_back_to_metadata(driver, wait):
     return driver
 
 
-def get_repertoires_from_web(driver, start_query_id: str, min_sequences: int = 20000):
+def get_repertoires_from_web(driver, start_query_id: str, min_sequences: int = 5000):
     base_url = f"https://gateway.ireceptor.org/samples?query_id={start_query_id}"
     current_page = 1
     repertoires_to_check = []
@@ -89,6 +89,10 @@ def get_repertoires_from_web(driver, start_query_id: str, min_sequences: int = 2
                     continue
 
                 seq_count = int(seq_count_text)
+                if seq_count > 20000:  # skip the rows we already checked
+                    rows = driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
+                    continue
+
                 if seq_count <= min_sequences:
                     too_small_dataset = True
                     break  # break since table is sorted by sequence count
@@ -157,7 +161,7 @@ def check_umi_preview(chrome_driver, sample_query_id: str):
 
     # Wait for the table to render by waiting for UMI count cells
     print("Waiting for table...")
-    WebDriverWait(chrome_driver, 60).until(
+    WebDriverWait(chrome_driver, 90).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "td.col_umi_count"))
     )
     print("Table loaded.")
@@ -205,21 +209,21 @@ def main():
         print("Login submitted.")
         time.sleep(5)  # Wait for the login to process
 
-        # Get query_ids
-        print("Getting query_ids...")
-        start_query_id = "120301"  # query_id for metadata with umi library method
-        repertoires_to_check = get_repertoires_from_web(driver, start_query_id, min_sequences=20000)
-        print(f"Found {len(repertoires_to_check)} sample_query_ids over threshold.")
-        print(repertoires_to_check)
-
-        # dump repertoires_to_check to file
-        with open("explorative_analysis/results/repertoires_to_check.txt", "w") as f:
-            for study_id, repertoire_id, sample_query_id in repertoires_to_check:
-                f.write(f"{study_id}\t{repertoire_id}\t{sample_query_id}\n")
+        # # Get query_ids
+        # print("Getting query_ids...")
+        # start_query_id = "120301"  # query_id for metadata with umi library method
+        # repertoires_to_check = get_repertoires_from_web(driver, start_query_id, min_sequences=5000)
+        # print(f"Found {len(repertoires_to_check)} sample_query_ids over threshold.")
+        # print(repertoires_to_check)
+        #
+        # # dump repertoires_to_check to file
+        # with open("explorative_analysis/results/repertoires_to_check_small_datasets.txt", "w") as f:
+        #     for study_id, repertoire_id, sample_query_id in repertoires_to_check:
+        #         f.write(f"{study_id}\t{repertoire_id}\t{sample_query_id}\n")
 
         # Load repertoires to check
         print("Loading repertoires to check...")
-        with open("explorative_analysis/results/repertoires_to_check.txt", "r") as f:
+        with open("explorative_analysis/results/repertoires_to_check_small_datasets.txt", "r") as f:
             repertoires_to_check = [line.strip().split("\t") for line in f.readlines()]
         print(f"Loaded {len(repertoires_to_check)} repertoires to check.")
         print(repertoires_to_check)
@@ -239,7 +243,7 @@ def main():
 
         # Save results
         results_df = pd.DataFrame(results, columns=['repertoire_id', 'study_id', 'has_umi'])
-        results_df.to_csv("explorative_analysis/results/umi_presence_results.csv", index=False)
+        results_df.to_csv("explorative_analysis/results/umi_presence_results_small_datasets.csv", index=False)
 
     except Exception as e:
         print("Error occurred:", type(e).__name__, e)
