@@ -7,7 +7,7 @@ import pandas as pd
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
-from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
+from gen_airr_bm.utils.plotting_utils import plot_jsd_scores, plot_scatter_precision_recall
 
 
 def run_precision_recall_analysis(analysis_config: AnalysisConfig):
@@ -21,12 +21,16 @@ def run_precision_recall_analysis(analysis_config: AnalysisConfig):
 
     compute_precision_recall_scores(analysis_config, compairr_output_dir)
 
+
 def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
     reference_data = analysis_config.reference_data
     mean_precision_scores = defaultdict(lambda: defaultdict(list))
     std_precision_scores = defaultdict(lambda: defaultdict(list))
     mean_recall_scores = defaultdict(lambda: defaultdict(list))
     std_recall_scores = defaultdict(lambda: defaultdict(list))
+
+    precision_scores_all = defaultdict(lambda: defaultdict(list))
+    recall_scores_all = defaultdict(lambda: defaultdict(list))
     for model in analysis_config.model_names:
         comparison_files_dir = get_sequence_files(analysis_config, model, reference_data)
 
@@ -40,12 +44,36 @@ def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_ou
             mean_recall_scores[dataset_name][model] = np.mean(recall_metrics)
             std_recall_scores[dataset_name][model] = np.std(recall_metrics)
 
+            precision_scores_all[dataset_name][model] = precision_metrics
+            recall_scores_all[dataset_name][model] = recall_metrics
+
+    # Add upper reference of precision recall between train and test
+    test_dir = f"{analysis_config.root_output_dir}/{reference_data}_compairr_sequences"
+    train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
+    for dataset in mean_precision_scores:
+        train_file = f"{train_dir}/{dataset}.tsv"
+        test_file = f"{test_dir}/{dataset}.tsv"
+        ref_precision, ref_recall = get_precision_recall_reference(train_file, test_file, compairr_output_dir,
+                                                                   "train_test")
+        mean_precision_scores[dataset]["train_test"] = ref_precision
+        std_precision_scores[dataset]["train_test"] = np.nan
+        mean_recall_scores[dataset]["train_test"] = ref_recall
+        std_recall_scores[dataset]["train_test"] = np.nan
+
     for dataset in mean_precision_scores:
         plot_jsd_scores(mean_precision_scores[dataset], std_precision_scores[dataset], analysis_config.analysis_output_dir,
                         "precision", f"{dataset}_precision.png", "precision")
 
         plot_jsd_scores(mean_recall_scores[dataset], std_recall_scores[dataset], analysis_config.analysis_output_dir,
                         "recall", f"{dataset}_recall.png", "recall")
+
+    # Scatterplot of precision and recall scores
+    plot_scatter_precision_recall(precision_scores_all, recall_scores_all,
+                                  analysis_config.analysis_output_dir, analysis_config.reference_data,
+                                  f"precision_recall.png")
+    plot_scatter_precision_recall(mean_precision_scores, mean_recall_scores,
+                                  analysis_config.analysis_output_dir, analysis_config.reference_data,
+                                  f"mean_precision_recall.png", plot_mean=True)
 
 
 def get_precision_recall_metrics(ref_file, gen_files, compairr_output_dir, model):
@@ -60,6 +88,14 @@ def get_precision_recall_metrics(ref_file, gen_files, compairr_output_dir, model
         recall_metrics.append(recall)
 
     return precision_metrics, recall_metrics
+
+
+def get_precision_recall_reference(train_file, test_file, compairr_output_dir, model):
+    precision = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
+                                               model, "precision")
+    recall = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
+                                            model, "recall")
+    return precision, recall
 
 
 def compute_compairr_overlap_ratio(search_for_file, search_in_file, compairr_output_dir, model_name, metric):
