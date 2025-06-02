@@ -1,19 +1,19 @@
 n_experiments: 7
-output_dir: "results/bcr_tcr"
-input_dir: "data/bcr_tcr/"
+output_dir: "results/covid_case_control/"
+input_dir: "data/covid_case_control/"
 seed: 42
 data_generation:
   experimental: True
-  method: "experimental"
-  n_samples: 22000
+  method: "experimental_umi"
+  n_samples: 100000
   default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call"]
+  input_columns: ["junction_aa", "v_call", "j_call", "umi_count"]
 models:
     - name: "pwm"
       config: "configs/generative_models/PWM.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 22000
+      n_subset_samples: 100000
     - name: "sonnia"
       config: "configs/generative_models/soNNia.yaml"
       train_dir: "train"
@@ -23,13 +23,13 @@ models:
       config: "configs/generative_models/VAE.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17000
+      n_subset_samples: 100000
 analyses:
     - name: "network"
-      model_names: ["vae"]
+      model_names: ["vae", "pwm"]
       default_model_name: "humanTRB"
       reference_data: "train"
-      n_subsets: 50
+      n_subsets: 1
     - name: "network"
       model_names: [ "vae" ]
       default_model_name: "humanTRB"
@@ -47,3 +47,11 @@ analyses:
     - name: "phenotype"
       model_names: [ "vae" ]
       default_model_name: "humanTRB"
+    - name: "reduced_dimensionality"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "test"
+    - name: "reduced_dimensionality"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "train"
