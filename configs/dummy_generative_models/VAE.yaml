@@ -9,7 +9,7 @@ definitions:
         region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
-    my_vae_model:
+    model:
       SimpleVAE:
         batch_size: 100
         beta: 0.75
@@ -26,18 +26,11 @@ definitions:
         warmup_epochs: 1
         validation_split: 0.1
 
-  reports:
-    my_KLKmerCompare_report: KLKmerComparison
-    my_vae_report:
-      VAESummary:
-        dim_dist_cols: 4
-        dim_dist_rows: None
-
 instructions:
   gen_model:
     type: TrainGenModel
     export_combined_dataset: False
     dataset: dataset
-    method: my_vae_model
+    method: model
     gen_examples_count: 1000
     number_of_processes: 4

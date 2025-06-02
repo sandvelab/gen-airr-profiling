@@ -9,7 +9,7 @@ definitions:
         region_type: IMGT_JUNCTION
         separator: "\t"
   ml_methods:
-    my_pwm_model:
+    model:
       PWM:
         locus: beta
         sequence_type: amino_acid
@@ -20,6 +20,6 @@ instructions:
     type: TrainGenModel
     export_combined_dataset: False
     dataset: dataset
-    method: my_pwm_model
+    method: model
     gen_examples_count: 1000000
     number_of_processes: 1
