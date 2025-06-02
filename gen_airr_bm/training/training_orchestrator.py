@@ -32,13 +32,23 @@ def divide_generated_sequences(generated_sequences_dir: str, generated_sequences
 class TrainingOrchestrator:
     """Orchestrates the immuneML training process."""
 
-    def run_single_training(self, immuneml_config: str, data_path: str, output_dir: str):
+    def run_single_training(self, immuneml_config: str, data_path: str, output_dir: str, locus: str):
         """Runs immuneML training for model in the config."""
         output_immuneml_config = f"{output_dir}/immuneml_config.yaml"
         output_immuneml_dir = f"{output_dir}/immuneml"
 
-        write_immuneml_config(immuneml_config, data_path, output_immuneml_config)
+        write_immuneml_config(immuneml_config, data_path, output_immuneml_config, locus)
         run_immuneml_command(output_immuneml_config, output_immuneml_dir)
+
+    @staticmethod
+    def get_default_model_name(train_data_full_path: str) -> str:
+        """Returns the default model name."""
+        train_df = pd.read_csv(train_data_full_path, sep='\t')
+        if len(train_df['locus'].unique()) != 1:
+            raise ValueError(f"Multiple loci found in the training data: {train_df['locus'].unique()}. "
+                             f"Please provide a single locus for the model.")
+        else:
+            return train_df['locus'].unique()[0]
 
     # TODO: It became spaghetti code. We might want to refactor this method.
     def run_training(self, model_config: ModelConfig, output_dir: str):
@@ -50,6 +60,8 @@ class TrainingOrchestrator:
             data_file_name = train_data_file.split('.')[0]
             model_output_dir = f"{model_config.output_dir}/{model_config.name}/{data_file_name}"
             train_data_full_path = f"{train_data_dir}/{train_data_file}"
+            model_config.locus = self.get_default_model_name(train_data_full_path)
+
             os.makedirs(f"{output_dir}/train_sequences", exist_ok=True)
             os.system(
                 f"cp -n {train_data_full_path} {output_dir}/train_sequences/{data_file_name}_{model_config.experiment}.tsv")
@@ -70,7 +82,7 @@ class TrainingOrchestrator:
                     preprocess_files_for_compairr(f"{output_dir}/test_sequences", compairr_test_dir)
 
             os.makedirs(model_output_dir, exist_ok=True)
-            self.run_single_training(model_config.config, train_data_full_path, model_output_dir)
+            self.run_single_training(model_config.config, train_data_full_path, model_output_dir, model_config.locus)
 
             # Copy generated sequences to the output directory
             # The generated sequences are stored in a subdirectory of the immuneML output directory (always static path)

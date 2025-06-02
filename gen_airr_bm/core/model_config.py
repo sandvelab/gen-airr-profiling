@@ -10,6 +10,7 @@ class ModelConfig:
         self.test_dir = test_dir
         self.output_dir = output_dir
         self.n_subset_samples = n_subset_samples
+        self.locus = None
 
     def __repr__(self):
         return (f"ModelConfig(name={self.name}, config={self.config}, experiment={self.experiment}, "
