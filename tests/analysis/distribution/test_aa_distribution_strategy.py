@@ -61,7 +61,7 @@ def test_aa_distribution_strategy_update_mean_std_scores():
 
 
 def test_aa_distribution_strategy_plot_scores(mocker):
-    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.aa_distribution_strategy.plot_jsd_scores")
+    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.aa_distribution_strategy.plot_avg_scores")
 
     strategy = AADistributionStrategy()
     mean_scores = {length: {"model": 0.5} for length in range(10, 21)}
