@@ -2,15 +2,16 @@ import os
 
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 
 
-def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, reference_data, file_name,
-                    distribution_type):
+def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
+                    distribution_type, scoring_method="JSD"):
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
-    models, scores = zip(*sorted(mean_divergence_scores_dict.items(), key=lambda x: x[0]))
-    errors = [std_divergence_scores_dict[model] for model in models]
+    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[0]))
+    errors = [std_scores_dict[model] for model in models]
 
     fig = go.Figure()
 
@@ -22,10 +23,10 @@ def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, out
     ))
 
     fig.update_layout(
-        title=f"JSD Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
+        title=f"Average {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
               f"{reference_data.capitalize()} Data",
         xaxis_title="Models",
-        yaxis_title=f"Mean JSD for {distribution_type.capitalize()} Distributions",
+        yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
         xaxis_tickangle=-45,
         template="plotly_white"
     )
@@ -35,10 +36,6 @@ def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, out
 
     print(f"Plot saved as PNG at: {png_path}")
 
-
-import os
-import pandas as pd
-import plotly.graph_objects as go
 
 def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distributions, output_dir, model_name, reference_data,
                               dataset_name):
@@ -119,3 +116,52 @@ def plot_diversity_bar_chart(mean_diversity, std_diversity, output_path):
     )
 
     fig.write_image(output_path)
+
+
+def plot_scatter_precision_recall(precision_scores_dict, recall_scores_dict, output_dir, reference_data, file_name,
+                                  plot_mean=False):
+    """ Plot scatter plot of precision vs recall, colored by dataset and shaped by model. """
+
+    data = []
+    for dataset in precision_scores_dict:
+        for model in precision_scores_dict[dataset]:
+
+            if plot_mean:
+                precision_scores_dict[dataset][model] = [precision_scores_dict[dataset][model]]
+                recall_scores_dict[dataset][model] = [recall_scores_dict[dataset][model]]
+
+            for precision, recall in zip(precision_scores_dict[dataset][model], recall_scores_dict[dataset][model]):
+                data.append({
+                    'Dataset': dataset,
+                    'Model': model,
+                    'Precision': precision,
+                    'Recall': recall
+                })
+
+    df = pd.DataFrame(data)
+    df = df.sort_values(by=["Dataset", "Model"])
+
+    fig = px.scatter(
+        df,
+        x="Recall",
+        y="Precision",
+        color="Dataset",
+        symbol="Model",
+        title=f"Mean Precision vs Recall: Colored by Dataset, Shaped by Model (Reference: {reference_data})" if
+        plot_mean else f"Precision vs Recall: Colored by Dataset, Shaped by Model (Reference: {reference_data})"
+    )
+
+    fig.update_traces(marker=dict(size=6, line=dict(width=0.5, color='dark gray')))
+    fig.update_layout(
+        width=1000,
+        height=700,
+        legend_title_text='Dataset, model'
+    )
+
+    fig.update_xaxes(range=[-0.02, 0.5], title_text="Recall")
+    fig.update_yaxes(range=[-0.02, 0.5], title_text="Precision")
+
+    png_path = os.path.join(output_dir, file_name)
+    fig.write_image(png_path, scale=2)
+
+    print(f"Plot saved as PNG at: {png_path}")

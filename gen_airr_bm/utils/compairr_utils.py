@@ -24,6 +24,8 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
         else:
             data['duplicate_count'] = 1
 
+        data['sequence_id'] = [f"sequence_{i + 1}" for i in range(len(data))]
+
         data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
 
 

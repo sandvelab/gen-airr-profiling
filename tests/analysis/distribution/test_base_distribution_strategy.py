@@ -51,7 +51,7 @@ def test_update_mean_std_scores():
 
 
 def test_plot_scores_calls_plot_jsd_scores(mocker):
-    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.base_distribution_strategy.plot_jsd_scores")
+    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.base_distribution_strategy.plot_avg_scores")
 
     strategy = DummyStrategyBase()
     mean_scores = {"model": 0.5}

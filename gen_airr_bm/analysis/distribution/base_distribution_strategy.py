@@ -4,7 +4,7 @@ from typing import Any
 import numpy as np
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores
 
 
 class BaseDistributionStrategy(ABC):
@@ -29,6 +29,6 @@ class BaseDistributionStrategy(ABC):
     def plot_scores(self, mean_scores: dict, std_scores: dict,
                     analysis_config: AnalysisConfig, distribution_type: str) -> None:
         file_name = f"{distribution_type}.png"
-        plot_jsd_scores(mean_scores, std_scores,
+        plot_avg_scores(mean_scores, std_scores,
                         analysis_config.analysis_output_dir, analysis_config.reference_data,
-                        file_name, distribution_type)
+                        file_name, distribution_type, "JSD")
