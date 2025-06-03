@@ -111,6 +111,44 @@ def preprocess_experimental_data(config: DataGenerationConfig):
     experimental_test.to_csv(experimental_test_file_path, sep='\t', index=False)
 
 
+def preprocess_experimental_umi_data(config: DataGenerationConfig):
+    """
+    This function preprocesses experimental data by sampling number_of_sequences sequences from the input data.
+    :param config: DataGenerationConfig object with the following attributes:
+    :return:
+    """
+    number_of_sequences = config.n_samples
+    output_path = config.output_dir
+    input_path = config.data_file
+    seed = config.seed
+    input_columns = config.input_columns
+
+    train_dir = os.path.join(output_path, "train")
+    test_dir = os.path.join(output_path, "test")
+    os.makedirs(train_dir, exist_ok=True)
+    os.makedirs(test_dir, exist_ok=True)
+    input_path_file_name = os.path.basename(input_path)
+    experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
+    experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
+    experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
+    experimental_data = experimental_data[~experimental_data.junction_aa.str.contains("\*")]
+    experimental_data['v_call'] = experimental_data['v_call'].str.split(',').str[0]
+    experimental_data['j_call'] = experimental_data['j_call'].str.split(',').str[0]
+    experimental_data = experimental_data.dropna(subset=["junction_aa", "v_call", "j_call", "umi_count", "locus"])
+    experimental_data = experimental_data.loc[experimental_data.index.repeat(experimental_data["umi_count"])]
+
+    # we need at least 2 * number_of_sequences sequences to split them into train and test
+    if len(experimental_data) < 2 * number_of_sequences:
+        raise ValueError(f"Not enough sequences! Requested {2*number_of_sequences}, but only {len(experimental_data)} "
+                         f"available.")
+
+    experimental_sequences = experimental_data.sample(n=2*number_of_sequences, random_state=seed)
+    experimental_train = experimental_sequences.iloc[:number_of_sequences].reset_index(drop=True)
+    experimental_test = experimental_sequences.iloc[number_of_sequences:].reset_index(drop=True)
+    experimental_train.to_csv(experimental_train_file_path, sep='\t', index=False)
+    experimental_test.to_csv(experimental_test_file_path, sep='\t', index=False)
+
+
 def simulate_pure_olga_sequences(number_of_sequences, model, output_file_path, seed):
     """
     This function generates number_of_sequences sequences using Olga tool and stores them in output_file_path.
