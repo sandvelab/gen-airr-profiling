@@ -7,7 +7,7 @@ import pandas as pd
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
-from gen_airr_bm.utils.plotting_utils import plot_jsd_scores, plot_scatter_precision_recall
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_scatter_precision_recall
 
 
 def run_precision_recall_analysis(analysis_config: AnalysisConfig):
@@ -61,11 +61,13 @@ def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_ou
         std_recall_scores[dataset]["train_test"] = np.nan
 
     for dataset in mean_precision_scores:
-        plot_jsd_scores(mean_precision_scores[dataset], std_precision_scores[dataset], analysis_config.analysis_output_dir,
-                        "precision", f"{dataset}_precision.png", "precision")
+        plot_avg_scores(mean_precision_scores[dataset], std_precision_scores[dataset], analysis_config.analysis_output_dir,
+                        "precision", f"{dataset}_precision.png", "precision",
+                        scoring_method="precision")
 
-        plot_jsd_scores(mean_recall_scores[dataset], std_recall_scores[dataset], analysis_config.analysis_output_dir,
-                        "recall", f"{dataset}_recall.png", "recall")
+        plot_avg_scores(mean_recall_scores[dataset], std_recall_scores[dataset], analysis_config.analysis_output_dir,
+                        "recall", f"{dataset}_recall.png", "recall",
+                        scoring_method="recall")
 
     # Scatterplot of precision and recall scores
     plot_scatter_precision_recall(precision_scores_all, recall_scores_all,

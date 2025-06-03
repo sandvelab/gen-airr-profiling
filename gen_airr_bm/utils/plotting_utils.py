@@ -5,13 +5,13 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 
-def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, output_dir, reference_data, file_name,
-                    distribution_type):
+def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
+                    distribution_type, scoring_method="JSD"):
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
-    models, scores = zip(*sorted(mean_divergence_scores_dict.items(), key=lambda x: x[0]))
-    errors = [std_divergence_scores_dict[model] for model in models]
+    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[0]))
+    errors = [std_scores_dict[model] for model in models]
 
     fig = go.Figure()
 
@@ -23,10 +23,10 @@ def plot_jsd_scores(mean_divergence_scores_dict, std_divergence_scores_dict, out
     ))
 
     fig.update_layout(
-        title=f"JSD Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
+        title=f"Average {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
               f"{reference_data.capitalize()} Data",
         xaxis_title="Models",
-        yaxis_title=f"Mean JSD for {distribution_type.capitalize()} Distributions",
+        yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
         xaxis_tickangle=-45,
         template="plotly_white"
     )

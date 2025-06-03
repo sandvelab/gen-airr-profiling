@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
-from gen_airr_bm.utils.plotting_utils import plot_jsd_scores
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores
 
 
 class AADistributionStrategy(BaseDistributionStrategy):
@@ -36,9 +36,9 @@ class AADistributionStrategy(BaseDistributionStrategy):
     def plot_scores(self, mean_scores, std_scores, analysis_config, distribution_type):
         for length in range(10, 21):
             file_name = f"{distribution_type}_{length}.png"
-            plot_jsd_scores(mean_scores[length], std_scores[length],
+            plot_avg_scores(mean_scores[length], std_scores[length],
                             analysis_config.analysis_output_dir, analysis_config.reference_data, file_name,
-                            f"{distribution_type} {length}")
+                            f"{distribution_type} {length}", scoring_method="JSD")
 
 
 def compute_positional_aa_dist(sequences):

@@ -9,7 +9,7 @@ from scipy.stats import entropy
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
-from gen_airr_bm.utils.plotting_utils import plot_jsd_scores, plot_degree_distribution, plot_diversity_bar_chart
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_degree_distribution, plot_diversity_bar_chart
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_compairr_cluster, deduplicate_single_dataset
 
 
@@ -146,5 +146,5 @@ def compute_divergence(gen_node_degree_distribution, ref_node_degree_distributio
 def plot_connectivity_scores(mean_scores: dict, std_scores: dict, output_dir: str, reference_data: str,
                              distribution_type: str, file_name: str) -> None:
     """Plot the mean and standard deviation of the divergence scores."""
-    plot_jsd_scores(mean_scores, std_scores, output_dir, reference_data,
-                    file_name, distribution_type)
+    plot_avg_scores(mean_scores, std_scores, output_dir, reference_data,
+                    file_name, distribution_type, scoring_method="JSD")
