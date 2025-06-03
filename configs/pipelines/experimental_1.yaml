@@ -5,25 +5,25 @@ seed: 42
 data_generation:
   experimental: True
   method: "experimental_umi"
-  n_samples: 100000
-  default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call", "umi_count"]
+  n_samples: 150000
+  default_model_name: "humanIGH"
+  input_columns: ["junction_aa", "v_call", "j_call", "umi_count", "locus"]
 models:
     - name: "pwm"
       config: "configs/generative_models/PWM.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 100000
+      n_subset_samples: 150000
 #    - name: "sonnia"
 #      config: "configs/generative_models/SoNNia.yaml"
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 100000
     - name: "vae"
-      config: "configs/generative_models/VAE.yaml"
+      config: "configs/generative_models/SimpleVAE.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 100000
+      n_subset_samples: 150000
 #analyses:
 #    - name: "precision_recall"
 #      model_names: [ "vae" ]

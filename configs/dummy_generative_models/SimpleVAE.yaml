@@ -29,8 +29,8 @@ definitions:
 instructions:
   gen_model:
     type: TrainGenModel
-    export_combined_dataset: False
+    export_combined_dataset: True
     dataset: dataset
     method: model
     gen_examples_count: 1000
-    number_of_processes: 4
+    number_of_processes: 1
