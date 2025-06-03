@@ -1,6 +1,6 @@
-n_experiments: 7
-output_dir: "results_may20_bcr_tcr"
-input_dir: "data/bcr_tcr/"
+n_experiments: 9
+output_dir: "results/covid_igh_igk_igl/"
+input_dir: "data/covid_igh_igk_igl/"
 seed: 42
 data_generation:
   experimental: True
