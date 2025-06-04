@@ -33,8 +33,10 @@ def run_compairr_existence(compairr_output_dir, search_sequences_path, reference
     os.makedirs(compairr_output_dir, exist_ok=True)
     #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
-    #TODO: update to compairr binary
-    compairr_command = (f"compairr -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
+    compairr_binary_path = "compairr-1.13.0-linux-x86_64"
+    compairr_call = "./" + compairr_binary_path if os.path.exists(compairr_binary_path) else "compairr"
+
+    compairr_command = (f"{compairr_call} -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
                         f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
 
@@ -59,6 +61,7 @@ def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name, model_na
         print(f"Compairr output already exists for {file_name}. Skipping execution.")
     else:
         run_command(compairr_command)
+
 
 def deduplicate_and_merge_two_datasets(data1_path, data2_path, output_file_unique, output_file_concat):
     data1 = pd.read_csv(data1_path, sep='\t')
