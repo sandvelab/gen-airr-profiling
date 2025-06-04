@@ -59,10 +59,6 @@ class TrainingOrchestrator:
         for train_data_file in train_data_files:
             data_file_name = train_data_file.split('.')[0]
 
-            if "IGK" not in data_file_name:
-                print(f"Skipping training for {data_file_name}. Data file does not contain IGK locus.")
-                continue
-
             model_output_dir = f"{model_config.output_dir}/{model_config.name}/{data_file_name}"
             train_data_full_path = f"{train_data_dir}/{train_data_file}"
             model_config.locus = self.get_default_model_name(train_data_full_path)

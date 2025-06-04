@@ -20,12 +20,5 @@ class DataGenerationOrchestrator:
         if method not in self.DATA_GENERATION_METHODS:
             raise ValueError(f"Unknown simulation method: {method}")
 
-        # print(f"Running simulation: {method} with {n_samples} samples.")
-        # return self.DATA_GENERATION_METHODS[method](config)
-
-        if "IGK" in str(config.data_file):
-            print(f"Running simulation: {method} with {n_samples} samples.")
-            return self.DATA_GENERATION_METHODS[method](config)
-        else:
-            print(f"Skipping simulation: {method} with {n_samples} samples. "
-                  f"Data file {config.data_file} does not contain IGK locus.")
+        print(f"Running simulation: {method} with {n_samples} samples.")
+        return self.DATA_GENERATION_METHODS[method](config)
