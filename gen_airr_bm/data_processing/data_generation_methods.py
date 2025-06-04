@@ -135,6 +135,12 @@ def preprocess_experimental_umi_data(config: DataGenerationConfig):
     experimental_data['v_call'] = experimental_data['v_call'].str.split(',').str[0]
     experimental_data['j_call'] = experimental_data['j_call'].str.split(',').str[0]
     experimental_data = experimental_data.dropna(subset=["junction_aa", "v_call", "j_call", "umi_count", "locus"])
+
+    # check for multiple loci and only keep the most common one
+    if len(experimental_data['locus'].unique()) != 1:
+        most_common_locus = experimental_data['locus'].value_counts().idxmax()
+        experimental_data = experimental_data[experimental_data['locus'] == most_common_locus]
+
     experimental_data = experimental_data.loc[experimental_data.index.repeat(experimental_data["umi_count"])]
 
     # we need at least 2 * number_of_sequences sequences to split them into train and test
