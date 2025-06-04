@@ -1,6 +1,6 @@
-n_experiments: 4
+n_experiments: 3
 output_dir: "results_dummy_june3/covid_igh_igk_igl"
-input_dir: "data/experimental/covid_igh_igk_igl"
+input_dir: "data/covid_igh_igk_igl"
 seed: 42
 data_generation:
   experimental: True
@@ -9,24 +9,24 @@ data_generation:
   default_model_name: "humanIGH"
   input_columns: ["junction_aa", "v_call", "j_call", "umi_count", "locus" ]
 models:
-    - name: "vae"
-      config: "configs/dummy_generative_models/SimpleVAE.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10
+#    - name: "vae"
+#      config: "configs/dummy_generative_models/SimpleVAE.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
     - name: "pwm"
       config: "configs/dummy_generative_models/PWM.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 10
-#    - name: "sonnia"
-#      config: "configs/dummy_generative_models/SoNNia.yaml"
-#      train_dir: "train"
-#      test_dir: "test"
-#      n_subset_samples: 10
+      n_subset_samples: 100
+    - name: "sonnia"
+      config: "configs/dummy_generative_models/SoNNia.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
 analyses:
     - name: "precision_recall"
-      model_names: [ "pwm", "vae" ]
+      model_names: [ "pwm", "sonnia" ]
       default_model_name: "humanTRB"
       reference_data: "test"
       n_subsets: 10

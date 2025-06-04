@@ -2,34 +2,34 @@ n_experiments: 9
 output_dir: "results_june3/covid_igh_igk_igl/"
 input_dir: "data/covid_igh_igk_igl/"
 seed: 42
-data_generation:
-  experimental: True
-  method: "experimental_umi"
-  n_samples: 150000
-  default_model_name: "humanIGH"
-  input_columns: ["junction_aa", "v_call", "j_call", "umi_count", "locus"]
+#data_generation:
+#  experimental: True
+#  method: "experimental_umi"
+#  n_samples: 150000
+#  default_model_name: "humanIGH"
+#  input_columns: ["junction_aa", "v_call", "j_call", "umi_count", "locus"]
 models:
-    - name: "pwm"
-      config: "configs/generative_models/PWM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
-#    - name: "sonnia"
-#      config: "configs/generative_models/SoNNia.yaml"
+#    - name: "pwm"
+#      config: "configs/generative_models/PWM.yaml"
 #      train_dir: "train"
 #      test_dir: "test"
-#      n_subset_samples: 100000
-    - name: "vae"
-      config: "configs/generative_models/SimpleVAE.yaml"
+#      n_subset_samples: 150000
+    - name: "sonnia"
+      config: "configs/generative_models/SoNNia.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 150000
-#analyses:
-#    - name: "precision_recall"
-#      model_names: [ "vae" ]
-#      default_model_name: "humanTRB"
-#      reference_data: "test"
-#      n_subsets: 50
+#    - name: "vae"
+#      config: "configs/generative_models/SimpleVAE.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
+analyses:
+    - name: "precision_recall"
+      model_names: [ "pwm", "vae", "sonnia" ]
+      default_model_name: "humanTRB"
+      reference_data: "test"
+      n_subsets: 6
 #    - name: "network"
 #      model_names: ["vae", "pwm"]
 #      default_model_name: "humanTRB"
