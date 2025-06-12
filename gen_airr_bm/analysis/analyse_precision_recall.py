@@ -95,13 +95,16 @@ def get_precision_recall_metrics(ref_file, gen_files, compairr_output_dir, model
 def get_precision_recall_reference(train_file, test_file, compairr_output_dir, model):
     precision = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
                                                model, "precision")
-    recall = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
+    recall = compute_compairr_overlap_ratio(test_file, train_file, compairr_output_dir,
                                             model, "recall")
     return precision, recall
 
 
 def compute_compairr_overlap_ratio(search_for_file, search_in_file, compairr_output_dir, model_name, metric):
-    file_name = f"{os.path.splitext(os.path.basename(search_for_file))[0]}_{model_name}_{metric}"
+    if metric == "precision":
+        file_name = f"{os.path.splitext(os.path.basename(search_for_file))[0]}_{model_name}_{metric}"
+    else:
+        file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{model_name}_{metric}"
 
     run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',

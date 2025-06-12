@@ -158,8 +158,8 @@ def plot_scatter_precision_recall(precision_scores_dict, recall_scores_dict, out
         legend_title_text='Dataset, model'
     )
 
-    fig.update_xaxes(range=[-0.02, 0.5], title_text="Recall")
-    fig.update_yaxes(range=[-0.02, 0.5], title_text="Precision")
+    fig.update_xaxes(range=[-0.02, 1.02], title_text="Recall")
+    fig.update_yaxes(range=[-0.02, 1.02], title_text="Precision")
 
     png_path = os.path.join(output_dir, file_name)
     fig.write_image(png_path, scale=2)
