@@ -1,3 +1,4 @@
+from gen_airr_bm.analysis.analyse_diversity import run_diversity_analysis
 from gen_airr_bm.analysis.analyse_network import run_network_analysis
 from gen_airr_bm.analysis.analyse_phenotype import run_phenotype_analysis
 from gen_airr_bm.analysis.analyse_pgen import run_pgen_analysis
@@ -16,6 +17,7 @@ class AnalysisOrchestrator:
         "novelty": run_novelty_analysis,
         "network": run_network_analysis,
         "precision_recall": run_precision_recall_analysis,
+        "diversity": run_diversity_analysis
     }
 
     def run_analysis(self, analysis_config: AnalysisConfig):
