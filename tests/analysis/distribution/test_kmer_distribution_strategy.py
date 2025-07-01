@@ -1,4 +1,5 @@
 import pytest
+
 from gen_airr_bm.analysis.distribution.kmer_distribution_strategy import (
     KmerDistributionStrategy,
     compute_kmer_distribution,

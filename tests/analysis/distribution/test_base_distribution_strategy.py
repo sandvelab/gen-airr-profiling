@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
 from gen_airr_bm.core.analysis_config import AnalysisConfig
