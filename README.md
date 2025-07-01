@@ -1,4 +1,4 @@
-# gen-airr-profiling
+# Profiling of AIRR generative models
 
 **Work in progress 🚧**
 
@@ -9,7 +9,7 @@ We aim to better understand the behaviour and output of these models by applying
 ## Goals
 
 - Explore and assess evaluation methods for generative AIRR models
-- Profile outputs of commonly used models (e.g., VAE, LSTM, SONIA)
+- Profile outputs of commonly used models (e.g., VAE, LSTM, soNNia)
 - Compare generated repertoires to real-world immune data
 - Identify strengths, biases, and limitations across models
 
