@@ -19,7 +19,8 @@ def run_network_analysis(analysis_config: AnalysisConfig):
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
 
     Returns:
-        None"""
+        None
+    """
     print("Running network analysis")
 
     output_dir = analysis_config.analysis_output_dir
@@ -29,11 +30,11 @@ def run_network_analysis(analysis_config: AnalysisConfig):
     for directory in [output_dir, compairr_output_helper_dir, compairr_output_dir]:
         os.makedirs(directory, exist_ok=True)
 
-    compute_and_plot_connectivity_scores(analysis_config, compairr_output_dir, compairr_output_helper_dir)
+    compute_and_plot_connectivity(analysis_config, compairr_output_dir, compairr_output_helper_dir)
 
 
-def compute_and_plot_connectivity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str,
-                                         compairr_output_helper_dir: str):
+def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_output_dir: str,
+                                  compairr_output_helper_dir: str):
     reference_data = analysis_config.reference_data
     mean_scores = defaultdict(lambda: defaultdict(list))
     std_scores = defaultdict(lambda: defaultdict(list))
@@ -77,16 +78,6 @@ def run_compairr_and_get_degree_distributions(ref_file, gen_files, compairr_outp
     ref_degree_dist = get_node_degree_distribution(ref_connectivity)
 
     return ref_degree_dist, gen_degree_dists
-
-
-def compute_diversity(data_file, compairr_output_dir, file_name):
-    run_compairr_cluster(compairr_output_dir, data_file, file_name)
-    compairr_cluster_result = pd.read_csv(f"{compairr_output_dir}/{file_name}.tsv", sep='\t')
-    cluster_counts = compairr_cluster_result["#cluster_no"].value_counts()
-    probabilities = cluster_counts / cluster_counts.sum()
-    shannon_entropy = entropy(probabilities)
-
-    return shannon_entropy
 
 
 def compute_compairr_connectivity(input_sequences_path, compairr_output_helper_dir, compairr_output_dir, dataset_type):
