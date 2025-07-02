@@ -28,7 +28,7 @@ def run_network_analysis(analysis_config: AnalysisConfig):
     compute_and_plot_connectivity_scores(analysis_config, compairr_output_dir, compairr_output_helper_dir)
 
 
-# We are considering removing this metric
+# CLONALITY
 def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
     def collect_diversity_scores(dir_path, label):
         scores = []
