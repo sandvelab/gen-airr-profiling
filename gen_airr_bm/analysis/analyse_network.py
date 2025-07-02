@@ -1,5 +1,4 @@
 import os
-import re
 from collections import defaultdict
 
 import numpy as np
@@ -14,6 +13,13 @@ from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_compair
 
 
 def run_network_analysis(analysis_config: AnalysisConfig):
+    """Run network analysis to compute connectivity plots.
+
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+
+    Returns:
+        None"""
     print("Running network analysis")
 
     output_dir = analysis_config.analysis_output_dir
@@ -23,34 +29,7 @@ def run_network_analysis(analysis_config: AnalysisConfig):
     for directory in [output_dir, compairr_output_helper_dir, compairr_output_dir]:
         os.makedirs(directory, exist_ok=True)
 
-    compute_and_plot_diversity_scores(analysis_config, compairr_output_dir)
-
     compute_and_plot_connectivity_scores(analysis_config, compairr_output_dir, compairr_output_helper_dir)
-
-
-# We are considering removing this metric
-def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
-    def collect_diversity_scores(dir_path, label):
-        scores = []
-        for file in set(os.listdir(dir_path)):
-            path = os.path.join(dir_path, file)
-            name = os.path.splitext(file)[0]
-            scores.append(compute_diversity(path, compairr_output_dir, f"{name}_{label}_clustering"))
-        return scores
-
-    mean_diversity, std_diversity = {}, {}
-
-    for model in analysis_config.model_names:
-        dir_path = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model}"
-        scores = collect_diversity_scores(dir_path, model)
-        mean_diversity[model], std_diversity[model] = np.mean(scores), np.std(scores)
-
-    for label in ["train", "test"]:
-        dir_path = f"{analysis_config.root_output_dir}/{label}_compairr_sequences"
-        scores = collect_diversity_scores(dir_path, label)
-        mean_diversity[label], std_diversity[label] = np.mean(scores), np.std(scores)
-
-    plot_diversity_bar_chart(mean_diversity, std_diversity, f"{analysis_config.analysis_output_dir}/diversity.png")
 
 
 def compute_and_plot_connectivity_scores(analysis_config: AnalysisConfig, compairr_output_dir: str,
