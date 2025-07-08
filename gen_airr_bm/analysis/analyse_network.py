@@ -61,7 +61,7 @@ def analyse_degree_distributions(ref_file, gen_files, compairr_output_helper_dir
     ref_degree_dist, gen_degree_dists = get_node_degree_distributions(ref_file, gen_files,
                                                                       compairr_output_helper_dir,
                                                                       compairr_output_dir,
-                                                                      model, reference_data)
+                                                                      model, dataset_split)
 
     plot_degree_distribution(ref_degree_dist, gen_degree_dists, output_dir, model,
                              reference_data, dataset_name)
