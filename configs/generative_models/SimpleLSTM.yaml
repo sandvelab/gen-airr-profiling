@@ -10,18 +10,18 @@ definitions:
         separator: "\t"
   ml_methods:
     model:
-        SimpleLSTM:
-            locus: beta
-            sequence_type: amino_acid
-            num_epochs: 20
-            batch_size: 1000
-            device: cpu
-            hidden_size: 1024
-            learning_rate: 0.001
-            embed_size: 256
-            temperature: 1
-            num_layers: 3
-            region_type: IMGT_JUNCTION
+      SimpleLSTM:
+        locus: beta
+        sequence_type: amino_acid
+        num_epochs: 20
+        batch_size: 1000
+        device: cpu
+        hidden_size: 1024
+        learning_rate: 0.001
+        embed_size: 256
+        temperature: 1
+        num_layers: 3
+        region_type: IMGT_JUNCTION
 
 instructions:
   gen_model:
@@ -30,4 +30,4 @@ instructions:
     dataset: dataset
     method: model
     gen_examples_count: 1000000
-    number_of_processes: 4
+    number_of_processes: 1
