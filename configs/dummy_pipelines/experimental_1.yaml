@@ -25,7 +25,7 @@ models:
 #      test_dir: "test"
 #      n_subset_samples: 100
     - name: "lstm"
-      config: "configs/generative_models/SimpleLSTM.yaml"
+      config: "configs/dummy_generative_models/SimpleLSTM.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 150000
