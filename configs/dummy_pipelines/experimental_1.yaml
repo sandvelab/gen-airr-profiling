@@ -24,19 +24,19 @@ models:
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 100
-#    - name: "lstm"
-#      config: "configs/dummy_generative_models/SimpleLSTM.yaml"
-#      train_dir: "train"
-#      test_dir: "test"
-#      n_subset_samples: 100
+    - name: "lstm"
+      config: "configs/dummy_generative_models/SimpleLSTM.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
 analyses:
     - name: "precision_recall"
-      model_names: [ "pwm" ]
+      model_names: [ "pwm", "lstm" ]
       default_model_name: "humanTRB"
       reference_data: "test"
       n_subsets: 10
     - name: "diversity"
-      model_names: [ "pwm" ]
+      model_names: [ "pwm", "lstm" ]
       default_model_name: "humanTRB"
       reference_data: "test"
       n_subsets: 10
