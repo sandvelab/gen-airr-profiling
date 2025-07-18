@@ -9,21 +9,21 @@ data_generation:
   default_model_name: "humanIGH"
   input_columns: ["junction_aa", "v_call", "j_call", "umi_count", "locus"]
 models:
-    - name: "pwm"
-      config: "configs/generative_models/PWM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
+#    - name: "pwm"
+#      config: "configs/generative_models/PWM.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
 #    - name: "sonnia"
 #      config: "configs/generative_models/SoNNia.yaml"
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 150000
-    - name: "vae"
-      config: "configs/generative_models/SimpleVAE.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
+#    - name: "vae"
+#      config: "configs/generative_models/SimpleVAE.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
     - name: "lstm"
       config: "configs/generative_models/SimpleLSTM.yaml"
       train_dir: "train"
@@ -31,12 +31,12 @@ models:
       n_subset_samples: 150000
 analyses:
     - name: "precision_recall"
-      model_names: [ "pwm", "vae", "lstm" ]
+      model_names: [ "lstm" ]
       default_model_name: "humanTRB"
       reference_data: "test"
       n_subsets: 6
     - name: "diversity"
-      model_names: [ "pwm", "vae", "lstm" ]
+      model_names: [ "lstm" ]
       default_model_name: "humanTRB"
       reference_data: "test"
       n_subsets: 6

@@ -22,6 +22,7 @@ definitions:
         temperature: 1
         num_layers: 1 #3
         region_type: IMGT_JUNCTION
+        iter_to_report: 1
 
 instructions:
   gen_model:
