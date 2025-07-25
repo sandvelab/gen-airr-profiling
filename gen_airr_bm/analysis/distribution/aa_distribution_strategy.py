@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_avg_scores
 
 
 class AADistributionStrategy(BaseDistributionStrategy):
@@ -26,10 +26,15 @@ class AADistributionStrategy(BaseDistributionStrategy):
 
     def update_divergence_scores(self, divergence_scores, new_scores):
         for length, value in new_scores.items():
+            if length not in divergence_scores:
+                divergence_scores[length] = []
             divergence_scores[length].extend(value)
 
     def update_mean_std_scores(self, divergence_scores, model_name, mean_scores, std_scores):
         for length, scores in divergence_scores.items():
+            if length not in mean_scores:
+                mean_scores[length] = {}
+                std_scores[length] = {}
             mean_scores[length][model_name] = np.mean(scores)
             std_scores[length][model_name] = np.std(scores)
 
@@ -39,6 +44,16 @@ class AADistributionStrategy(BaseDistributionStrategy):
             plot_avg_scores(mean_scores[length], std_scores[length],
                             analysis_config.analysis_output_dir, analysis_config.reference_data, file_name,
                             f"{distribution_type} {length}", scoring_method="JSD")
+
+    def plot_scores_by_reference(self, mean_scores_by_ref, std_scores_by_ref,
+                                 analysis_config, distribution_type):
+        for length in range(10, 21):
+            mean_by_ref = {ref: mean_scores_by_ref[ref].get(length, {}) for ref in mean_scores_by_ref}
+            std_by_ref = {ref: std_scores_by_ref[ref].get(length, {}) for ref in std_scores_by_ref}
+            file_name = f"{distribution_type}_{length}_grouped.png"
+            plot_grouped_avg_scores(mean_by_ref, std_by_ref,
+                                    analysis_config.analysis_output_dir, analysis_config.reference_data,
+                                    file_name, f"{distribution_type} {length}", "JSD")
 
 
 def compute_positional_aa_dist(sequences):

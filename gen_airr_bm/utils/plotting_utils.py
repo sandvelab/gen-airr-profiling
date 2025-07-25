@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+import plotly.colors as pc
 
 
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
@@ -34,6 +35,60 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     png_path = os.path.join(fig_dir, file_name)
     fig.write_image(png_path)
 
+    print(f"Plot saved as PNG at: {png_path}")
+
+
+def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, reference_data, file_name,
+                            distribution_type, scoring_method="JSD"):
+    """
+    Plots grouped bar chart for mean scores across models and reference types.
+
+    Args:
+        mean_scores_by_ref: dict of {ref_label: {model: mean_score}}
+        std_scores_by_ref: dict of {ref_label: {model: std_score}}
+        output_dir: output directory
+        reference_data: string or list, used for subfolder naming
+        file_name: output file name
+        distribution_type: e.g. "cdr3"
+        scoring_method: e.g. "JSD"
+    """
+    if isinstance(reference_data, (list, tuple)):
+        ref_folder = "_".join(reference_data)
+    else:
+        ref_folder = str(reference_data)
+
+    fig_dir = os.path.join(output_dir, ref_folder)
+    os.makedirs(fig_dir, exist_ok=True)
+
+    all_models = sorted({model for ref_scores in mean_scores_by_ref.values() for model in ref_scores})
+    all_refs = sorted(mean_scores_by_ref.keys())
+
+    data = []
+    for ref_label in all_refs:
+        means = [mean_scores_by_ref.get(ref_label, {}).get(model, None) for model in all_models]
+        stds = [std_scores_by_ref.get(ref_label, {}).get(model, 0) for model in all_models]
+        data.append(go.Bar(
+            name=ref_label.capitalize(),
+            x=all_models,
+            y=means,
+            error_y=dict(type='data', array=stds, visible=True),
+        ))
+
+    fig = go.Figure(data=data)
+    fig.update_layout(
+        barmode='group',
+        title={'text': f"Avg {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across "
+                       f"Models and References",
+               'font': {'size': 14}},
+        xaxis_title="Models",
+        yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
+        xaxis_tickangle=-45,
+        template="plotly_white",
+        colorway=pc.qualitative.Set2
+    )
+
+    png_path = os.path.join(fig_dir, file_name)
+    fig.write_image(png_path)
     print(f"Plot saved as PNG at: {png_path}")
 
 

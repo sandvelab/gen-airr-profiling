@@ -1,5 +1,4 @@
 import os
-
 import pandas as pd
 
 from gen_airr_bm.analysis.distribution.distribution_factory import get_distribution_strategy
@@ -20,35 +19,43 @@ def run_reduced_dimensionality_analysis(analysis_config: AnalysisConfig, distrib
 
     for model in analysis_config.model_names:
         comparison_pairs = get_sequence_file_pairs(analysis_config, model)
+        divergence_scores_by_ref = {}
 
-        divergence_scores = strategy.init_divergence_scores()
-
-        for gen_file, ref_file in comparison_pairs:
-            ref_seqs, gen_seqs = map(get_sequences_from_file, [ref_file, gen_file])
-
+        for gen_file, ref_file, ref_label in comparison_pairs:
+            gen_seqs = get_sequences_from_file(gen_file)
+            ref_seqs = get_sequences_from_file(ref_file)
             scores = strategy.compute_divergence(gen_seqs, ref_seqs)
-            strategy.update_divergence_scores(divergence_scores, scores)
+            if ref_label not in divergence_scores_by_ref:
+                divergence_scores_by_ref[ref_label] = strategy.init_divergence_scores()
+            strategy.update_divergence_scores(divergence_scores_by_ref[ref_label], scores)
 
-        strategy.update_mean_std_scores(divergence_scores, model,
-                                        mean_divergence_scores_dict, std_divergence_scores_dict)
+        for ref_label, scores in divergence_scores_by_ref.items():
+            if ref_label not in mean_divergence_scores_dict:
+                mean_divergence_scores_dict[ref_label], std_divergence_scores_dict[ref_label] = strategy.init_mean_std_scores()
 
-    strategy.plot_scores(mean_divergence_scores_dict, std_divergence_scores_dict,
-                         analysis_config, distribution_type.value.lower())
+            strategy.update_mean_std_scores(scores, model, mean_divergence_scores_dict[ref_label],
+                                            std_divergence_scores_dict[ref_label])
+
+    strategy.plot_scores_by_reference(mean_divergence_scores_dict, std_divergence_scores_dict,
+                                      analysis_config, distribution_type.value.lower())
 
 
 def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str):
+    """
+    Returns a list of (gen_file, ref_file, ref_label) tuples.
+    ref_label is the name of the reference (e.g. 'train', 'test').
+    """
     comparison_pairs = []
-
     gen_dir = f"{analysis_config.root_output_dir}/generated_sequences/{model}"
-    ref_dir = f"{analysis_config.root_output_dir}/{analysis_config.reference_data}_sequences"
-
     gen_files = set(os.listdir(gen_dir))
 
-    comparison_pairs.extend([
-        (os.path.join(gen_dir, file), os.path.join(ref_dir, file))
-        for file in gen_files
-    ])
-
+    for reference in analysis_config.reference_data:
+        ref_dir = f"{analysis_config.root_output_dir}/{reference}_sequences"
+        for file in gen_files:
+            gen_file_path = os.path.join(gen_dir, file)
+            ref_file_path = os.path.join(ref_dir, file)
+            if os.path.exists(ref_file_path):
+                comparison_pairs.append((gen_file_path, ref_file_path, reference))
     return comparison_pairs
 
 
