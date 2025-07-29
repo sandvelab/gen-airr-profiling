@@ -35,9 +35,13 @@ def main(config_path):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(lambda model: run_training(model, training_orchestrator, config.output_dir), config.model_configs)
 
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator),
+    #                  config.analysis_configs)
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator),
-                     config.analysis_configs)
+        for _ in executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator),
+                              config.analysis_configs):
+            pass  # This will re-raise exceptions from worker threads in the main thread
 
 
 if __name__ == "__main__":
