@@ -50,9 +50,6 @@ analyses:
 #      default_model_name: "humanTRB"
 #      reference_data: "test"
 #      n_subsets: 50
-#    - name: "novelty"
-#      model_names: [ "pwm", "sonnia" ]
-#      default_model_name: "humanTRB"
 #    - name: "phenotype"
 #      model_names: ["pwm"]
 #      default_model_name: "humanTRB"
