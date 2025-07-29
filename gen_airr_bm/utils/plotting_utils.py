@@ -11,7 +11,7 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
-    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[0]))
+    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[1], reverse=True))
     errors = [std_scores_dict[model] for model in models]
 
     fig = go.Figure()
