@@ -1,13 +1,13 @@
 n_experiments: 2
-output_dir: "results_dummy_july29/covid_igh_igk_igl"
-input_dir: "data/covid_igh_igk_igl"
+output_dir: "results_july29/dummy/collection4"
+input_dir: "data/experimental/collection4"
 seed: 42
 data_generation:
   experimental: True
-  method: "experimental_umi"
-  n_samples: 1000
+  method: "experimental"
+  n_samples: 22000
   default_model_name: "humanIGH"
-  input_columns: ["junction_aa", "v_call", "j_call", "umi_count", "locus" ]
+  input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
 models:
     - name: "vae"
       config: "configs/dummy_generative_models/SimpleVAE.yaml"
@@ -19,45 +19,45 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
-    - name: "sonnia"
-      config: "configs/dummy_generative_models/SoNNia.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
-    - name: "lstm"
-      config: "configs/dummy_generative_models/SimpleLSTM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
+#    - name: "sonnia"
+#      config: "configs/dummy_generative_models/SoNNia.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
+#    - name: "lstm"
+#      config: "configs/dummy_generative_models/SimpleLSTM.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
 analyses:
     - name: "reduced_dimensionality"
-      model_names: [ "pwm", "vae", "sonnia", "lstm" ]
+      model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
-    - name: "phenotype"
-      model_names: ["pwm"]
-      default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: ["sonnia"]
-      default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: [ "vae" ]
-      default_model_name: "humanTRB"
-    - name: "network"
-      model_names: [ "pwm", "sonnia", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "test"
-      n_subsets: 10
-    - name: "precision_recall"
-      model_names: [ "pwm", "vae", "sonnia", "lstm" ]
-      default_model_name: "humanTRB"
-      reference_data: "test"
-      n_subsets: 10
-    - name: "diversity"
-      model_names: [ "pwm", "vae", "sonnia", "lstm" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
+#    - name: "phenotype"
+#      model_names: ["pwm"]
+#      default_model_name: "humanTRB"
+#    - name: "phenotype"
+#      model_names: ["sonnia"]
+#      default_model_name: "humanTRB"
+#    - name: "phenotype"
+#      model_names: [ "vae" ]
+#      default_model_name: "humanTRB"
+#    - name: "network"
+#      model_names: [ "pwm", "sonnia", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: "test"
+#      n_subsets: 10
+#    - name: "precision_recall"
+#      model_names: [ "pwm", "vae", "sonnia", "lstm" ]
+#      default_model_name: "humanTRB"
+#      reference_data: "test"
+#      n_subsets: 10
+#    - name: "diversity"
+#      model_names: [ "pwm", "vae", "sonnia", "lstm" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 10
 
 #    - name: "network"
 #      model_names: [ "pwm", "vae" ]
