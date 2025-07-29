@@ -1,5 +1,6 @@
-import pytest
 from collections import Counter
+
+import pytest
 
 from gen_airr_bm.analysis.distribution.length_distribution_strategy import (
     LengthDistributionStrategy,
