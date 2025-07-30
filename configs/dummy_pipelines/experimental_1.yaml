@@ -1,12 +1,12 @@
-n_experiments: 2
-output_dir: "results_july29/dummy/collection4"
+n_experiments: 1
+output_dir: "results_july30_non_umi/dummy/collection4"
 input_dir: "data/experimental/collection4"
 seed: 42
 data_generation:
   experimental: True
   method: "experimental"
   n_samples: 22000
-  default_model_name: "humanIGH"
+  default_model_name: "humanTRB"
   input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
 models:
     - name: "vae"

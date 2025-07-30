@@ -1,12 +1,12 @@
 n_experiments: 12
-output_dir: "results_july29/collection4/"
-input_dir: "data/collection4/"
+output_dir: "results_july30_non_umi/collection4/"
+input_dir: "data/experimental/collection4/"
 seed: 42
 data_generation:
   experimental: True
   method: "experimental"
   n_samples: 22000
-  default_model_name: "humanIGH"
+  default_model_name: "humanTRB"
   input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 models:
     - name: "pwm"
@@ -24,11 +24,11 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22000
-    - name: "lstm"
-      config: "configs/generative_models/SimpleLSTM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22000
+#    - name: "lstm"
+#      config: "configs/generative_models/SimpleLSTM.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22000
 
 
 #analyses:
