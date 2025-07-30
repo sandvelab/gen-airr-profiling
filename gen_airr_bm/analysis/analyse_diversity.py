@@ -1,6 +1,7 @@
 import math
 import os
 from collections import defaultdict, Counter
+from typing import Callable
 
 import numpy as np
 import plotly.express as px
@@ -10,7 +11,13 @@ from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
-def run_diversity_analysis(analysis_config: AnalysisConfig):
+def run_diversity_analysis(analysis_config: AnalysisConfig) -> None:
+    """ Run diversity analysis on the generated sequences.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+    Returns:
+        None
+    """
     print("Running diversity analysis...")
 
     os.makedirs(analysis_config.analysis_output_dir, exist_ok=True)
@@ -28,16 +35,26 @@ def run_diversity_analysis(analysis_config: AnalysisConfig):
                                           diversity_function, metric_name)
 
 
-def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, test_dir, train_dir, output_path,
-                                      function, metric_name):
-    test_diversity = compute_diversity(test_dir, function)
-    train_diversity = compute_diversity(train_dir, function)
-
-    models_diversities = defaultdict(dict)
-    for model in analysis_config.model_names:
-        gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
-        models_diversities[model] = compute_diversity(gen_dir, function)
-
+def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, test_dir: str, train_dir: str, output_path: str,
+                                      diversity_function: Callable, metric_name: str) -> None:
+    """ Compute diversity scores and plot them.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        test_dir (str): Path to the test dataset directory.
+        train_dir (str): Path to the training dataset directory.
+        output_path (str): Path to save the output plot.
+        diversity_function (Callable): Diversity function to compute the scores.
+        metric_name (str): Name of the metric for labeling the plot.
+    Returns:
+        None
+    """
+    print(f"Computing {metric_name} diversity scores...")
+    test_diversity = compute_diversity(test_dir, diversity_function)
+    train_diversity = compute_diversity(train_dir, diversity_function)
+    models_diversities = compute_diversities_for_models(analysis_config.model_names,
+                                                        f"{analysis_config.root_output_dir}/"
+                                                        f"generated_compairr_sequences_split",
+                                                        diversity_function)
     models_diversities_grouped = defaultdict(dict)
     for model in analysis_config.model_names:
         datasets = models_diversities[model].keys()
@@ -50,6 +67,23 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, test_dir,
             ])
 
     plot_diversity_scatter_plotly(train_diversity, test_diversity, models_diversities_grouped, output_path, metric_name)
+
+
+def compute_diversities_for_models(models: list, gen_dir, diversity_function: Callable) -> dict:
+    """ Compute diversity scores for each model in the specified list.
+    Args:
+        models (list): List of model names.
+        gen_dir (str): Directory containing generated sequences for each model.
+        diversity_function (Callable): Function to compute the diversity score.
+    Returns:
+        dict: A dictionary with model names as keys and their diversity scores as values.
+    """
+    models_diversities = defaultdict(dict)
+    for model in models:
+        gen_dir = f"{gen_dir}/{model}"
+        models_diversities[model] = compute_diversity(gen_dir, diversity_function)
+
+    return models_diversities
 
 
 def compute_diversity(directory_path, diversity_function):
@@ -107,7 +141,7 @@ def gini_coefficient(sequences):
         for xj in counts:
             cumulative_diff += abs(xi - xj)
     mean = total / n
-    return cumulative_diff / (2 * n**2 * mean)
+    return cumulative_diff / (2 * n ** 2 * mean)
 
 
 def plot_diversity_scatter_plotly(train_div, test_div, models_div, output_path, metric_name):
