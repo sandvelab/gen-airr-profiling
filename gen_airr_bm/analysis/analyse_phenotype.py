@@ -32,6 +32,9 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
 
     generated_datasets = os.listdir(sequences_dir)
     generated_datasets_names = [dataset.strip('.tsv') for dataset in generated_datasets]
+    if len(generated_datasets) < 2:
+        raise ValueError(f"At least two datasets are required for phenotype analysis, but found "
+                         f"{len(generated_datasets)} in {sequences_dir}.")
 
     similarities_matrix = []
 
