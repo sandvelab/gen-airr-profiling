@@ -49,6 +49,9 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str):
     gen_dir = f"{analysis_config.root_output_dir}/generated_sequences/{model}"
     gen_files = set(os.listdir(gen_dir))
 
+    if isinstance(analysis_config.reference_data, str):
+        analysis_config.reference_data = [analysis_config.reference_data]
+
     for reference in analysis_config.reference_data:
         ref_dir = f"{analysis_config.root_output_dir}/{reference}_sequences"
         for file in gen_files:

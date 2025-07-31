@@ -1,6 +1,6 @@
 class AnalysisConfig:
     def __init__(self, analysis: str, model_names: list, analysis_output_dir: str, root_output_dir: str,
-                 default_model_name: str, reference_data: list, n_subsets: int = None):
+                 default_model_name: str, reference_data: str | list, n_subsets: int = None):
         self.analysis = analysis
         self.model_names = model_names
         self.analysis_output_dir = analysis_output_dir

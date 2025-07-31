@@ -45,6 +45,9 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
         None
     """
     dataset_split = analysis_config.reference_data
+    if not isinstance(dataset_split, str):
+        raise ValueError("Network analysis only supports a single dataset split (train or test).")
+
     mean_scores = defaultdict(lambda: defaultdict(list))
     std_scores = defaultdict(lambda: defaultdict(list))
     for model in analysis_config.model_names:

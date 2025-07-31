@@ -24,6 +24,9 @@ def run_precision_recall_analysis(analysis_config: AnalysisConfig):
 
 def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
     reference_data = analysis_config.reference_data
+    if not isinstance(reference_data, str):
+        raise ValueError("Reference data should be a single string for running precision recall analysis.")
+
     mean_precision_scores = defaultdict(lambda: defaultdict(list))
     std_precision_scores = defaultdict(lambda: defaultdict(list))
     mean_recall_scores = defaultdict(lambda: defaultdict(list))
