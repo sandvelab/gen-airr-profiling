@@ -37,7 +37,7 @@ def run_compairr_existence(compairr_output_dir, search_sequences_path, reference
     compairr_call = "./" + compairr_binary_path if os.path.exists(compairr_binary_path) else "compairr"
 
     compairr_command = (f"{compairr_call} -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
-                        f"{compairr_output_dir}/{file_name}_overlap.tsv -p {compairr_output_dir}/{file_name}_pairs.tsv "
+                        f"{compairr_output_dir}/{file_name}_overlap.tsv "
                         f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
 
     # TODO: Add better support for PWM model

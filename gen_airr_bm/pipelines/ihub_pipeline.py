@@ -30,18 +30,16 @@ def main(config_path):
     analysis_orchestrator = AnalysisOrchestrator()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        for _ in executor.map(lambda data_generation: run_data_generation(data_generation, data_generation_orchestrator), config.data_generation_configs):
-            pass
+        executor.map(lambda data_generation: run_data_generation(data_generation, data_generation_orchestrator),
+                     config.data_generation_configs)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        for _ in executor.map(lambda model: run_training(model, training_orchestrator, config.output_dir),
-                              config.model_configs):
-            pass
+        executor.map(lambda model: run_training(model, training_orchestrator, config.output_dir),
+                     config.model_configs)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        for _ in executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator),
-                              config.analysis_configs):
-            pass
+        executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator),
+                     config.analysis_configs)
 
 
 if __name__ == "__main__":
