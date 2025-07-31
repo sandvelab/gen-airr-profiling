@@ -38,13 +38,6 @@ class AADistributionStrategy(BaseDistributionStrategy):
             mean_scores[length][model_name] = np.mean(scores)
             std_scores[length][model_name] = np.std(scores)
 
-    def plot_scores(self, mean_scores, std_scores, analysis_config, distribution_type):
-        for length in range(10, 21):
-            file_name = f"{distribution_type}_{length}.png"
-            plot_avg_scores(mean_scores[length], std_scores[length],
-                            analysis_config.analysis_output_dir, analysis_config.reference_data, file_name,
-                            f"{distribution_type} {length}", scoring_method="JSD")
-
     def plot_scores_by_reference(self, mean_scores_by_ref, std_scores_by_ref,
                                  analysis_config, distribution_type):
         for length in range(10, 21):
