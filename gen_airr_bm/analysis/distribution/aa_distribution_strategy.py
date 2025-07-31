@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_avg_scores
+from gen_airr_bm.utils.plotting_utils import plot_grouped_avg_scores
 
 
 class AADistributionStrategy(BaseDistributionStrategy):
