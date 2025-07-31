@@ -29,43 +29,37 @@ models:
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 22000
-
-
-#analyses:
-#    - name: "precision_recall"
-#      model_names: [ "lstm" ]
-#      default_model_name: "humanTRB"
-#      reference_data: "test"
-#      n_subsets: 45
-#    - name: "diversity"
-#      model_names: [ "lstm" ]
-#      default_model_name: "humanTRB"
-#      reference_data: "test"
-#      n_subsets: 45
-#    - name: "network"
-#      model_names: ["vae", "pwm"]
-#      default_model_name: "humanTRB"
-#      reference_data: "train"
-#      n_subsets: 1
-#    - name: "network"
-#      model_names: [ "vae" ]
-#      default_model_name: "humanTRB"
-#      reference_data: "test"
-#      n_subsets: 50
-#    - name: "phenotype"
-#      model_names: ["pwm"]
-#      default_model_name: "humanTRB"
-#    - name: "phenotype"
-#      model_names: ["sonnia"]
-#      default_model_name: "humanTRB"
-#    - name: "phenotype"
-#      model_names: [ "vae" ]
-#      default_model_name: "humanTRB"
-#    - name: "reduced_dimensionality"
-#      model_names: [ "pwm", "vae" ]
-#      default_model_name: "humanTRB"
-#      reference_data: "test"
-#    - name: "reduced_dimensionality"
-#      model_names: [ "pwm", "vae" ]
-#      default_model_name: "humanTRB"
-#      reference_data: "train"
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+    - name: "diversity"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 45
+    - name: "phenotype"
+      model_names: ["pwm"]
+      default_model_name: "humanTRB"
+    - name: "phenotype"
+      model_names: ["sonnia"]
+      default_model_name: "humanTRB"
+    - name: "phenotype"
+      model_names: [ "vae" ]
+      default_model_name: "humanTRB"
+    - name: "network"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "train"
+      n_subsets: 45
+    - name: "network"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "test"
+      n_subsets: 45
+    - name: "precision_recall"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: "test"
+      n_subsets: 45
