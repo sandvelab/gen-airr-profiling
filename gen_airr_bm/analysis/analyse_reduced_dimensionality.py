@@ -18,26 +18,53 @@ def run_reduced_dimensionality_analysis(analysis_config: AnalysisConfig, distrib
     mean_divergence_scores_dict, std_divergence_scores_dict = strategy.init_mean_std_scores()
 
     for model in analysis_config.model_names:
-        comparison_pairs = get_sequence_file_pairs(analysis_config, model)
-        divergence_scores_by_ref = {}
-
-        for gen_file, ref_file, ref_label in comparison_pairs:
-            gen_seqs = get_sequences_from_file(gen_file)
-            ref_seqs = get_sequences_from_file(ref_file)
-            scores = strategy.compute_divergence(gen_seqs, ref_seqs)
-            if ref_label not in divergence_scores_by_ref:
-                divergence_scores_by_ref[ref_label] = strategy.init_divergence_scores()
-            strategy.update_divergence_scores(divergence_scores_by_ref[ref_label], scores)
-
-        for ref_label, scores in divergence_scores_by_ref.items():
-            if ref_label not in mean_divergence_scores_dict:
-                mean_divergence_scores_dict[ref_label], std_divergence_scores_dict[ref_label] = strategy.init_mean_std_scores()
-
-            strategy.update_mean_std_scores(scores, model, mean_divergence_scores_dict[ref_label],
-                                            std_divergence_scores_dict[ref_label])
+        divergence_scores_by_ref = process_model(analysis_config, model, strategy)
+        update_mean_std_scores_by_reference(divergence_scores_by_ref,
+                                            mean_divergence_scores_dict,
+                                            std_divergence_scores_dict,
+                                            strategy,
+                                            model)
 
     strategy.plot_scores_by_reference(mean_divergence_scores_dict, std_divergence_scores_dict,
                                       analysis_config, distribution_type.value.lower())
+
+
+def process_model(analysis_config: AnalysisConfig, model: str, strategy):
+    """
+    Processes a single model: computes divergence scores for each reference.
+    Returns a dict mapping ref_label to divergence scores.
+    """
+    comparison_pairs = get_sequence_file_pairs(analysis_config, model)
+    divergence_scores_by_ref = {}
+
+    for gen_file, ref_file, ref_label in comparison_pairs:
+        scores = process_reference(gen_file, ref_file, ref_label, strategy, divergence_scores_by_ref)
+        strategy.update_divergence_scores(divergence_scores_by_ref[ref_label], scores)
+
+    return divergence_scores_by_ref
+
+
+def process_reference(gen_file, ref_file, ref_label, strategy, divergence_scores_by_ref):
+    """
+    Processes a single reference: computes divergence scores and updates the dict.
+    """
+    gen_seqs = get_sequences_from_file(gen_file)
+    ref_seqs = get_sequences_from_file(ref_file)
+    scores = strategy.compute_divergence(gen_seqs, ref_seqs)
+    if ref_label not in divergence_scores_by_ref:
+        divergence_scores_by_ref[ref_label] = strategy.init_divergence_scores()
+    strategy.update_divergence_scores(divergence_scores_by_ref[ref_label], scores)
+    return scores
+
+
+def update_mean_std_scores_by_reference(divergence_scores_by_ref, mean_dict, std_dict, strategy, model):
+    """
+    Updates mean and std dictionaries for each reference label.
+    """
+    for ref_label, scores in divergence_scores_by_ref.items():
+        if ref_label not in mean_dict:
+            mean_dict[ref_label], std_dict[ref_label] = strategy.init_mean_std_scores()
+        strategy.update_mean_std_scores(scores, model, mean_dict[ref_label], std_dict[ref_label])
 
 
 def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str):
