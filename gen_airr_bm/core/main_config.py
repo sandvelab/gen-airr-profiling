@@ -24,7 +24,7 @@ class MainConfig:
                            f"{self.output_dir}/analyses/{analysis['name']}/"
                            f"{'_'.join(m.lower() for m in analysis['model_names'])}",
                            self.output_dir, analysis["default_model_name"], analysis.get("reference_data", None),
-                           analysis.get("n_subsets", None))
+                           analysis.get("n_subsets", None), analysis.get("n_unique_samples", None))
             for analysis in data.get("analyses", [])
         ] if data.get("analyses") else []
 

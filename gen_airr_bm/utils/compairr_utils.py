@@ -79,12 +79,20 @@ def deduplicate_and_merge_two_datasets(data1_path, data2_path, output_file_uniqu
     concat_data.to_csv(output_file_concat, sep='\t', index=False)
 
 
-def deduplicate_single_dataset(input_sequences_path, output_file_unique):
+def deduplicate_single_dataset(input_sequences_path, output_file_unique, n_unique_samples=None):
     data = pd.read_csv(input_sequences_path, sep='\t')
     data['sequence_id'] = [f"dataset_{i + 1}" for i in range(len(data))]
 
     #TODO: We need to decide if we want to include v,j genes in the deduplication
-    unique_sequences = data.drop_duplicates(subset=['junction_aa'])
+    unique_sequences = data.drop_duplicates(subset=["junction_aa"])
+
+    if n_unique_samples is not None:
+        if len(unique_sequences) >= n_unique_samples:
+            unique_sequences = unique_sequences.sample(n=n_unique_samples, random_state=42)
+        else:
+            raise ValueError(f"Not enough unique sequences in {input_sequences_path} to sample {n_unique_samples} "
+                             f"sequences.")
+
     unique_sequences.to_csv(output_file_unique, sep='\t', index=False)
 
 

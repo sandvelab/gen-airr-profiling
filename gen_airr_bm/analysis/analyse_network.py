@@ -57,7 +57,8 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
             dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
             divergence_scores = calculate_degree_divergence_scores(ref_file, gen_files, compairr_output_helper_dir,
                                                                    compairr_output_dir, model, dataset_split,
-                                                                   analysis_config.analysis_output_dir, dataset_name)
+                                                                   analysis_config.analysis_output_dir, dataset_name,
+                                                                   analysis_config.n_unique_samples)
 
             mean_scores[dataset_name][model] = np.mean(divergence_scores)
             std_scores[dataset_name][model] = np.std(divergence_scores)
@@ -69,7 +70,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
 def calculate_degree_divergence_scores(ref_file: str, gen_files: list, compairr_output_helper_dir: str,
                                        compairr_output_dir: str, model: str, dataset_split: str, output_dir: str,
-                                       dataset_name: str) -> list:
+                                       dataset_name: str, n_unique_samples: int | None) -> list:
     """Calculate divergence scores based on node degree distributions. Additionally, plots the degree distributions.
 
     Args:
@@ -81,16 +82,16 @@ def calculate_degree_divergence_scores(ref_file: str, gen_files: list, compairr_
         dataset_split (str): Reference data identifier (train or test).
         output_dir (str): Directory to save output plots.
         dataset_name (str): Name of the dataset being analyzed.
+        n_unique_samples (int, optional): Maximum number of unique samples to consider. Defaults to None (all considered).
 
     Returns:
         list: List of divergence scores between generated and reference node degree distributions.
     """
     divergence_scores = []
 
-    ref_degree_dist, gen_degree_dists = get_node_degree_distributions(ref_file, gen_files,
-                                                                      compairr_output_helper_dir,
-                                                                      compairr_output_dir,
-                                                                      model, dataset_split)
+    ref_degree_dist, gen_degree_dists = get_node_degree_distributions(ref_file, gen_files, compairr_output_helper_dir,
+                                                                      compairr_output_dir, model, dataset_split,
+                                                                      n_unique_samples)
 
     plot_degree_distribution(ref_degree_dist, gen_degree_dists, output_dir, model,
                              dataset_split, dataset_name)
@@ -102,7 +103,8 @@ def calculate_degree_divergence_scores(ref_file: str, gen_files: list, compairr_
 
 
 def get_node_degree_distributions(ref_file: str, gen_files: list, compairr_output_helper_dir: str,
-                                  compairr_output_dir: str, model: str, dataset_split: str) -> tuple:
+                                  compairr_output_dir: str, model: str, dataset_split: str,
+                                  n_unique_samples: int | None) -> tuple:
     """
     Compute node degree distributions for reference and generated files.
 
@@ -113,25 +115,28 @@ def get_node_degree_distributions(ref_file: str, gen_files: list, compairr_outpu
         compairr_output_dir (str): Directory for Compairr output files.
         model (str): Model name used for analysis.
         dataset_split (str): Reference data identifier (train or test).
+        n_unique_samples (int, optional): Maximum number of unique samples to consider. Defaults to None (all considered).
+
     Returns:
         tuple: Reference node degree distribution and list of generated node degree distributions.
     """
     gen_degree_dists = []
     for gen_file in gen_files:
         gen_connectivity = compute_connectivity_with_compairr(gen_file, compairr_output_helper_dir, compairr_output_dir,
-                                                              model)
+                                                              model, n_unique_samples)
         gen_degree_dist = get_degrees_from_overlap(gen_connectivity)
         gen_degree_dists.append(gen_degree_dist)
 
     ref_connectivity = compute_connectivity_with_compairr(ref_file, compairr_output_helper_dir, compairr_output_dir,
-                                                          dataset_split)
+                                                          dataset_split, n_unique_samples)
     ref_degree_dist = get_degrees_from_overlap(ref_connectivity)
 
     return ref_degree_dist, gen_degree_dists
 
 
 def compute_connectivity_with_compairr(input_sequences_path: str, compairr_output_helper_dir: str,
-                                       compairr_output_dir: str, dataset_type: str) -> pd.DataFrame:
+                                       compairr_output_dir: str, dataset_type: str,
+                                       n_unique_samples: int | None) -> pd.DataFrame:
     """
     Compute connectivity using Compairr for a single dataset (either train or test).
 
@@ -140,6 +145,7 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
         compairr_output_helper_dir (str): Directory for Compairr helper files.
         compairr_output_dir (str): Directory for Compairr output files.
         dataset_type (str): Type of dataset (train or test or generated with a specific model).
+        n_unique_samples (int, optional): Maximum number of unique samples to consider. Defaults to None (all considered).
 
     Returns:
         pd.DataFrame: DataFrame containing sequence IDs and their overlap counts.
@@ -151,7 +157,7 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
     if os.path.exists(unique_sequences_path):
         print(f"Unique sequences already exist for {file_name}. Skipping execution.")
     else:
-        deduplicate_single_dataset(input_sequences_path, unique_sequences_path)
+        deduplicate_single_dataset(input_sequences_path, unique_sequences_path, n_unique_samples)
     run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
