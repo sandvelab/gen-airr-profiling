@@ -14,21 +14,21 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22000
-#    - name: "sonnia"
-#      config: "configs/generative_models/SoNNia.yaml"
-#      train_dir: "train"
-#      test_dir: "test"
-#      n_subset_samples: 22000
+    - name: "sonnia"
+      config: "configs/generative_models/SoNNia.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22000
     - name: "vae"
       config: "configs/generative_models/SimpleVAE.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22000
-#    - name: "lstm"
-#      config: "configs/generative_models/SimpleLSTM.yaml"
-#      train_dir: "train"
-#      test_dir: "test"
-#      n_subset_samples: 22000
+    - name: "lstm"
+      config: "configs/generative_models/SimpleLSTM.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22000
 analyses:
     - name: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
