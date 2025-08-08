@@ -17,6 +17,7 @@ definitions:
         deep: True
         include_joint_genes: True
         n_gen_seqs: 1000000
+        num_processes: 1
 
 instructions:
   gen_model:

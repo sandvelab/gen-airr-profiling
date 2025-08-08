@@ -4,7 +4,7 @@ from typing import Any
 import numpy as np
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_avg_scores
 
 
 class BaseDistributionStrategy(ABC):
@@ -32,3 +32,14 @@ class BaseDistributionStrategy(ABC):
         plot_avg_scores(mean_scores, std_scores,
                         analysis_config.analysis_output_dir, analysis_config.reference_data,
                         file_name, distribution_type, "JSD")
+
+    def plot_scores_by_reference(self, mean_scores_by_ref: dict, std_scores_by_ref: dict,
+                                 analysis_config: AnalysisConfig, distribution_type: str) -> None:
+        """
+        mean_scores_by_ref: {ref_label: {model: mean_score}}
+        std_scores_by_ref: {ref_label: {model: std_score}}
+        """
+        file_name = f"{distribution_type}_grouped.png"
+        plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref,
+                                analysis_config.analysis_output_dir, analysis_config.reference_data,
+                                file_name, distribution_type, "JSD")

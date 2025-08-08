@@ -1,8 +1,9 @@
+git+https://github.com/uio-bmi/immuneML.git@development
 logomaker
 kaleido
 statsmodels
 seaborn
 sonnia==0.1.5
-immuneml==3.0.11
+#immuneml==3.0.11
 tensorflow==2.15.0
 torch==2.6.0

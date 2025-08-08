@@ -10,19 +10,24 @@ definitions:
         separator: "\t"
   ml_methods:
     model:
-      SoNNia:
-        batch_size: 10000
-        epochs: 50
-        default_model_name: 'humanTRB'
-        deep: True
-        include_joint_genes: True
-        n_gen_seqs: 1000 #500000
-        num_processes: 1
+      SimpleLSTM:
+        locus: beta
+        sequence_type: amino_acid
+        num_epochs: 20
+        batch_size: 1000
+        device: cpu
+        hidden_size:  16 #1024
+        learning_rate: 0.001
+        embed_size: 2 #256
+        temperature: 1
+        num_layers: 1 #3
+        region_type: IMGT_JUNCTION
+        iter_to_report: 1
 
 instructions:
   gen_model:
     type: TrainGenModel
-    export_combined_dataset: True
+    export_combined_dataset: False
     dataset: dataset
     method: model
     gen_examples_count: 1000

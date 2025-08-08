@@ -27,7 +27,8 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_root",
         default_model_name="humanTRB",
         reference_data="test",
-        n_subsets=5
+        n_subsets=5,
+        n_unique_samples=10
     )
 
 
@@ -122,7 +123,8 @@ def test_calculate_degree_divergence_scores(mocker):
         "model1",
         "test",
         "/tmp/analysis",
-        "dataset1"
+        "dataset1",
+        10
     )
 
     # Check that get_node_degree_distributions was called
@@ -165,7 +167,8 @@ def test_get_node_degree_distributions(mocker):
         "/tmp/helper",
         "/tmp/output",
         "model1",
-        "test"
+        "test",
+        10
     )
 
     # Check that compute_connectivity_with_compairr was called 3 times
@@ -200,13 +203,15 @@ def test_compute_connectivity_with_compairr_valid_new_file(mocker):
         "/input/sequences.tsv",
         "/tmp/helper",
         "/tmp/output",
-        "test"
+        "test",
+        10
     )
 
     # Check that deduplicate_single_dataset was called
     mock_dedupe.assert_called_once_with(
         "/input/sequences.tsv",
-        "/tmp/helper/sequences_test_unique.tsv"
+        "/tmp/helper/sequences_test_unique.tsv",
+        10
     )
 
     # Check that run_compairr_existence was called
@@ -234,7 +239,8 @@ def test_compute_connectivity_with_compairr_invalid_file_not_found(mocker):
             "/nonexistent/file.tsv",
             "/tmp/helper",
             "/tmp/output",
-            "test"
+            "test",
+            10
         )
 
 
@@ -260,7 +266,8 @@ def test_compute_connectivity_with_compairr_valid_existing_file(mocker):
         "/input/sequences.tsv",
         "/tmp/helper",
         "/tmp/output",
-        "test"
+        "test",
+        10
     )
 
     # Check that deduplicate_single_dataset was NOT called
