@@ -242,7 +242,7 @@ def _plot_grouped_bar(df, value_col_mean, value_col_std, all_models, all_dataset
             name=dataset,
             x=all_models,
             y=means,
-            error_y=dict(type='data', array=stds, visible=True),
+            error_y=dict(type='data', array=stds, visible=True, thickness=1,),
             marker_color=color_palette[i % len(color_palette)]
         ))
 
@@ -259,10 +259,10 @@ def _plot_grouped_bar(df, value_col_mean, value_col_std, all_models, all_dataset
     print(f"{yaxis_title} bar chart saved as PNG at: {output_path}")
 
 
-def sort_filenames_ignore_prefix(filenames):
-    """ Sorts filenames by ignoring the first 5 characters (e.g., '0001_') """
+def sort_names_ignore_prefix(names):
+    """ Sorts names by ignoring the first 5 characters (e.g., '0001_') """
     # TODO: this solution works specifically for current dataset names but should find another way
-    return sorted(filenames, key=lambda x: x[5:])  # skip first 5 chars: 4 digits + "_"
+    return sorted(names, key=lambda x: x[5:])  # skip first 5 chars: 4 digits + "_"
 
 
 def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict, output_dir, reference_data,
@@ -305,8 +305,11 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
     # Calculate average precision for each model across all datasets
     model_avg_precision = df.groupby('Model')['Precision'].mean().sort_values(ascending=False)
     all_models = list(model_avg_precision.index)
-    all_datasets = sort_filenames_ignore_prefix(df['Dataset'].unique())
-    color_palette = pc.qualitative.Set2
+    if "upper_reference" in all_models:
+        all_models = ["upper_reference"] + [m for m in all_models if m != "upper_reference"]
+
+    all_datasets = sort_names_ignore_prefix(df['Dataset'].unique())
+    color_palette = px.colors.sequential.Blues_r
 
     # Plot precision
     _plot_grouped_bar(
