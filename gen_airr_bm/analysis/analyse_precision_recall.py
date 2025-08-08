@@ -7,7 +7,7 @@ import pandas as pd
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_scatter_precision_recall
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall
 
 
 def run_precision_recall_analysis(analysis_config: AnalysisConfig):
@@ -53,15 +53,13 @@ def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_ou
     # Add upper reference of precision recall between train and test
     test_dir = f"{analysis_config.root_output_dir}/{reference_data}_compairr_sequences"
     train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
-    for dataset in mean_precision_scores:
+    for dataset in mean_precision_scores.keys():
         train_file = f"{train_dir}/{dataset}.tsv"
         test_file = f"{test_dir}/{dataset}.tsv"
         ref_precision, ref_recall = get_precision_recall_reference(train_file, test_file, compairr_output_dir,
-                                                                   "train_test")
-        mean_precision_scores[dataset]["train_test"] = ref_precision
-        std_precision_scores[dataset]["train_test"] = np.nan
-        mean_recall_scores[dataset]["train_test"] = ref_recall
-        std_recall_scores[dataset]["train_test"] = np.nan
+                                                                   "upper_reference")
+        precision_scores_all[dataset]["upper_reference"] = [ref_precision]
+        recall_scores_all[dataset]["upper_reference"] = [ref_recall]
 
     for dataset in mean_precision_scores:
         plot_avg_scores(mean_precision_scores[dataset], std_precision_scores[dataset], analysis_config.analysis_output_dir,
@@ -72,13 +70,9 @@ def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_ou
                         "recall", f"{dataset}_recall.png", "recall",
                         scoring_method="recall")
 
-    # Scatterplot of precision and recall scores
-    plot_scatter_precision_recall(precision_scores_all, recall_scores_all,
-                                  analysis_config.analysis_output_dir, analysis_config.reference_data,
-                                  f"precision_recall.png")
-    plot_scatter_precision_recall(mean_precision_scores, mean_recall_scores,
-                                  analysis_config.analysis_output_dir, analysis_config.reference_data,
-                                  f"mean_precision_recall.png", plot_mean=True)
+    # barchart of precision and recall scores
+    plot_grouped_bar_precision_recall(precision_scores_all, recall_scores_all,
+                                      analysis_config.analysis_output_dir, analysis_config.reference_data)
 
 
 def get_precision_recall_metrics(ref_file, gen_files, compairr_output_dir, model):
