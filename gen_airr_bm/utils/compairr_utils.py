@@ -91,7 +91,7 @@ def deduplicate_single_dataset(input_sequences_path, output_file_unique, n_uniqu
             unique_sequences = unique_sequences.sample(n=n_unique_samples, random_state=42)
         else:
             raise ValueError(f"Not enough unique sequences in {input_sequences_path} to sample {n_unique_samples} "
-                             f"sequences.")
+                             f"sequences. Found {len(unique_sequences)} unique sequences.")
 
     unique_sequences.to_csv(output_file_unique, sep='\t', index=False)
 
