@@ -80,8 +80,8 @@ def compute_diversities_for_models(models: list, gen_dir, diversity_function: Ca
     """
     models_diversities = defaultdict(dict)
     for model in models:
-        gen_dir = f"{gen_dir}/{model}"
-        models_diversities[model] = compute_diversity(gen_dir, diversity_function)
+        gen_dir_model = f"{gen_dir}/{model}"
+        models_diversities[model] = compute_diversity(gen_dir_model, diversity_function)
 
     return models_diversities
 
