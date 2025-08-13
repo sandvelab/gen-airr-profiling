@@ -81,7 +81,7 @@ class TrainingOrchestrator:
 
             # Copy generated sequences to the output directory
             # The generated sequences are stored in a subdirectory of the immuneML output directory (always static path)
-            immuneml_generated_sequences_dir = f"{model_output_dir}/immuneml/gen_model/generated_sequences/model"
+            immuneml_generated_sequences_dir = f"{model_output_dir}/immuneml/gen_model/generated_sequences"
             # Generated sequences files might have different names, so we need to find the correct one
             immuneml_generated_sequences_file = [
                 f for f in os.listdir(immuneml_generated_sequences_dir)
