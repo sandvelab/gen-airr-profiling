@@ -61,21 +61,21 @@ def test_aa_distribution_strategy_update_mean_std_scores():
 
 
 def test_aa_distribution_strategy_plot_scores(mocker):
-    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.aa_distribution_strategy.plot_avg_scores")
+    mock_plot_jsd_scores = mocker.patch("gen_airr_bm.analysis.distribution.aa_distribution_strategy.plot_grouped_avg_scores")
 
     strategy = AADistributionStrategy()
-    mean_scores = {length: {"model": 0.5} for length in range(10, 21)}
-    std_scores = {length: {"model": 0.1} for length in range(10, 21)}
+    mean_scores = {"ref": {length: {"model": 0.5} for length in range(10, 21)}}
+    std_scores = {"ref": {length: {"model": 0.1} for length in range(10, 21)}}
 
     config = AnalysisConfig(
         model_names=["model"],
-        reference_data="ref",
+        reference_data=["ref"],
         root_output_dir="output",
         analysis_output_dir="output/analysis",
         analysis="test",
         default_model_name="model"
     )
 
-    strategy.plot_scores(mean_scores, std_scores, config, "dummy")
+    strategy.plot_scores_by_reference(mean_scores, std_scores, config, "dummy")
 
     assert mock_plot_jsd_scores.call_count == len(range(10, 21))

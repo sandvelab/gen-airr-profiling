@@ -97,7 +97,10 @@ def preprocess_experimental_data(config: DataGenerationConfig):
     experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
     experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
     experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
-    experimental_data = experimental_data.drop_duplicates()
+    experimental_data = experimental_data.dropna(subset=["junction_aa", "v_call", "j_call", "locus"])
+    experimental_data = experimental_data[~experimental_data.junction_aa.str.contains("\*")]
+    experimental_data['v_call'] = experimental_data['v_call'].str.split(',').str[0].str.split('/').str[0]
+    experimental_data['j_call'] = experimental_data['j_call'].str.split(',').str[0].str.split('/').str[0]
 
     # we need at least 2 * number_of_sequences sequences to split them into train and test
     if len(experimental_data) < 2 * number_of_sequences:
@@ -105,8 +108,14 @@ def preprocess_experimental_data(config: DataGenerationConfig):
                          f"available.")
 
     experimental_sequences = experimental_data.sample(n=2*number_of_sequences, random_state=seed)
-    experimental_train = experimental_sequences.iloc[:number_of_sequences].reset_index(drop=True)
-    experimental_test = experimental_sequences.iloc[number_of_sequences:].reset_index(drop=True)
+    experimental_train = experimental_sequences.iloc[:number_of_sequences].reset_index(drop=True).drop_duplicates(input_columns)
+    experimental_test = experimental_sequences.iloc[number_of_sequences:].reset_index(drop=True).drop_duplicates(input_columns)
+
+    for data in [experimental_train, experimental_test]:
+        if len(data) < 0.95 * number_of_sequences:
+            raise ValueError(f"Not enough sequences after deduplication! Got less than 95% of the requested number of "
+                             f"sequences. Requested {number_of_sequences}, but got {len(data)}.")
+
     experimental_train.to_csv(experimental_train_file_path, sep='\t', index=False)
     experimental_test.to_csv(experimental_test_file_path, sep='\t', index=False)
 
@@ -131,10 +140,10 @@ def preprocess_experimental_umi_data(config: DataGenerationConfig):
     experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
     experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
     experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
-    experimental_data = experimental_data[~experimental_data.junction_aa.str.contains("\*")]
-    experimental_data['v_call'] = experimental_data['v_call'].str.split(',').str[0]
-    experimental_data['j_call'] = experimental_data['j_call'].str.split(',').str[0]
     experimental_data = experimental_data.dropna(subset=["junction_aa", "v_call", "j_call", "umi_count", "locus"])
+    experimental_data = experimental_data[~experimental_data.junction_aa.str.contains("\*")]
+    experimental_data['v_call'] = experimental_data['v_call'].str.split(',').str[0].str.split('/').str[0]
+    experimental_data['j_call'] = experimental_data['j_call'].str.split(',').str[0].str.split('/').str[0]
 
     # check for multiple loci and only keep the most common one
     if len(experimental_data['locus'].unique()) != 1:

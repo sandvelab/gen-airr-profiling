@@ -8,7 +8,7 @@ from gen_airr_bm.utils.compairr_utils import preprocess_files_for_compairr
 
 
 def divide_generated_sequences(generated_sequences_dir: str, generated_sequences_filename: str, output_dir: str,
-                               n_samples: int, dedup_fields: list = None):
+                               n_samples: int):
     os.makedirs(output_dir, exist_ok=True)
     generated_sequences = pd.read_csv(f"{generated_sequences_dir}/{generated_sequences_filename}.tsv", sep='\t')
     if len(generated_sequences) < n_samples:
@@ -20,13 +20,7 @@ def divide_generated_sequences(generated_sequences_dir: str, generated_sequences
         start_idx = i * n_samples
         end_idx = (i + 1) * n_samples
         split_dataset = generated_sequences.iloc[start_idx:end_idx]
-        split_dataset.drop_duplicates(subset=dedup_fields)
-        if len(split_dataset) < n_samples * 0.9:
-            raise ValueError(
-                f"Too many duplicates removed: only {len(split_dataset)} rows remaining out of {len(generated_sequences)}."
-            )
-        else:
-            split_dataset.to_csv(f"{output_dir}/{generated_sequences_filename}_{i}.tsv", sep='\t', index=False)
+        split_dataset.to_csv(f"{output_dir}/{generated_sequences_filename}_{i}.tsv", sep='\t', index=False)
 
 
 class TrainingOrchestrator:
@@ -87,7 +81,7 @@ class TrainingOrchestrator:
 
             # Copy generated sequences to the output directory
             # The generated sequences are stored in a subdirectory of the immuneML output directory (always static path)
-            immuneml_generated_sequences_dir = f"{model_output_dir}/immuneml/gen_model/generated_sequences"
+            immuneml_generated_sequences_dir = f"{model_output_dir}/immuneml/gen_model/generated_sequences/model"
             # Generated sequences files might have different names, so we need to find the correct one
             immuneml_generated_sequences_file = [
                 f for f in os.listdir(immuneml_generated_sequences_dir)
@@ -105,4 +99,4 @@ class TrainingOrchestrator:
             divide_generated_sequences(compairr_model_dir,
                                        f"{data_file_name}_{model_config.experiment}",
                                        f"{output_dir}/generated_compairr_sequences_split/{model_config.name}",
-                                       model_config.n_subset_samples, ['junction_aa', 'v_call', 'j_call'])
+                                       model_config.n_subset_samples)

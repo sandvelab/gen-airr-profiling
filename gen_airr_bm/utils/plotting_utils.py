@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+import plotly.colors as pc
 
 
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
@@ -10,7 +11,7 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
 
-    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[0]))
+    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[1], reverse=True))
     errors = [std_scores_dict[model] for model in models]
 
     fig = go.Figure()
@@ -34,6 +35,60 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     png_path = os.path.join(fig_dir, file_name)
     fig.write_image(png_path)
 
+    print(f"Plot saved as PNG at: {png_path}")
+
+
+def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, reference_data, file_name,
+                            distribution_type, scoring_method="JSD"):
+    """
+    Plots grouped bar chart for mean scores across models and reference types.
+
+    Args:
+        mean_scores_by_ref: dict of {ref_label: {model: mean_score}}
+        std_scores_by_ref: dict of {ref_label: {model: std_score}}
+        output_dir: output directory
+        reference_data: string or list, used for subfolder naming
+        file_name: output file name
+        distribution_type: e.g. "cdr3"
+        scoring_method: e.g. "JSD"
+    """
+    if isinstance(reference_data, (list, tuple)):
+        ref_folder = "_".join(reference_data)
+    else:
+        ref_folder = str(reference_data)
+
+    fig_dir = os.path.join(output_dir, ref_folder)
+    os.makedirs(fig_dir, exist_ok=True)
+
+    all_models = sorted({model for ref_scores in mean_scores_by_ref.values() for model in ref_scores})
+    all_refs = sorted(mean_scores_by_ref.keys())
+
+    data = []
+    for ref_label in all_refs:
+        means = [mean_scores_by_ref.get(ref_label, {}).get(model, None) for model in all_models]
+        stds = [std_scores_by_ref.get(ref_label, {}).get(model, 0) for model in all_models]
+        data.append(go.Bar(
+            name=ref_label.capitalize(),
+            x=all_models,
+            y=means,
+            error_y=dict(type='data', array=stds, visible=True),
+        ))
+
+    fig = go.Figure(data=data)
+    fig.update_layout(
+        barmode='group',
+        title={'text': f"Avg {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across "
+                       f"Models and References",
+               'font': {'size': 14}},
+        xaxis_title="Models",
+        yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
+        xaxis_tickangle=-45,
+        template="plotly_white",
+        colorway=pc.qualitative.Set2
+    )
+
+    png_path = os.path.join(fig_dir, file_name)
+    fig.write_image(png_path)
     print(f"Plot saved as PNG at: {png_path}")
 
 
@@ -165,3 +220,119 @@ def plot_scatter_precision_recall(precision_scores_dict, recall_scores_dict, out
     fig.write_image(png_path, scale=2)
 
     print(f"Plot saved as PNG at: {png_path}")
+
+
+def _plot_grouped_bar(df, value_col_mean, value_col_std, all_models, all_datasets, color_palette, title, yaxis_title,
+                      output_path):
+    """
+    Helper function to plot grouped bar chart from a DataFrame.
+    """
+    bars = []
+    for i, dataset in enumerate(all_datasets):
+        means, stds = [], []
+        for model in all_models:
+            row = df[(df['Dataset'] == dataset) & (df['Model'] == model)]
+            if not row.empty:
+                means.append(row[f'{value_col_mean}'].values[0])
+                stds.append(row[f'{value_col_std}'].values[0] if not pd.isna(row[f'{value_col_std}'].values[0]) else 0)
+            else:
+                means.append(0)
+                stds.append(0)
+        bars.append(go.Bar(
+            name=dataset,
+            x=all_models,
+            y=means,
+            error_y=dict(type='data', array=stds, visible=True, thickness=1,),
+            marker_color=color_palette[i % len(color_palette)]
+        ))
+
+    fig = go.Figure(data=bars)
+    fig.update_layout(
+        barmode='group',
+        title=title,
+        xaxis_title="Model",
+        yaxis_title=yaxis_title,
+        xaxis_tickangle=-45,
+        template="plotly_white"
+    )
+    fig.write_image(output_path, scale=2)
+    print(f"{yaxis_title} bar chart saved as PNG at: {output_path}")
+
+
+def sort_names_ignore_prefix(names):
+    """ Sorts names by ignoring the first 5 characters (e.g., '0001_') """
+    # TODO: this solution works specifically for current dataset names but should find another way
+    return sorted(names, key=lambda x: x[5:])  # skip first 5 chars: 4 digits + "_"
+
+
+def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict, output_dir, reference_data,
+                                      precision_file_name="precision_grouped_bar.png",
+                                      recall_file_name="recall_grouped_bar.png"):
+    """
+    Plots two grouped bar charts: one for precision and one for recall.
+    Each chart is grouped by model, with bars for each dataset.
+
+    Args:
+        precision_scores_dict: dict of {dataset: {model: [precision_scores]}}
+        recall_scores_dict: dict of {dataset: {model: [recall_scores]}}
+        output_dir: output directory
+        reference_data: string, used for subfolder naming and title
+        precision_file_name: output file name for precision chart
+        recall_file_name: output file name for recall chart
+    """
+    fig_dir = os.path.join(output_dir, reference_data)
+    os.makedirs(fig_dir, exist_ok=True)
+
+    data = []
+    for dataset in precision_scores_dict:
+        for model in precision_scores_dict[dataset]:
+            prec_vals = precision_scores_dict[dataset][model]
+            rec_vals = recall_scores_dict[dataset][model]
+            for precision, recall in zip(prec_vals, rec_vals):
+                data.append({'Dataset': dataset, 'Model': model, 'Precision': precision, 'Recall': recall})
+
+    df = pd.DataFrame(data)
+    df = df.sort_values(by=["Dataset", "Model"])
+
+    # Compute mean and std for each (Dataset, Model) pair
+    grouped = df.groupby(['Dataset', 'Model']).agg(
+        Precision_mean=('Precision', 'mean'),
+        Precision_std=('Precision', 'std'),
+        Recall_mean=('Recall', 'mean'),
+        Recall_std=('Recall', 'std')
+    ).reset_index()
+
+    # Calculate average precision for each model across all datasets
+    model_avg_precision = df.groupby('Model')['Precision'].mean().sort_values(ascending=False)
+    all_models = list(model_avg_precision.index)
+    if "upper_reference" in all_models:
+        all_models = ["upper_reference"] + [m for m in all_models if m != "upper_reference"]
+
+    all_datasets = sort_names_ignore_prefix(df['Dataset'].unique())
+    color_palette = px.colors.sequential.Blues_r
+
+    # Plot precision
+    _plot_grouped_bar(
+        grouped,
+        value_col_mean='Precision_mean',
+        value_col_std='Precision_std',
+        all_models=all_models,
+        all_datasets=all_datasets,
+        color_palette=color_palette,
+        title=f"Realism score by Model and Dataset (Reference: {reference_data})",
+        yaxis_title="Realism",
+        output_path=os.path.join(fig_dir, precision_file_name)
+    )
+
+    # Plot recall
+    _plot_grouped_bar(
+        grouped,
+        value_col_mean='Recall_mean',
+        value_col_std='Recall_std',
+        all_models=all_models,
+        all_datasets=all_datasets,
+        color_palette=color_palette,
+        title=f"Coverage score by Model and Dataset (Reference: {reference_data})",
+        yaxis_title="Coverage",
+        output_path=os.path.join(fig_dir, recall_file_name)
+    )
