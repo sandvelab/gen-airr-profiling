@@ -63,5 +63,5 @@ analyses:
     - name: "precision_recall"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
-      reference_data: "test"
+      reference_data: [ "train", "test" ]
       n_subsets: 10
