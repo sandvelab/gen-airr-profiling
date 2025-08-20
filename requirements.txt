@@ -1,6 +1,6 @@
 git+https://github.com/uio-bmi/immuneML.git@development
 logomaker
-kaleido
+kaleido==0.2.1
 statsmodels
 seaborn
 sonnia==0.1.5
