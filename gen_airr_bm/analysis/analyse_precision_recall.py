@@ -12,6 +12,7 @@ from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_p
 
 @dataclass
 class ScoreStorage:
+    """ Class to store precision and recall scores for different models and datasets. """
     mean_precision: dict = field(default_factory=lambda: defaultdict(dict))
     std_precision: dict = field(default_factory=lambda: defaultdict(dict))
     mean_recall: dict = field(default_factory=lambda: defaultdict(dict))
