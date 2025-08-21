@@ -28,9 +28,9 @@ def sample_analysis_config():
     )
 
 
-def test_run_precision_recall_analysis_full_pipeline(mocker, sample_analysis_config):
+def test_run_precision_recall_analysis(mocker, sample_analysis_config):
     os_makedirs = mocker.patch("os.makedirs")
-    mock_compute = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.compute_precision_recall_scores")
+    mock_compute = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.compute_and_plot_precision_recall_scores")
 
     run_precision_recall_analysis(sample_analysis_config)
 
@@ -39,7 +39,7 @@ def test_run_precision_recall_analysis_full_pipeline(mocker, sample_analysis_con
     mock_compute.assert_called_once()
 
 
-def test_compute_precision_recall_scores_happy_path(mocker, sample_analysis_config):
+def test_compute_and_plot_precision_recall_scores(mocker, sample_analysis_config):
     # Mocks for low-level helpers and plotting
     mock_collect = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.collect_model_scores", autospec=True
@@ -50,7 +50,7 @@ def test_compute_precision_recall_scores_happy_path(mocker, sample_analysis_conf
     mock_plot_avg = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_avg_scores")
     mock_plot_grouped = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_grouped_bar_precision_recall")
 
-    # Patch ScoreStorage so mean_precision dict isn't just empty
+    # Patch PrecisionRecallScores so mean_precision dict isn't just empty
     fake_scores = PrecisionRecallScores()
     datasets = ["ds1", "ds2"]
     for ds in datasets:
@@ -62,8 +62,8 @@ def test_compute_precision_recall_scores_happy_path(mocker, sample_analysis_conf
         fake_scores.recall_all[ds] = {"modelA": [0.7], "modelB": [0.6]}
     mock_collect.side_effect = lambda ac, m, t, c, s: fake_scores
 
-    # Patch ScoreStorage instantiation
-    mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.ScoreStorage", return_value=fake_scores)
+    # Patch PrecisionRecallScores instantiation
+    mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.PrecisionRecallScores", return_value=fake_scores)
 
     compute_and_plot_precision_recall_scores(sample_analysis_config, "/tmp/test_output/analysis/compairr_output")
     assert mock_collect.call_count == len(sample_analysis_config.model_names)
@@ -73,7 +73,30 @@ def test_compute_precision_recall_scores_happy_path(mocker, sample_analysis_conf
     mock_plot_grouped.assert_called_once()
 
 
-def test_collect_model_scores_invokes_deps_and_updates_scores(mocker, sample_analysis_config):
+def test_compute_and_plot_precision_recall_scores_throws_exception(mocker, sample_analysis_config):
+    # Remove 'test' from reference_data to force the error
+    sample_analysis_config.reference_data = ["train"]
+
+    # Patch to make sure that helpers are not called
+    mock_collect = mocker.patch(
+        "gen_airr_bm.analysis.analyse_precision_recall.collect_model_scores"
+    )
+    mock_add_ref = mocker.patch(
+        "gen_airr_bm.analysis.analyse_precision_recall.add_upper_reference"
+    )
+    mock_plot = mocker.patch(
+        "gen_airr_bm.analysis.analyse_precision_recall.plot_precision_recall_scores"
+    )
+
+    with pytest.raises(ValueError, match="Could not run precision recall analysis without test data"):
+        compute_and_plot_precision_recall_scores(sample_analysis_config, "fake_compairr_out_dir")
+
+    mock_collect.assert_not_called()
+    mock_add_ref.assert_not_called()
+    mock_plot.assert_not_called()
+
+
+def test_collect_model_scores(mocker, sample_analysis_config):
     # Setup fixture and mocks
     mock_get_seq_files = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.get_sequence_files",
@@ -84,8 +107,8 @@ def test_collect_model_scores_invokes_deps_and_updates_scores(mocker, sample_ana
                 "/tmp/test_output/generated_compairr_sequences_split/modelA/ds2_0.tsv"}
         }
     )
-    mock_get_metrics = mocker.patch(
-        "gen_airr_bm.analysis.analyse_precision_recall.get_precision_recall_metrics",
+    mock_get_scores = mocker.patch(
+        "gen_airr_bm.analysis.analyse_precision_recall.get_precision_recall_scores",
         side_effect=lambda ref, gen, out, model: ([0.9], [0.8])
     )
     storage = PrecisionRecallScores()
@@ -94,7 +117,7 @@ def test_collect_model_scores_invokes_deps_and_updates_scores(mocker, sample_ana
     assert storage.std_recall["ds2"]["modelA"] == 0.0  # Only one value, std=0
 
 
-def test_add_upper_reference_flows_and_updates_scores(mocker, sample_analysis_config):
+def test_add_upper_reference(mocker, sample_analysis_config):
     mock_get_ref = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.get_precision_recall_reference",
         return_value=(0.99, 0.88)
@@ -107,7 +130,7 @@ def test_add_upper_reference_flows_and_updates_scores(mocker, sample_analysis_co
     assert ss.recall_all["ds3"]["upper_reference"] == [0.88]
 
 
-def test_get_precision_recall_metrics(mocker):
+def test_get_precision_recall_scores(mocker):
     mock_overlap = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.compute_compairr_overlap_ratio",
         side_effect=[0.81, 0.61]
@@ -129,7 +152,7 @@ def test_get_precision_recall_reference(mocker):
     assert r == 0.55
 
 
-def test_compute_compairr_overlap_ratio_reads_result(mocker, tmp_path):
+def test_compute_compairr_overlap_ratio(mocker, tmp_path):
     out_dir = tmp_path
     simple_path = out_dir / "somefile.tsv"
     # The path that will be READ is (according to function logic):
