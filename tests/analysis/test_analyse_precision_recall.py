@@ -3,13 +3,13 @@ import pandas as pd
 
 from gen_airr_bm.analysis.analyse_precision_recall import (
     run_precision_recall_analysis,
-    compute_precision_recall_scores,
+    compute_and_plot_precision_recall_scores,
     collect_model_scores,
     add_upper_reference,
-    get_precision_recall_metrics,
+    get_precision_recall_scores,
     get_precision_recall_reference,
     compute_compairr_overlap_ratio,
-    ScoreStorage,
+    PrecisionRecallScores,
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
@@ -51,7 +51,7 @@ def test_compute_precision_recall_scores_happy_path(mocker, sample_analysis_conf
     mock_plot_grouped = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_grouped_bar_precision_recall")
 
     # Patch ScoreStorage so mean_precision dict isn't just empty
-    fake_scores = ScoreStorage()
+    fake_scores = PrecisionRecallScores()
     datasets = ["ds1", "ds2"]
     for ds in datasets:
         fake_scores.mean_precision[ds] = {"modelA": 0.8, "modelB": 0.5}
@@ -65,7 +65,7 @@ def test_compute_precision_recall_scores_happy_path(mocker, sample_analysis_conf
     # Patch ScoreStorage instantiation
     mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.ScoreStorage", return_value=fake_scores)
 
-    compute_precision_recall_scores(sample_analysis_config, "/tmp/test_output/analysis/compairr_output")
+    compute_and_plot_precision_recall_scores(sample_analysis_config, "/tmp/test_output/analysis/compairr_output")
     assert mock_collect.call_count == len(sample_analysis_config.model_names)
     mock_add_ref.assert_called_once()
     # Should plot for each dataset
@@ -88,7 +88,7 @@ def test_collect_model_scores_invokes_deps_and_updates_scores(mocker, sample_ana
         "gen_airr_bm.analysis.analyse_precision_recall.get_precision_recall_metrics",
         side_effect=lambda ref, gen, out, model: ([0.9], [0.8])
     )
-    storage = ScoreStorage()
+    storage = PrecisionRecallScores()
     collect_model_scores(sample_analysis_config, "modelA", "test", "/tmp/compairr_out", storage)
     assert storage.mean_precision["ds1"]["modelA"] == 0.9
     assert storage.std_recall["ds2"]["modelA"] == 0.0  # Only one value, std=0
@@ -99,7 +99,7 @@ def test_add_upper_reference_flows_and_updates_scores(mocker, sample_analysis_co
         "gen_airr_bm.analysis.analyse_precision_recall.get_precision_recall_reference",
         return_value=(0.99, 0.88)
     )
-    ss = ScoreStorage()
+    ss = PrecisionRecallScores()
     # Must pre-populate mean_precision keys for loop
     ss.mean_precision["ds3"] = {}
     add_upper_reference(sample_analysis_config, "train", "test", ss, "/tmp/compairr_out")
@@ -112,7 +112,7 @@ def test_get_precision_recall_metrics(mocker):
         "gen_airr_bm.analysis.analyse_precision_recall.compute_compairr_overlap_ratio",
         side_effect=[0.81, 0.61]
     )
-    precision, recall = get_precision_recall_metrics("ref.tsv", ["gen1.tsv"], "/tmp/out", "myModel")
+    precision, recall = get_precision_recall_scores("ref.tsv", ["gen1.tsv"], "/tmp/out", "myModel")
     mock_overlap.assert_any_call("gen1.tsv", "ref.tsv", "/tmp/out", "myModel", "precision")
     mock_overlap.assert_any_call("ref.tsv", "gen1.tsv", "/tmp/out", "myModel", "recall")
     assert precision == [0.81]

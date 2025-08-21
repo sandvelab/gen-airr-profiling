@@ -11,7 +11,7 @@ from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_p
 
 
 @dataclass
-class ScoreStorage:
+class PrecisionRecallScores:
     """ Class to store precision and recall scores for different models and datasets. """
     mean_precision: dict = field(default_factory=lambda: defaultdict(dict))
     std_precision: dict = field(default_factory=lambda: defaultdict(dict))
@@ -21,7 +21,7 @@ class ScoreStorage:
     recall_all: dict = field(default_factory=lambda: defaultdict(dict))
 
 
-def run_precision_recall_analysis(analysis_config: AnalysisConfig):
+def run_precision_recall_analysis(analysis_config: AnalysisConfig) -> None:
     """ Runs precision recall analysis on the generated and reference sequences.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -36,10 +36,10 @@ def run_precision_recall_analysis(analysis_config: AnalysisConfig):
     for directory in [output_dir, compairr_output_dir]:
         os.makedirs(directory, exist_ok=True)
 
-    compute_precision_recall_scores(analysis_config, compairr_output_dir)
+    compute_and_plot_precision_recall_scores(analysis_config, compairr_output_dir)
 
 
-def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_output_dir: str):
+def compute_and_plot_precision_recall_scores(analysis_config: AnalysisConfig, compairr_output_dir: str) -> None:
     """ Compute precision and recall scores and plot them.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -55,7 +55,7 @@ def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_ou
     else:
         print(f"Continuing running precision recall analysis using {test_reference} as reference data...")
 
-    scores = ScoreStorage()
+    scores = PrecisionRecallScores()
 
     for model in analysis_config.model_names:
         collect_model_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
@@ -64,30 +64,18 @@ def compute_precision_recall_scores(analysis_config: AnalysisConfig, compairr_ou
         print(f"Adding upper reference scores using {train_reference} data.")
         add_upper_reference(analysis_config, train_reference, test_reference, scores, compairr_output_dir)
 
-    for dataset in scores.mean_precision:
-        plot_avg_scores(scores.mean_precision[dataset], scores.std_precision[dataset],
-                        analysis_config.analysis_output_dir, "precision",
-                        f"{dataset}_precision.png", "precision",
-                        scoring_method="precision")
-
-        plot_avg_scores(scores.mean_recall[dataset], scores.std_recall[dataset],
-                        analysis_config.analysis_output_dir, "recall",
-                        f"{dataset}_recall.png", "recall",
-                        scoring_method="recall")
-
-    plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,
-                                      analysis_config.analysis_output_dir, test_reference)
+    plot_precision_recall_scores(analysis_config, scores, test_reference)
 
 
 def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_reference: str, compairr_output_dir: str,
-                         scores: ScoreStorage):
+                         scores: PrecisionRecallScores) -> None:
     """ Collect precision and recall scores for a given model.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         model (str): Name of the model to analyze.
         test_reference (str): Reference dataset for testing.
         compairr_output_dir (str): Directory to store CompAIRR output files.
-        scores (ScoreStorage): Storage for precision and recall scores.
+        scores (PrecisionRecallScores): Storage for precision and recall scores.
     Returns:
         None
     """
@@ -96,29 +84,29 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     for ref_file, gen_files in comparison_files_dir.items():
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-        precision_metrics, recall_metrics = get_precision_recall_metrics(ref_file, gen_files, compairr_output_dir,
-                                                                         model)
+        precision_scores, recall_scores = get_precision_recall_scores(ref_file, gen_files, compairr_output_dir,
+                                                                      model)
 
-        mean_p, std_p = np.mean(precision_metrics), np.std(precision_metrics)
-        mean_r, std_r = np.mean(recall_metrics), np.std(recall_metrics)
+        mean_p, std_p = np.mean(precision_scores), np.std(precision_scores)
+        mean_r, std_r = np.mean(recall_scores), np.std(recall_scores)
 
         scores.mean_precision[dataset_name][model] = mean_p
         scores.std_precision[dataset_name][model] = std_p
         scores.mean_recall[dataset_name][model] = mean_r
         scores.std_recall[dataset_name][model] = std_r
 
-        scores.precision_all[dataset_name][model] = precision_metrics
-        scores.recall_all[dataset_name][model] = recall_metrics
+        scores.precision_all[dataset_name][model] = precision_scores
+        scores.recall_all[dataset_name][model] = recall_scores
 
 
 def add_upper_reference(analysis_config: AnalysisConfig, train_reference: str, test_reference: str,
-                        scores: ScoreStorage, compairr_output_dir: str):
+                        scores: PrecisionRecallScores, compairr_output_dir: str) -> None:
     """ Add upper reference precision/recall scores between train and test data.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         train_reference (str): Reference dataset train to compare with test data.
         test_reference (str): Reference dataset test to compare with train data.
-        scores (ScoreStorage): Storage for precision and recall scores.
+        scores (PrecisionRecallScores): Storage for precision and recall scores.
         compairr_output_dir (str): Directory to store CompAIRR output files.
     Returns:
         None
@@ -136,38 +124,38 @@ def add_upper_reference(analysis_config: AnalysisConfig, train_reference: str, t
         scores.recall_all[dataset]["upper_reference"] = [ref_recall]
 
 
-def get_precision_recall_metrics(ref_file: str, gen_files: list, compairr_output_dir: str, model: str):
-    """ Get precision and recall metrics for the generated files compared to the reference file.
+def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_dir: str, model: str) -> tuple:
+    """ Get precision and recall scores for the generated files compared to the reference file.
     Args:
         ref_file (str): Path to the reference file.
         gen_files (list): List of paths to generated files.
         compairr_output_dir (str): Directory to store CompAIRR output files.
         model (str): Name of the model used for generation.
     Returns:
-        tuple: Lists of precision and recall metrics for the generated files.
+        tuple: Lists of precision and recall scores for the generated files.
     """
-    precision_metrics, recall_metrics = [], []
+    precision_scores, recall_scores = [], []
     for gen_file in gen_files:
         precision = compute_compairr_overlap_ratio(gen_file, ref_file, compairr_output_dir,
                                                    model, "precision")
         recall = compute_compairr_overlap_ratio(ref_file, gen_file, compairr_output_dir,
                                                 model, "recall")
 
-        precision_metrics.append(precision)
-        recall_metrics.append(recall)
+        precision_scores.append(precision)
+        recall_scores.append(recall)
 
-    return precision_metrics, recall_metrics
+    return precision_scores, recall_scores
 
 
-def get_precision_recall_reference(train_file, test_file, compairr_output_dir):
-    """ Get precision and recall metrics for the upper reference between train and test files.
+def get_precision_recall_reference(train_file, test_file, compairr_output_dir) -> tuple:
+    """ Get precision and recall scores for the upper reference between train and test files.
     Args:
         train_file (str): Path to the train file (train used as replacement of generated (model) file for upper
         reference.
         test_file (str): Path to the test file.
         compairr_output_dir (str): Directory to store CompAIRR output files.
     Returns:
-        tuple: Precision and recall metrics for the upper reference.
+        tuple: Precision and recall scores for the upper reference.
     """
     precision = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
                                                'upper_reference', "precision")
@@ -200,3 +188,28 @@ def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, co
     ratio = n_nonzero_rows / len(compairr_result)
 
     return ratio
+
+
+def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: PrecisionRecallScores,
+                                 test_reference: str) -> None:
+    """ Plot precision and recall scores for each dataset and model.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores (PrecisionRecallScores): Storage class for precision and recall scores.
+        test_reference (str): Reference dataset for testing.
+    Returns:
+        None
+    """
+    for dataset in scores.mean_precision:
+        plot_avg_scores(scores.mean_precision[dataset], scores.std_precision[dataset],
+                        analysis_config.analysis_output_dir, "precision",
+                        f"{dataset}_precision.png", "precision",
+                        scoring_method="precision")
+
+        plot_avg_scores(scores.mean_recall[dataset], scores.std_recall[dataset],
+                        analysis_config.analysis_output_dir, "recall",
+                        f"{dataset}_recall.png", "recall",
+                        scoring_method="recall")
+
+    plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,
+                                      analysis_config.analysis_output_dir, test_reference)
