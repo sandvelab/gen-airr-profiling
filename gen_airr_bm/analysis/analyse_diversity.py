@@ -177,7 +177,7 @@ def gini_coefficient(sequences: list) -> float:
 
 
 def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversities: dict, output_path: str,
-                                  metric_name: str):
+                                  metric_name: str) -> None:
     """ Plot diversity scores using Plotly scatter plot.
     Args:
         reference_diversities (dict): Dictionary with reference dataset names and their diversity scores.
