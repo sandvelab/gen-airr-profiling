@@ -133,7 +133,7 @@ def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distr
     ))
 
     fig.update_layout(
-        title="Comparison of Connectivity Distributions",
+        title=f"Comparison of Connectivity Distributions for {dataset_name}",
         xaxis_title="Number of neighbors",
         yaxis_title="Frequency (log scale)",
         yaxis_type="log",
