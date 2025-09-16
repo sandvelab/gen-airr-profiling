@@ -39,7 +39,7 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
 
 
 def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, reference_data, file_name,
-                            distribution_type, scoring_method="JSD"):
+                            distribution_type, scoring_method="JSD", reference_score=None) -> None:
     """
     Plots grouped bar chart for mean scores across models and reference types.
 
@@ -51,6 +51,9 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
         file_name: output file name
         distribution_type: e.g. "cdr3"
         scoring_method: e.g. "JSD"
+        reference_score: optional float, to plot a reference line
+    Returns:
+        None
     """
     if isinstance(reference_data, (list, tuple)):
         ref_folder = "_".join(reference_data)
@@ -86,6 +89,14 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
         template="plotly_white",
         colorway=pc.qualitative.Set2
     )
+
+    if reference_score is not None:
+        fig.add_hline(
+            y=reference_score,
+            line=dict(color="black", dash="dash"),
+            annotation_text=f"reference={reference_score:.3f}",
+            annotation_position="top right"
+        )
 
     png_path = os.path.join(fig_dir, file_name)
     fig.write_image(png_path)
