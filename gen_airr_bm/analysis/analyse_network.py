@@ -158,7 +158,8 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
         print(f"Unique sequences already exist for {file_name}. Skipping execution.")
     else:
         deduplicate_single_dataset(input_sequences_path, unique_sequences_path, n_unique_samples)
-    run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name)
+    run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name,
+                           allowed_mismatches=1, indels=True)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     return compairr_result

@@ -29,23 +29,33 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
         data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
 
 
-def run_compairr_existence(compairr_output_dir, search_sequences_path, reference_sequences_path, file_name, model_name=None):
+def run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_identifier,
+                           allowed_mismatches=0, indels=False) -> None:
+    """ Run CompAIRR to find overlapping sequences between two datasets.
+    Args:
+        compairr_output_dir (str): Directory to save CompAIRR output.
+        search_for_file (str): Path to the file of sequences for which to search for existence in another sequence set.
+        search_in_file (str): Path to the file to search for existence in.
+        file_identifier (str): Base name for output files.
+        allowed_mismatches (int): Number of allowed mismatches for sequence comparison. Default is 0.
+        indels (bool): Whether to allow insertions or deletions in sequence comparison. Default is False.
+    Returns:
+        None
+    """
     os.makedirs(compairr_output_dir, exist_ok=True)
-    #TODO: For ImmunoHub execution we might need to use binaries instead of the command line
     #TODO: Maybe replace -u method ignoring illegal characters in sequences
     compairr_binary_path = "compairr-1.13.0-linux-x86_64"
     compairr_call = "./" + compairr_binary_path if os.path.exists(compairr_binary_path) else "compairr"
 
-    compairr_command = (f"{compairr_call} -x {search_sequences_path} {reference_sequences_path} -d 1 -f -t 8 -u -g -o "
-                        f"{compairr_output_dir}/{file_name}_overlap.tsv "
-                        f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
+    distance_option = f" -d {allowed_mismatches}" if allowed_mismatches > 0 else ""
+    distance_option += " --indels" if indels and allowed_mismatches == 1 else ""
 
-    # TODO: Add better support for PWM model
-    # if model_name == "pwm":
-    #     compairr_command += " -g"
+    compairr_command = (f"{compairr_call} -x {search_for_file} {search_in_file}"
+                        f" -f -t 8 -u -g -o {compairr_output_dir}/{file_identifier}_overlap.tsv "
+                        f"--log {compairr_output_dir}/{file_identifier}_log.txt") + distance_option
 
-    if os.path.exists(f"{compairr_output_dir}/{file_name}_overlap.tsv"):
-        print(f"Compairr output already exists for {file_name}. Skipping execution.")
+    if os.path.exists(f"{compairr_output_dir}/{file_identifier}_overlap.tsv"):
+        print(f"Compairr output already exists for {file_identifier}. Skipping execution.")
     else:
         run_command(compairr_command)
 

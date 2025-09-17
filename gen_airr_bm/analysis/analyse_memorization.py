@@ -107,7 +107,8 @@ def compute_jaccard_similarity(compairr_helper_dir, reference_path, model_path, 
     deduplicate_and_merge_two_datasets(reference_path, model_path, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
-    run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_identifier, model_name)
+    run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_identifier,
+                           allowed_mismatches=0, indels=False)
 
     overlap_df = pd.read_csv(f"{compairr_output_dir}/{file_identifier}_overlap.tsv", sep='\t')
     n_nonzero_rows = overlap_df[(overlap_df['dataset_1'] != 0) & (overlap_df['dataset_2'] != 0)].shape[0]
