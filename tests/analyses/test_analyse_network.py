@@ -7,12 +7,15 @@ import pytest
 from gen_airr_bm.analysis.analyse_network import (
     run_network_analysis,
     compute_and_plot_connectivity,
-    calculate_degree_divergence_scores,
+    process_dataset,
     get_node_degree_distributions,
+    get_reference_divergence_score,
     compute_connectivity_with_compairr,
     get_degrees_from_overlap,
     calculate_jsd,
-    plot_connectivity_scores
+    summarize_and_plot_dataset_connectivity,
+    summarize_and_plot_all,
+    validate_references
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
@@ -26,7 +29,7 @@ def sample_analysis_config():
         analysis_output_dir="/tmp/test_output",
         root_output_dir="/tmp/test_root",
         default_model_name="humanTRB",
-        reference_data="test",
+        reference_data=["train", "test"],
         n_subsets=5,
         n_unique_samples=10
     )
@@ -77,8 +80,11 @@ def test_run_network_analysis(mocker, sample_analysis_config):
 def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     """Test compute_and_plot_connectivity processes files correctly."""
     mock_get_files = mocker.patch('gen_airr_bm.analysis.analyse_network.get_sequence_files')
-    mock_calc_scores = mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_degree_divergence_scores')
-    mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_connectivity_scores')
+    mock_process = mocker.patch('gen_airr_bm.analysis.analyse_network.process_dataset')
+    mock_plot_dataset = mocker.patch('gen_airr_bm.analysis.analyse_network.summarize_and_plot_dataset_connectivity')
+    mock_get_ref_score = mocker.patch('gen_airr_bm.analysis.analyse_network.get_reference_divergence_score',
+                                      return_value=0.42)
+    mock_plot_all = mocker.patch('gen_airr_bm.analysis.analyse_network.summarize_and_plot_all')
 
     # Mock the file structure
     mock_get_files.return_value = {
@@ -86,23 +92,34 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
         "/path/to/ref2.tsv": ["/path/to/gen2_1.tsv", "/path/to/gen2_2.tsv"]
     }
 
-    # Mock divergence scores
-    mock_calc_scores.side_effect = [[0.1, 0.2], [0.3, 0.1], [0.5, 0.4], [0.2, 0.3]]
+    # Prepare process_dataset returns: one per (model, ref_file)
+    def process_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference, analysis_output_dir):
+        dataset_name = ref_file.split('/')[-1].replace('.tsv', '')
+        # Return divergence_scores dict keyed by the current model
+        return dataset_name, {model_name: [[0.1], [0.2]]}
 
-    compute_and_plot_connectivity(sample_analysis_config, "/tmp/compairr_output", "/tmp/compairr_helper")
+    mock_process.side_effect = process_side_effect
 
-    # Check that get_sequence_files was called for each model
-    assert mock_get_files.call_count == 2
+    compute_and_plot_connectivity(sample_analysis_config, "/tmp/compairr_output",
+                                  "/tmp/compairr_helper_dir")
 
-    # Check that calculate_degree_divergence_scores was called for each ref file and model
-    assert mock_calc_scores.call_count == 4  # 2 models * 2 ref files
+    # get_sequence_files called once per model
+    assert mock_get_files.call_count == len(sample_analysis_config.model_names) * len(sample_analysis_config.reference_data)
+    # process_dataset called for each model x each ref dataset
+    assert mock_process.call_count == len(sample_analysis_config.model_names) * len(sample_analysis_config.reference_data) * len(mock_get_files.return_value)
 
-    # Check that plot_connectivity_scores was called for each dataset
-    assert mock_plot.call_count == 2  # 2 datasets (ref1, ref2)
+    # summarize_and_plot_dataset_connectivity called once per dataset (ref1, ref2) for the reference "test"
+    assert mock_plot_dataset.call_count == len(mock_get_files.return_value) * len(sample_analysis_config.reference_data)
+
+    # reference JSD computed and overall plot created
+    mock_get_ref_score.assert_called_once()
+    mock_plot_all.assert_called_once()
+    # Ensure the reference score is passed through
+    assert mock_plot_all.call_args.kwargs.get('mean_reference_score') or mock_plot_all.call_args.args[-1] == 0.42
 
 
-def test_calculate_degree_divergence_scores(mocker):
-    """Test calculate_degree_divergence_scores computes scores correctly."""
+def test_process_dataset(mocker):
+    """Test process_dataset computes distributions, plots them, and returns divergence scores."""
     mock_get_dists = mocker.patch('gen_airr_bm.analysis.analyse_network.get_node_degree_distributions')
     mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
     mock_calc_jsd = mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd')
@@ -112,34 +129,24 @@ def test_calculate_degree_divergence_scores(mocker):
     gen_dists = [pd.Series([1, 2], index=[0, 1]), pd.Series([3, 1], index=[0, 1])]
     mock_get_dists.return_value = (ref_dist, gen_dists)
 
-    # Mock JSD calculations
+    # Mock JSD calculations (each returns a single-element list as implemented)
     mock_calc_jsd.side_effect = [[0.1], [0.2]]
 
-    result = calculate_degree_divergence_scores(
-        "/path/to/ref.tsv",
+    dataset_name, divergence_scores = process_dataset(
+        "/path/to/dataset1.tsv",
         ["/path/to/gen1.tsv", "/path/to/gen2.tsv"],
         "/tmp/helper",
         "/tmp/output",
         "model1",
         "test",
-        "/tmp/analysis",
-        "dataset1",
-        10
+        "/tmp/analysis"
     )
 
-    # Check that get_node_degree_distributions was called
     mock_get_dists.assert_called_once()
-
-    # Check that plot_degree_distribution was called
-    mock_plot.assert_called_once_with(
-        ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1"
-    )
-
-    # Check that calculate_jsd was called for each generated distribution
-    assert mock_calc_jsd.call_count == 2
-
-    # Check the result
-    assert result == [0.1, 0.2]
+    mock_plot.assert_called_once_with(ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1")
+    assert dataset_name == "dataset1"
+    # divergence_scores are lists of single-element lists per current calculate_jsd implementation
+    assert divergence_scores == {"model1": [[0.1], [0.2]]}
 
 
 def test_get_node_degree_distributions(mocker):
@@ -167,8 +174,7 @@ def test_get_node_degree_distributions(mocker):
         "/tmp/helper",
         "/tmp/output",
         "model1",
-        "test",
-        10
+        "test"
     )
 
     # Check that compute_connectivity_with_compairr was called 3 times
@@ -204,14 +210,12 @@ def test_compute_connectivity_with_compairr_valid_new_file(mocker):
         "/tmp/helper",
         "/tmp/output",
         "test",
-        10
     )
 
     # Check that deduplicate_single_dataset was called
     mock_dedupe.assert_called_once_with(
         "/input/sequences.tsv",
         "/tmp/helper/sequences_test_unique.tsv",
-        10
     )
 
     # Check that run_compairr_existence was called
@@ -240,7 +244,6 @@ def test_compute_connectivity_with_compairr_invalid_file_not_found(mocker):
             "/tmp/helper",
             "/tmp/output",
             "test",
-            10
         )
 
 
@@ -267,7 +270,6 @@ def test_compute_connectivity_with_compairr_valid_existing_file(mocker):
         "/tmp/helper",
         "/tmp/output",
         "test",
-        10
     )
 
     # Check that deduplicate_single_dataset was NOT called
@@ -354,30 +356,129 @@ def test_calculate_jsd_empty_distributions():
     assert np.isnan(result[0]) or result[0] == 0
 
 
-def test_plot_connectivity_scores(mocker):
-    """Test plot_connectivity_scores calls plot_avg_scores with correct arguments."""
+def test_summarize_and_plot_dataset_connectivity(mocker):
+    """Test summarize_and_plot_dataset_connectivity calls plot_avg_scores with computed stats."""
     mock_plot_avg_scores = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_avg_scores')
 
-    mean_scores = {"model1": 0.5, "model2": 0.3}
-    std_scores = {"model1": 0.1, "model2": 0.05}
+    # Provide raw divergence scores so function computes mean/std
+    divergence_scores = {"model1": [0.5, 0.5], "model2": [0.3, 0.3]}
 
-    plot_connectivity_scores(
-        mean_scores,
-        std_scores,
+    summarize_and_plot_dataset_connectivity(
+        "test_dataset",
+        divergence_scores,
         "/tmp/output",
         "test",
-        "connectivity",
-        "test_connectivity.png"
     )
 
+    expected_mean = {"model1": 0.5, "model2": 0.3}
+    expected_std = {"model1": 0.0, "model2": 0.0}
+
     mock_plot_avg_scores.assert_called_once_with(
-        mean_scores,
-        std_scores,
-        "/tmp/output",
-        "test",
-        "test_connectivity.png",
-        "connectivity",
-        scoring_method="JSD"
+        mean_scores_dict=expected_mean,
+        std_scores_dict=expected_std,
+        output_dir="/tmp/output",
+        reference_data="test",
+        distribution_type="connectivity",
+        file_name="test_dataset_connectivity.png",
+    )
+
+
+def test_summarize_and_plot_all(mocker):
+    """Test summarize_and_plot_all computes mean/std per reference and calls plot_grouped_avg_scores."""
+    mock_plot_grouped = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_grouped_avg_scores')
+
+    divergence_scores_by_reference = {
+        "test": {
+            "model1": [0.2, 0.4],
+            "model2": [0.1, 0.3]
+        },
+        "train": {
+            "model1": [0.5, 0.7],
+            "model2": [0.6, 0.8]
+        }
+    }
+    output_dir = "/tmp/out"
+    reference_datasets = ["train", "test"]
+    mean_reference_score = 0.21
+
+    summarize_and_plot_all(
+        divergence_scores_by_reference=divergence_scores_by_reference,
+        output_dir=output_dir,
+        reference_datasets=reference_datasets,
+        mean_reference_score=mean_reference_score
+    )
+
+    assert mock_plot_grouped.call_count == 1
+    kwargs = mock_plot_grouped.call_args.kwargs
+
+    expected_mean = {
+        "test": {"model1": 0.3, "model2": 0.2},
+        "train": {"model1": 0.6, "model2": 0.7}
+    }
+    expected_std = {
+        "test": {"model1": 0.1, "model2": 0.1},
+        "train": {"model1": 0.1, "model2": 0.1}
+    }
+
+    # Compare nested float dicts using approx to avoid rounding issues
+    mean_scores = kwargs["mean_scores_by_ref"]
+    std_scores = kwargs["std_scores_by_ref"]
+    for ref, models in expected_mean.items():
+        for model, exp_val in models.items():
+            assert mean_scores[ref][model] == pytest.approx(exp_val, rel=1e-12, abs=1e-12)
+
+    for ref, models in expected_std.items():
+        for model, exp_val in models.items():
+            assert std_scores[ref][model] == pytest.approx(exp_val, rel=1e-12, abs=1e-12)
+
+    # Non-float kwargs can be compared directly
+    assert kwargs["output_dir"] == output_dir
+    assert kwargs["reference_data"] == reference_datasets
+    assert kwargs["distribution_type"] == "connectivity"
+    assert kwargs["file_name"] == "all_datasets_connectivity.png"
+    assert kwargs["scoring_method"] == "JSD"
+    assert kwargs["reference_score"] == mean_reference_score
+
+
+def test_get_reference_divergence_score(mocker, sample_analysis_config):
+    """Test get_reference_divergence_score collects all ref1 scores and returns their mean."""
+    mock_get_reference_files = mocker.patch(
+        'gen_airr_bm.analysis.analyse_network.get_reference_files',
+        return_value=[("trainA.tsv", "testA.tsv"), ("trainB.tsv", "testB.tsv")]
+    )
+
+    # process_dataset returns (dataset_name, divergence_scores)
+    # divergence_scores must be indexable as divergence_scores[ref1][0] -> list of floats
+    def process_side_effect(train_file, test_file, helper_dir, output_dir, ref1, ref2, out_dir):
+        ds_name = train_file.replace(".tsv", "")
+        return ds_name, {
+            "train": [[0.1, 0.3]] if "A" in train_file else [[0.2, 0.4]],
+            "test": [[0.0]]  # unused in this test
+        }
+
+    mock_process_dataset = mocker.patch(
+        'gen_airr_bm.analysis.analyse_network.process_dataset',
+        side_effect=process_side_effect
+    )
+
+    mean = get_reference_divergence_score(
+        analysis_config=sample_analysis_config,
+        compairr_output_helper_dir="/tmp/helper",
+        compairr_output_dir="/tmp/output",
+        train_ref="train",
+        test_ref="test"
+    )
+
+    # Scores were [0.1, 0.3, 0.2, 0.4] => mean 0.25
+    assert mean == pytest.approx(0.25, rel=1e-6)
+
+    mock_get_reference_files.assert_called_once_with(sample_analysis_config)
+    assert mock_process_dataset.call_count == 2
+    mock_process_dataset.assert_any_call(
+        "trainA.tsv", "testA.tsv", "/tmp/helper", "/tmp/output", "train", "test", sample_analysis_config.analysis_output_dir
+    )
+    mock_process_dataset.assert_any_call(
+        "trainB.tsv", "testB.tsv", "/tmp/helper", "/tmp/output", "train", "test", sample_analysis_config.analysis_output_dir
     )
 
 
@@ -393,6 +494,9 @@ def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
         mock_read_csv = mocker.patch('pandas.read_csv')
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_avg_scores')
+        mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd', return_value=[0.1])
+        mocker.patch('gen_airr_bm.analysis.analyse_network.get_reference_divergence_score', return_value=0.25)
+        mocker.patch('gen_airr_bm.analysis.analyse_network.summarize_and_plot_all')
         mocker.patch('os.path.exists', return_value=True)
 
         # Mock file structure
@@ -410,5 +514,5 @@ def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
         run_network_analysis(sample_analysis_config)
 
         # Verify that the main functions were called
-        assert mock_get_files.call_count == 2  # Once per model
+        assert mock_get_files.call_count == 2 * 2  # Once per model and reference dataset
         assert mock_read_csv.call_count >= 2   # At least once per model

@@ -6,8 +6,8 @@ import pandas as pd
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_degree_distribution
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_degree_distribution, plot_grouped_avg_scores
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, deduplicate_single_dataset
 
 
@@ -33,78 +33,78 @@ def run_network_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_output_dir: str,
-                                  compairr_output_helper_dir: str) -> None:
-    """Compute and plot connectivity scores for the given analysis configuration.
+                                  compairr_helper_dir: str) -> None:
+    """Compute and plot connectivity scores and distributions for the given analysis configuration.
 
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         compairr_output_dir (str): Directory to store Compairr output files.
-        compairr_output_helper_dir (str): Directory to store helper files for Compairr.
-
+        compairr_helper_dir (str): Directory to store helper files for Compairr.
     Returns:
         None
     """
-    dataset_split = analysis_config.reference_data
-    if not isinstance(dataset_split, str):
-        raise ValueError("Network analysis only supports a single dataset split (train or test).")
+    validate_references(analysis_config.reference_data)
 
-    mean_scores = defaultdict(lambda: defaultdict(list))
-    std_scores = defaultdict(lambda: defaultdict(list))
-    for model in analysis_config.model_names:
-        comparison_files_dir = get_sequence_files(analysis_config, model, dataset_split)
+    divergence_scores_by_reference = defaultdict(lambda: defaultdict(list))
 
-        for ref_file, gen_files in comparison_files_dir.items():
-            dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
-            divergence_scores = calculate_degree_divergence_scores(ref_file, gen_files, compairr_output_helper_dir,
-                                                                   compairr_output_dir, model, dataset_split,
-                                                                   analysis_config.analysis_output_dir, dataset_name,
-                                                                   analysis_config.n_unique_samples)
+    for reference in analysis_config.reference_data:
+        divergence_scores_by_dataset = defaultdict(lambda: defaultdict(list))
 
-            mean_scores[dataset_name][model] = np.mean(divergence_scores)
-            std_scores[dataset_name][model] = np.std(divergence_scores)
+        for model_name in analysis_config.model_names:
+            comparison_files = get_sequence_files(analysis_config, model_name, reference)
 
-    for dataset in mean_scores:
-        plot_connectivity_scores(mean_scores[dataset], std_scores[dataset], analysis_config.analysis_output_dir,
-                                 dataset_split, "connectivity", f"{dataset}_connectivity.png")
+            for ref_file, gen_files in comparison_files.items():
+                dataset_name, divergence_scores = process_dataset(ref_file, gen_files, compairr_helper_dir,
+                                                                  compairr_output_dir, model_name, reference,
+                                                                  analysis_config.analysis_output_dir)
+
+                for model, scores in divergence_scores.items():
+                    divergence_scores_by_reference[reference][model].extend(scores)
+                    divergence_scores_by_dataset[dataset_name][model].extend(scores)
+
+        for dataset_name, divergence_scores in divergence_scores_by_dataset.items():
+            summarize_and_plot_dataset_connectivity(dataset_name, divergence_scores,
+                                                    analysis_config.analysis_output_dir, reference)
+
+    mean_reference_divergence_score = get_reference_divergence_score(analysis_config, compairr_helper_dir,
+                                                                     compairr_output_dir, "train", "test")
+    summarize_and_plot_all(divergence_scores_by_reference,
+                           analysis_config.analysis_output_dir,
+                           analysis_config.reference_data,
+                           mean_reference_divergence_score)
 
 
-def calculate_degree_divergence_scores(ref_file: str, gen_files: list, compairr_output_helper_dir: str,
-                                       compairr_output_dir: str, model: str, dataset_split: str, output_dir: str,
-                                       dataset_name: str, n_unique_samples: int | None) -> list:
-    """Calculate divergence scores based on node degree distributions. Additionally, plots the degree distributions.
-
+def process_dataset(ref_file: str, gen_files: list[str], helper_dir: str, output_dir: str, model: str, reference: str,
+                    analysis_output_dir: str) -> tuple[str, dict[str, list[float]]]:
+    """Compute degree distributions, plot them, and return divergence scores for a dataset.
     Args:
         ref_file (str): Path to the reference file.
-        gen_files (list): List of generated sequence files.
-        compairr_output_helper_dir (str): Directory for Compairr helper files.
-        compairr_output_dir (str): Directory for Compairr output files.
+        gen_files (list[str]): List of generated sequence files.
+        helper_dir (str): Directory for Compairr helper files.
+        output_dir (str): Directory for Compairr output files.
         model (str): Model name used for analysis.
-        dataset_split (str): Reference data identifier (train or test).
-        output_dir (str): Directory to save output plots.
-        dataset_name (str): Name of the dataset being analyzed.
-        n_unique_samples (int, optional): Maximum number of unique samples to consider. Defaults to None (all considered).
-
+        reference (str): Reference data identifier (train or test).
+        analysis_output_dir (str): Directory to save output plots.
     Returns:
-        list: List of divergence scores between generated and reference node degree distributions.
+        tuple: Dataset name and dictionary with divergence scores for each model.
     """
-    divergence_scores = []
+    dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-    ref_degree_dist, gen_degree_dists = get_node_degree_distributions(ref_file, gen_files, compairr_output_helper_dir,
-                                                                      compairr_output_dir, model, dataset_split,
-                                                                      n_unique_samples)
+    ref_degree_dist, gen_degree_dists = get_node_degree_distributions(ref_file, gen_files, helper_dir, output_dir,
+                                                                      model, reference)
 
-    plot_degree_distribution(ref_degree_dist, gen_degree_dists, output_dir, model,
-                             dataset_split, dataset_name)
+    plot_degree_distribution(ref_degree_dist, gen_degree_dists, analysis_output_dir, model, reference, dataset_name)
 
+    divergence_scores = defaultdict(list)
     for gen_degree_dist in gen_degree_dists:
-        divergence_scores.extend(calculate_jsd(gen_degree_dist, ref_degree_dist))
+        jsd_score = calculate_jsd(gen_degree_dist, ref_degree_dist)
+        divergence_scores[model].append(jsd_score)
 
-    return divergence_scores
+    return dataset_name, divergence_scores
 
 
 def get_node_degree_distributions(ref_file: str, gen_files: list, compairr_output_helper_dir: str,
-                                  compairr_output_dir: str, model: str, dataset_split: str,
-                                  n_unique_samples: int | None) -> tuple:
+                                  compairr_output_dir: str, model: str, dataset_split: str) -> tuple:
     """
     Compute node degree distributions for reference and generated files.
 
@@ -115,7 +115,6 @@ def get_node_degree_distributions(ref_file: str, gen_files: list, compairr_outpu
         compairr_output_dir (str): Directory for Compairr output files.
         model (str): Model name used for analysis.
         dataset_split (str): Reference data identifier (train or test).
-        n_unique_samples (int, optional): Maximum number of unique samples to consider. Defaults to None (all considered).
 
     Returns:
         tuple: Reference node degree distribution and list of generated node degree distributions.
@@ -123,20 +122,43 @@ def get_node_degree_distributions(ref_file: str, gen_files: list, compairr_outpu
     gen_degree_dists = []
     for gen_file in gen_files:
         gen_connectivity = compute_connectivity_with_compairr(gen_file, compairr_output_helper_dir, compairr_output_dir,
-                                                              model, n_unique_samples)
+                                                              model)
         gen_degree_dist = get_degrees_from_overlap(gen_connectivity)
         gen_degree_dists.append(gen_degree_dist)
 
     ref_connectivity = compute_connectivity_with_compairr(ref_file, compairr_output_helper_dir, compairr_output_dir,
-                                                          dataset_split, n_unique_samples)
+                                                          dataset_split)
     ref_degree_dist = get_degrees_from_overlap(ref_connectivity)
 
     return ref_degree_dist, gen_degree_dists
 
 
+def get_reference_divergence_score(analysis_config: AnalysisConfig, compairr_output_helper_dir: str,
+                                   compairr_output_dir: str, train_ref: str, test_ref: str) -> float:
+    """ Get mean divergence score (JSD) for the reference data.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        compairr_output_helper_dir (str): Directory for Compairr helper files.
+        compairr_output_dir (str): Directory for Compairr output files.
+        train_ref (str): First reference data identifier.
+        test_ref (str): Second reference data identifier.
+    Returns:
+        float: Mean divergence score for the reference data.
+    """
+    ref_scores = []
+    reference_comparison_files = get_reference_files(analysis_config)
+    for train_file, test_file in reference_comparison_files:
+        dataset_name, divergence_scores = process_dataset(train_file, test_file, compairr_output_helper_dir,
+                                                          compairr_output_dir, test_ref, train_ref,
+                                                          analysis_config.analysis_output_dir)
+        ref_scores.extend(divergence_scores[test_ref][0])
+    mean_ref_divergence_score = np.mean(ref_scores)
+
+    return mean_ref_divergence_score
+
+
 def compute_connectivity_with_compairr(input_sequences_path: str, compairr_output_helper_dir: str,
-                                       compairr_output_dir: str, dataset_type: str,
-                                       n_unique_samples: int | None) -> pd.DataFrame:
+                                       compairr_output_dir: str, dataset_type: str) -> pd.DataFrame:
     """
     Compute connectivity using Compairr for a single dataset (either train or test).
 
@@ -145,7 +167,6 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
         compairr_output_helper_dir (str): Directory for Compairr helper files.
         compairr_output_dir (str): Directory for Compairr output files.
         dataset_type (str): Type of dataset (train or test or generated with a specific model).
-        n_unique_samples (int, optional): Maximum number of unique samples to consider. Defaults to None (all considered).
 
     Returns:
         pd.DataFrame: DataFrame containing sequence IDs and their overlap counts.
@@ -157,7 +178,7 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
     if os.path.exists(unique_sequences_path):
         print(f"Unique sequences already exist for {file_name}. Skipping execution.")
     else:
-        deduplicate_single_dataset(input_sequences_path, unique_sequences_path, n_unique_samples)
+        deduplicate_single_dataset(input_sequences_path, unique_sequences_path)
     run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name,
                            allowed_mismatches=1, indels=True)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
@@ -204,18 +225,66 @@ def calculate_jsd(gen_node_degree_distribution: pd.Series, ref_node_degree_distr
     return [jsd]
 
 
-def plot_connectivity_scores(mean_scores: dict, std_scores: dict, output_dir: str, dataset_split: str,
-                             distribution_type: str, file_name: str) -> None:
-    """Plot the mean and standard deviation of the divergence scores.
+def summarize_and_plot_dataset_connectivity(dataset_name: str, divergence_scores: dict[str, list[float]],
+                                            output_dir: str, reference: str) -> None:
+    """ Compute mean/std and plot dataset-level connectivity scores.
     Args:
-        mean_scores (dict): Dictionary with mean divergence scores for each model.
-        std_scores (dict): Dictionary with standard deviation of divergence scores for each model.
+        dataset_name (str): Name of the dataset being analyzed.
+        divergence_scores (dict): Dictionary with divergence scores for each model.
         output_dir (str): Directory to save the plot.
-        dataset_split (str): Reference data identifier (train or test).
-        distribution_type (str): Type of distribution being analyzed (e.g., connectivity).
-        file_name (str): Name of the output file for the plot.
+        reference (str): Reference data identifier (train or test).
     Returns:
         None
     """
-    plot_avg_scores(mean_scores, std_scores, output_dir, dataset_split,
-                    file_name, distribution_type, scoring_method="JSD")
+    mean_scores = {m: float(np.mean(scores)) for m, scores in divergence_scores.items()}
+    std_scores = {m: float(np.std(scores)) for m, scores in divergence_scores.items()}
+
+    plot_avg_scores(
+        mean_scores_dict=mean_scores,
+        std_scores_dict=std_scores,
+        output_dir=output_dir,
+        reference_data=reference,
+        distribution_type="connectivity",
+        file_name=f"{dataset_name}_connectivity.png",
+    )
+
+
+def summarize_and_plot_all(divergence_scores_by_reference: dict, output_dir: str,
+                           reference_datasets: list[str], mean_reference_score: float) -> None:
+    """ Aggregate scores across references and plot grouped averages.
+    Args:
+        divergence_scores_by_reference (dict): Nested dictionary with divergence scores by reference and model.
+        output_dir (str): Directory to save the plot.
+        reference_datasets (list[str]): List of reference dataset identifiers.
+        mean_reference_score (float): Mean divergence score for the reference data.
+    Returns:
+        None
+    """
+    mean_scores, std_scores = {}, {}
+    for reference, model_scores in divergence_scores_by_reference.items():
+        mean_scores[reference] = {m: float(np.mean(scores)) for m, scores in model_scores.items()}
+        std_scores[reference] = {m: float(np.std(scores)) for m, scores in model_scores.items()}
+
+    plot_grouped_avg_scores(
+        mean_scores_by_ref=mean_scores,
+        std_scores_by_ref=std_scores,
+        output_dir=output_dir,
+        reference_data=reference_datasets,
+        distribution_type="connectivity",
+        file_name="all_datasets_connectivity.png",
+        scoring_method="JSD",
+        reference_score=mean_reference_score
+    )
+
+
+def validate_references(reference_datasets: list[str]) -> None:
+    """ Validate that reference datasets are either 'train' or 'test'.
+    Args:
+        reference_datasets (list[str]): List of reference dataset identifiers.
+    Returns:
+        None
+    """
+    for ref in reference_datasets:
+        if ref not in {"train", "test"}:
+            raise ValueError("Network analysis only supports 'train' or 'test' as reference data.")
+
