@@ -30,6 +30,11 @@ models:
       test_dir: "test"
       n_subset_samples: 22000
 analyses:
+    - name: "memorization"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 45
     - name: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"

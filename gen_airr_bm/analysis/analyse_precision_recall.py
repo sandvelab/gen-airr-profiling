@@ -181,7 +181,8 @@ def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, co
     else:
         file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{model_name}_{metric}"
 
-    run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name)
+    run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name, allowed_mismatches=1,
+                           indels=True)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]

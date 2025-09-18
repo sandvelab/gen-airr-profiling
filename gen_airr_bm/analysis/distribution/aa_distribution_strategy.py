@@ -4,6 +4,8 @@ import numpy as np
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
+from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.file_utils import get_reference_files
 from gen_airr_bm.utils.plotting_utils import plot_grouped_avg_scores
 
 
@@ -38,15 +40,37 @@ class AADistributionStrategy(BaseDistributionStrategy):
             mean_scores[length][model_name] = np.mean(scores)
             std_scores[length][model_name] = np.std(scores)
 
+    def get_mean_reference_score(self, analysis_config: AnalysisConfig) -> list[float] | None:
+        if "train" in analysis_config.reference_data and "test" in analysis_config.reference_data:
+            ref_scores = []
+            reference_comparison_files = get_reference_files(analysis_config)
+            for train_file, test_file in reference_comparison_files:
+                train_seqs = self.get_sequences_from_file(train_file)
+                test_seqs = self.get_sequences_from_file(test_file[0])
+                ref_scores.append(self.compute_divergence(test_seqs, train_seqs))
+
+            mean_scores_by_length = {}
+            for scores in ref_scores:
+                for length, vals in scores.items():
+                    if length not in mean_scores_by_length:
+                        mean_scores_by_length[length] = []
+                    mean_scores_by_length[length].extend(vals)
+            all_means = [np.mean(vals) for vals in mean_scores_by_length.values() if vals]
+            return all_means
+        else:
+            return None
+
     def plot_scores_by_reference(self, mean_scores_by_ref, std_scores_by_ref,
-                                 analysis_config, distribution_type):
+                                 analysis_config, distribution_type, mean_reference_scores):
         for length in range(10, 21):
             mean_by_ref = {ref: mean_scores_by_ref[ref].get(length, {}) for ref in mean_scores_by_ref}
             std_by_ref = {ref: std_scores_by_ref[ref].get(length, {}) for ref in std_scores_by_ref}
             file_name = f"{distribution_type}_{length}_grouped.png"
+            mean_reference_score = mean_reference_scores[length-10] if mean_reference_scores else None
             plot_grouped_avg_scores(mean_by_ref, std_by_ref,
                                     analysis_config.analysis_output_dir, analysis_config.reference_data,
-                                    file_name, f"{distribution_type} {length}", "JSD")
+                                    file_name, f"{distribution_type} {length}", "JSD",
+                                    mean_reference_score)
 
 
 def compute_positional_aa_dist(sequences):

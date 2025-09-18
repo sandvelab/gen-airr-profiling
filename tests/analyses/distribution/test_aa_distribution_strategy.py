@@ -76,6 +76,6 @@ def test_aa_distribution_strategy_plot_scores(mocker):
         default_model_name="model"
     )
 
-    strategy.plot_scores_by_reference(mean_scores, std_scores, config, "dummy")
+    strategy.plot_scores_by_reference(mean_scores, std_scores, config, "dummy", [0.5]*len(range(10, 21)))
 
     assert mock_plot_jsd_scores.call_count == len(range(10, 21))

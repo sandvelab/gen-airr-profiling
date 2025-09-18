@@ -26,3 +26,18 @@ def get_sequence_files(analysis_config: AnalysisConfig, model: str, reference_da
             [os.path.join(gen_dir, f) for f in filtered_gen_files[:analysis_config.n_subsets]])
 
     return comparison_files_dir
+
+
+def get_reference_files(analysis_config: AnalysisConfig):
+    comparison_files_dir = []
+
+    train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
+    test_dir = f"{analysis_config.root_output_dir}/test_compairr_sequences"
+
+    train_files = set(os.listdir(train_dir))
+
+    for file in train_files:
+        base_name = os.path.splitext(file)[0]
+        comparison_files_dir.append((os.path.join(train_dir, file), [os.path.join(test_dir, base_name + ".tsv")]))
+
+    return comparison_files_dir
