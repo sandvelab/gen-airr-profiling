@@ -67,7 +67,8 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
                                                     analysis_config.analysis_output_dir, reference)
 
     mean_reference_divergence_score = get_reference_divergence_score(analysis_config, compairr_helper_dir,
-                                                                     compairr_output_dir, "train", "test")
+                                                                     compairr_output_dir, "train_ref",
+                                                                     "test_ref")
     summarize_and_plot_all(divergence_scores_by_reference,
                            analysis_config.analysis_output_dir,
                            analysis_config.reference_data,
@@ -98,7 +99,7 @@ def process_dataset(ref_file: str, gen_files: list[str], helper_dir: str, output
     divergence_scores = defaultdict(list)
     for gen_degree_dist in gen_degree_dists:
         jsd_score = calculate_jsd(gen_degree_dist, ref_degree_dist)
-        divergence_scores[model].append(jsd_score)
+        divergence_scores[model].extend(jsd_score)
 
     return dataset_name, divergence_scores
 
@@ -147,11 +148,11 @@ def get_reference_divergence_score(analysis_config: AnalysisConfig, compairr_out
     """
     ref_scores = []
     reference_comparison_files = get_reference_files(analysis_config)
-    for train_file, test_file in reference_comparison_files:
-        dataset_name, divergence_scores = process_dataset(train_file, test_file, compairr_output_helper_dir,
+    for train_file, test_file_list in reference_comparison_files:
+        dataset_name, divergence_scores = process_dataset(train_file, test_file_list, compairr_output_helper_dir,
                                                           compairr_output_dir, test_ref, train_ref,
                                                           analysis_config.analysis_output_dir)
-        ref_scores.extend(divergence_scores[test_ref][0])
+        ref_scores.extend(divergence_scores[test_ref])
     mean_ref_divergence_score = np.mean(ref_scores)
 
     return mean_ref_divergence_score

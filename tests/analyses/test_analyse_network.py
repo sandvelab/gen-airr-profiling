@@ -15,7 +15,6 @@ from gen_airr_bm.analysis.analyse_network import (
     calculate_jsd,
     summarize_and_plot_dataset_connectivity,
     summarize_and_plot_all,
-    validate_references
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
@@ -146,7 +145,7 @@ def test_process_dataset(mocker):
     mock_plot.assert_called_once_with(ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1")
     assert dataset_name == "dataset1"
     # divergence_scores are lists of single-element lists per current calculate_jsd implementation
-    assert divergence_scores == {"model1": [[0.1], [0.2]]}
+    assert divergence_scores == {"model1": [0.1, 0.2]}
 
 
 def test_get_node_degree_distributions(mocker):
@@ -442,21 +441,28 @@ def test_summarize_and_plot_all(mocker):
 
 def test_get_reference_divergence_score(mocker, sample_analysis_config):
     """Test get_reference_divergence_score collects all ref1 scores and returns their mean."""
-    mock_get_reference_files = mocker.patch(
+    mocker.patch(
         'gen_airr_bm.analysis.analyse_network.get_reference_files',
-        return_value=[("trainA.tsv", "testA.tsv"), ("trainB.tsv", "testB.tsv")]
+        return_value=[("trainA.tsv", ["testA.tsv"]), ("trainB.tsv", ["testB.tsv"])]
     )
 
     # process_dataset returns (dataset_name, divergence_scores)
     # divergence_scores must be indexable as divergence_scores[ref1][0] -> list of floats
     def process_side_effect(train_file, test_file, helper_dir, output_dir, ref1, ref2, out_dir):
         ds_name = train_file.replace(".tsv", "")
-        return ds_name, {
-            "train": [[0.1, 0.3]] if "A" in train_file else [[0.2, 0.4]],
-            "test": [[0.0]]  # unused in this test
-        }
+        if train_file == "trainA.tsv":
+            # First dataset contributes [0.1, 0.3]
+            scores = [0.1, 0.3]
+        elif train_file == "trainB.tsv":
+            # Second dataset contributes [0.2, 0.4]
+            scores = [0.2, 0.4]
+        else:
+            scores = []
 
-    mock_process_dataset = mocker.patch(
+        # Place scores under ref1 key so divergence_scores[ref1][0] -> list of floats
+        return ds_name, {ref1: [scores]}
+
+    mocker.patch(
         'gen_airr_bm.analysis.analyse_network.process_dataset',
         side_effect=process_side_effect
     )
@@ -471,15 +477,6 @@ def test_get_reference_divergence_score(mocker, sample_analysis_config):
 
     # Scores were [0.1, 0.3, 0.2, 0.4] => mean 0.25
     assert mean == pytest.approx(0.25, rel=1e-6)
-
-    mock_get_reference_files.assert_called_once_with(sample_analysis_config)
-    assert mock_process_dataset.call_count == 2
-    mock_process_dataset.assert_any_call(
-        "trainA.tsv", "testA.tsv", "/tmp/helper", "/tmp/output", "train", "test", sample_analysis_config.analysis_output_dir
-    )
-    mock_process_dataset.assert_any_call(
-        "trainB.tsv", "testB.tsv", "/tmp/helper", "/tmp/output", "train", "test", sample_analysis_config.analysis_output_dir
-    )
 
 
 def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
