@@ -145,7 +145,7 @@ def test_process_dataset(mocker):
     mock_plot.assert_called_once_with(ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1")
     assert dataset_name == "dataset1"
     # divergence_scores are lists of single-element lists per current calculate_jsd implementation
-    assert divergence_scores == {"model1": [0.1, 0.2]}
+    assert divergence_scores == [0.1, 0.2]
 
 
 def test_get_node_degree_distributions(mocker):
@@ -447,7 +447,7 @@ def test_get_reference_divergence_score(mocker, sample_analysis_config):
     )
 
     # process_dataset returns (dataset_name, divergence_scores)
-    # divergence_scores must be indexable as divergence_scores[ref1][0] -> list of floats
+    # divergence_scores must be list of floats
     def process_side_effect(train_file, test_file, helper_dir, output_dir, ref1, ref2, out_dir):
         ds_name = train_file.replace(".tsv", "")
         if train_file == "trainA.tsv":
@@ -459,8 +459,8 @@ def test_get_reference_divergence_score(mocker, sample_analysis_config):
         else:
             scores = []
 
-        # Place scores under ref1 key so divergence_scores[ref1][0] -> list of floats
-        return ds_name, {ref1: [scores]}
+        # divergence_scores -> list of floats
+        return ds_name, scores
 
     mocker.patch(
         'gen_airr_bm.analysis.analyse_network.process_dataset',
