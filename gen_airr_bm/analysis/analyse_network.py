@@ -58,9 +58,8 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
                                                                   compairr_output_dir, model_name, reference,
                                                                   analysis_config.analysis_output_dir)
 
-                for model, scores in divergence_scores.items():
-                    divergence_scores_by_reference[reference][model].extend(scores)
-                    divergence_scores_by_dataset[dataset_name][model].extend(scores)
+                divergence_scores_by_reference[reference][model_name].extend(divergence_scores)
+                divergence_scores_by_dataset[dataset_name][model_name].extend(divergence_scores)
 
         for dataset_name, divergence_scores in divergence_scores_by_dataset.items():
             summarize_and_plot_dataset_connectivity(dataset_name, divergence_scores,
@@ -76,7 +75,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
 
 def process_dataset(ref_file: str, gen_files: list[str], helper_dir: str, output_dir: str, model: str, reference: str,
-                    analysis_output_dir: str) -> tuple[str, dict[str, list[float]]]:
+                    analysis_output_dir: str) -> tuple[str, list[float]]:
     """Compute degree distributions, plot them, and return divergence scores for a dataset.
     Args:
         ref_file (str): Path to the reference file.
@@ -87,7 +86,7 @@ def process_dataset(ref_file: str, gen_files: list[str], helper_dir: str, output
         reference (str): Reference data identifier (train or test).
         analysis_output_dir (str): Directory to save output plots.
     Returns:
-        tuple: Dataset name and dictionary with divergence scores for each model.
+        tuple: Dataset name and list with divergence scores for the given model.
     """
     dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
@@ -96,10 +95,10 @@ def process_dataset(ref_file: str, gen_files: list[str], helper_dir: str, output
 
     plot_degree_distribution(ref_degree_dist, gen_degree_dists, analysis_output_dir, model, reference, dataset_name)
 
-    divergence_scores = defaultdict(list)
+    divergence_scores = list()
     for gen_degree_dist in gen_degree_dists:
         jsd_score = calculate_jsd(gen_degree_dist, ref_degree_dist)
-        divergence_scores[model].extend(jsd_score)
+        divergence_scores.extend(jsd_score)
 
     return dataset_name, divergence_scores
 
@@ -152,7 +151,7 @@ def get_reference_divergence_score(analysis_config: AnalysisConfig, compairr_out
         dataset_name, divergence_scores = process_dataset(train_file, test_file_list, compairr_output_helper_dir,
                                                           compairr_output_dir, test_ref, train_ref,
                                                           analysis_config.analysis_output_dir)
-        ref_scores.extend(divergence_scores[test_ref])
+        ref_scores.extend(divergence_scores)
     mean_ref_divergence_score = np.mean(ref_scores)
 
     return mean_ref_divergence_score
