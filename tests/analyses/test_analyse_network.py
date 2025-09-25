@@ -12,7 +12,7 @@ from gen_airr_bm.analysis.analyse_network import (
     get_node_degree_distributions,
     get_mean_reference_divergence_score,
     compute_connectivity_with_compairr,
-    get_degrees_from_overlap,
+    get_node_degree_from_compairr_output,
     calculate_jsd,
     summarize_and_plot_dataset_connectivity,
     summarize_and_plot_all, calculate_divergence_scores,
@@ -224,7 +224,7 @@ def test_calculate_divergence_scores(mocker):
 def test_get_node_degree_distributions(mocker):
     """Test get_node_degree_distributions processes files correctly."""
     mock_compute_conn = mocker.patch('gen_airr_bm.analysis.analyse_network.compute_connectivity_with_compairr')
-    mock_get_degrees = mocker.patch('gen_airr_bm.analysis.analyse_network.get_degrees_from_overlap')
+    mock_get_degrees = mocker.patch('gen_airr_bm.analysis.analyse_network.get_node_degree_from_compairr_output')
 
     # Mock connectivity results
     mock_compute_conn.side_effect = [
@@ -252,7 +252,7 @@ def test_get_node_degree_distributions(mocker):
     # Check that compute_connectivity_with_compairr was called 3 times
     assert mock_compute_conn.call_count == 3
 
-    # Check that get_degrees_from_overlap was called 3 times
+    # Check that get_node_degree_from_compairr_output was called 3 times
     assert mock_get_degrees.call_count == 3
 
     # Check the results
@@ -351,9 +351,9 @@ def test_compute_connectivity_with_compairr_valid_existing_file(mocker):
     mock_compairr.assert_called_once()
 
 
-def test_get_degrees_from_overlap_valid(sample_compairr_result):
-    """Test get_degrees_from_overlap with normal input."""
-    result = get_degrees_from_overlap(sample_compairr_result)
+def test_get_node_degree_from_compairr_output_valid(sample_compairr_result):
+    """Test get_node_degree_from_compairr_output with normal input."""
+    result = get_node_degree_from_compairr_output(sample_compairr_result)
 
     # Expected: overlap_count - 1 = [2, 1, 3, 0]
     # value_counts: {0: 1, 1: 1, 2: 1, 3: 1}
@@ -366,18 +366,18 @@ def test_get_degrees_from_overlap_valid(sample_compairr_result):
     pd.testing.assert_series_equal(result_sorted, expected_sorted, check_names=False)
 
 
-def test_get_degrees_from_overlap_invalid_missing_column():
-    """Test get_degrees_from_overlap raises error for missing overlap_count column."""
+def test_get_node_degree_from_compairr_output_invalid_missing_column():
+    """Test get_node_degree_from_compairr_output raises error for missing overlap_count column."""
     df = pd.DataFrame({'sequence_id': ['seq1', 'seq2']})
 
     with pytest.raises(ValueError, match="Compairr result DataFrame must contain 'overlap_count' column"):
-        get_degrees_from_overlap(df)
+        get_node_degree_from_compairr_output(df)
 
 
-def test_get_degrees_from_overlap_valid_empty_dataframe():
-    """Test get_degrees_from_overlap with empty DataFrame."""
+def test_get_node_degree_from_compairr_output_valid_empty_dataframe():
+    """Test get_node_degree_from_compairr_output with empty DataFrame."""
     df = pd.DataFrame({'sequence_id': [], 'overlap_count': []})
-    result = get_degrees_from_overlap(df)
+    result = get_node_degree_from_compairr_output(df)
 
     assert len(result) == 0
     assert isinstance(result, pd.Series)

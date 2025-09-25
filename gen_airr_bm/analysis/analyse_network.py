@@ -138,12 +138,12 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
     ref2_or_gen_degree_dists = []
     for file in ref2_or_gen_files:
         connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, model)
-        degree_dist = get_degrees_from_overlap(connectivity)
+        degree_dist = get_node_degree_from_compairr_output(connectivity)
         ref2_or_gen_degree_dists.append(degree_dist)
 
     ref1_connectivity = compute_connectivity_with_compairr(ref1_file, compairr_output_helper_dir, compairr_output_dir,
                                                            dataset_split)
-    ref1_degree_dist = get_degrees_from_overlap(ref1_connectivity)
+    ref1_degree_dist = get_node_degree_from_compairr_output(ref1_connectivity)
 
     return ref1_degree_dist, ref2_or_gen_degree_dists
 
@@ -201,7 +201,7 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
     return compairr_result
 
 
-def get_degrees_from_overlap(compairr_result: pd.DataFrame) -> pd.Series:
+def get_node_degree_from_compairr_output(compairr_result: pd.DataFrame) -> pd.Series:
     """
     Extract node degree distribution from Compairr overlap results.
 
