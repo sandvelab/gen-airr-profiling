@@ -46,7 +46,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
     """
     validate_references(analysis_config.reference_data)
 
-    divergence_scores_all = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: list())))
+    divergence_scores_all = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
     for reference in analysis_config.reference_data:
 
@@ -58,15 +58,15 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
                     get_connectivity_distributions_by_dataset(ref_file, gen_files, compairr_helper_dir,
                                                               compairr_output_dir, model_name, reference,
                                                               analysis_config.analysis_output_dir))
-                divergence_scores = calculate_divergence_scores_per_dataset(ref_degree_dist, gen_degree_dists)
+                divergence_scores = calculate_divergence_scores(ref_degree_dist, gen_degree_dists)
                 divergence_scores_all[reference][dataset_name][model_name].extend(divergence_scores)
 
         for dataset_name, divergence_scores in divergence_scores_all[reference].items():
             summarize_and_plot_dataset_connectivity(dataset_name, divergence_scores,
                                                     analysis_config.analysis_output_dir, reference)
 
-    mean_reference_divergence_score = get_reference_divergence_score(analysis_config, compairr_helper_dir,
-                                                                     compairr_output_dir)
+    mean_reference_divergence_score = get_mean_reference_divergence_score(analysis_config, compairr_helper_dir,
+                                                                          compairr_output_dir)
     summarize_and_plot_all(divergence_scores_all,
                            analysis_config.analysis_output_dir,
                            analysis_config.reference_data,
@@ -100,7 +100,7 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
 
 
-def calculate_divergence_scores_per_dataset(ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series]) -> (
+def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series]) -> (
         list)[float]:
     """ Calculate divergence scores (JSD) between reference set 1 (train or test) and generated degree distributions or
     between reference set 1 (train) and reference set 2 (test) degree distributions.
@@ -148,8 +148,8 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
     return ref1_degree_dist, ref2_or_gen_degree_dists
 
 
-def get_reference_divergence_score(analysis_config: AnalysisConfig, compairr_output_helper_dir: str,
-                                   compairr_output_dir: str) -> float:
+def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compairr_output_helper_dir: str,
+                                        compairr_output_dir: str) -> float:
     """ Get mean divergence score (JSD) for the reference data.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -165,7 +165,7 @@ def get_reference_divergence_score(analysis_config: AnalysisConfig, compairr_out
             get_connectivity_distributions_by_dataset(train_file, [test_file], compairr_output_helper_dir,
                                                       compairr_output_dir, DatasetSplit.TEST.value,
                                                       DatasetSplit.TRAIN.value, analysis_config.analysis_output_dir))
-        divergence_scores = calculate_divergence_scores_per_dataset(train_node_degree, test_node_degree)
+        divergence_scores = calculate_divergence_scores(train_node_degree, test_node_degree)
         ref_scores.extend(divergence_scores)
     mean_ref_divergence_score = np.mean(ref_scores)
 

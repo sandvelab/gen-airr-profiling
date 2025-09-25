@@ -10,12 +10,12 @@ from gen_airr_bm.analysis.analyse_network import (
     compute_and_plot_connectivity,
     get_connectivity_distributions_by_dataset,
     get_node_degree_distributions,
-    get_reference_divergence_score,
+    get_mean_reference_divergence_score,
     compute_connectivity_with_compairr,
     get_degrees_from_overlap,
     calculate_jsd,
     summarize_and_plot_dataset_connectivity,
-    summarize_and_plot_all, calculate_divergence_scores_per_dataset,
+    summarize_and_plot_all, calculate_divergence_scores,
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
@@ -81,10 +81,10 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     """Test compute_and_plot_connectivity processes files correctly."""
     mock_get_files = mocker.patch("gen_airr_bm.analysis.analyse_network.get_sequence_files")
     mock_gcd = mocker.patch("gen_airr_bm.analysis.analyse_network.get_connectivity_distributions_by_dataset")
-    mock_calc_div = mocker.patch("gen_airr_bm.analysis.analyse_network.calculate_divergence_scores_per_dataset")
+    mock_calc_div = mocker.patch("gen_airr_bm.analysis.analyse_network.calculate_divergence_scores")
     mock_plot_dataset = mocker.patch("gen_airr_bm.analysis.analyse_network.summarize_and_plot_dataset_connectivity")
     mock_get_ref_score = mocker.patch(
-        "gen_airr_bm.analysis.analyse_network.get_reference_divergence_score", return_value=0.42
+        "gen_airr_bm.analysis.analyse_network.get_mean_reference_divergence_score", return_value=0.42
     )
     mock_plot_all = mocker.patch("gen_airr_bm.analysis.analyse_network.summarize_and_plot_all")
 
@@ -177,19 +177,15 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
                 assert divergence_scores_all[reference][ds][model] == [0.1, 0.2]
 
 
-def test_process_dataset(mocker):
-    """Test process_dataset computes distributions, plots them, and returns divergence scores."""
+def test_get_connectivity_distributions_by_dataset(mocker):
+    """Test get_connectivity_distributions_by_dataset computes distributions and plots them."""
     mock_get_dists = mocker.patch('gen_airr_bm.analysis.analyse_network.get_node_degree_distributions')
     mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
-    mock_calc_jsd = mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd')
 
     # Mock degree distributions
     ref_dist = pd.Series([2, 1], index=[0, 1])
     gen_dists = [pd.Series([1, 2], index=[0, 1]), pd.Series([3, 1], index=[0, 1])]
     mock_get_dists.return_value = (ref_dist, gen_dists)
-
-    # Mock JSD calculations (each returns a single-element list as implemented)
-    mock_calc_jsd.side_effect = [[0.1], [0.2]]
 
     dataset_name, ref1_degree_dist, gen_degree_dists = get_connectivity_distributions_by_dataset(
         "/path/to/dataset1.tsv",
@@ -200,13 +196,29 @@ def test_process_dataset(mocker):
         "test",
         "/tmp/analysis"
     )
-    divergence_scores = calculate_divergence_scores_per_dataset(ref1_degree_dist, gen_degree_dists)
 
     mock_get_dists.assert_called_once()
     mock_plot.assert_called_once_with(ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1")
     assert dataset_name == "dataset1"
-    # divergence_scores are lists of single-element lists per current calculate_jsd implementation
-    assert divergence_scores == [0.1, 0.2]
+
+
+def test_calculate_divergence_scores(mocker):
+    """Test calculate_divergence_scores_per_dataset computes JSD scores correctly."""
+    mock_calc_jsd = mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd')
+
+    mock_calc_jsd.side_effect = [[0.1], [0.3], [0.2]]
+
+    ref_dist = pd.Series([2, 1], index=[0, 1])
+    gen_dists = [
+        pd.Series([1, 2], index=[0, 1]),
+        pd.Series([3, 1], index=[0, 1]),
+        pd.Series([2, 2], index=[0, 1])
+    ]
+
+    scores = calculate_divergence_scores(ref_dist, gen_dists)
+
+    assert scores == [0.1, 0.3, 0.2]
+    assert mock_calc_jsd.call_count == 3
 
 
 def test_get_node_degree_distributions(mocker):
@@ -500,7 +512,7 @@ def test_summarize_and_plot_all(mocker):
     assert kwargs["reference_score"] == mean_reference_score
 
 
-def test_get_reference_divergence_score(mocker, sample_analysis_config):
+def test_get_mean_reference_divergence_score(mocker, sample_analysis_config):
     """Test get_reference_divergence_score collects all ref1 scores and returns their mean."""
     mocker.patch(
         'gen_airr_bm.analysis.analyse_network.get_reference_files',
@@ -519,11 +531,11 @@ def test_get_reference_divergence_score(mocker, sample_analysis_config):
     # Mock calculate_divergence_scores_per_dataset with the CORRECT signature:
     # (ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series]) -> list[float]
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_network.calculate_divergence_scores_per_dataset",
+        "gen_airr_bm.analysis.analyse_network.calculate_divergence_scores",
         side_effect=[[0.1, 0.3], [0.2, 0.4]],  # one list per dataset
     )
 
-    mean = get_reference_divergence_score(
+    mean = get_mean_reference_divergence_score(
         analysis_config=sample_analysis_config,
         compairr_output_helper_dir="/tmp/helper",
         compairr_output_dir="/tmp/output",
@@ -546,7 +558,7 @@ def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_avg_scores')
         mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd', return_value=[0.1])
-        mocker.patch('gen_airr_bm.analysis.analyse_network.get_reference_divergence_score', return_value=0.25)
+        mocker.patch('gen_airr_bm.analysis.analyse_network.get_mean_reference_divergence_score', return_value=0.25)
         mocker.patch('gen_airr_bm.analysis.analyse_network.summarize_and_plot_all')
         mocker.patch('os.path.exists', return_value=True)
 
