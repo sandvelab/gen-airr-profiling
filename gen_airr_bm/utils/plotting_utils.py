@@ -137,31 +137,31 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
     print(f"Plot saved as PNG at: {png_path}")
 
 
-def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distributions, output_dir, model_name,
-                             reference_data, dataset_name):
+def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_degree_distributions, output_dir,
+                             ref2_or_model_name, ref1_name, dataset_name):
     """Plot histograms of the two node degree distributions in one plot (with error bars for generated).
     Args:
-        ref_node_degree_distribution: pd.Series, index=node_degree, value=count
-        gen_node_degree_distributions: list of pd.Series, each with index=node_degree, value=count
+        ref1_node_degree_distribution: pd.Series, index=node_degree, value=count
+        ref2_or_gen_node_degree_distributions: list of pd.Series, each with index=node_degree, value=count
         output_dir: output directory
-        model_name: name of the generative model
-        reference_data: string, used for subfolder naming
+        ref2_or_model_name: name of the generative model or the second reference set (test)
+        ref1_name: string, used for subfolder naming (e.g. 'train')
         dataset_name: name of the dataset
     Returns:
         None
     """
-    fig_dir = os.path.join(output_dir, reference_data)
+    fig_dir = os.path.join(output_dir, ref1_name)
     os.makedirs(fig_dir, exist_ok=True)
-    png_path = f"{fig_dir}/histogram_{dataset_name}_{model_name}_{reference_data}.png"
-    tsv_path = f"{fig_dir}/histogram_{dataset_name}_{model_name}_{reference_data}.tsv"
+    png_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.png"
+    tsv_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.tsv"
 
     # Normalize the reference distribution
-    ref_freq = ref_node_degree_distribution / ref_node_degree_distribution.sum()
-    ref_freq = ref_freq.rename("freq_ref").to_frame()
+    ref1_freq = ref1_node_degree_distribution / ref1_node_degree_distribution.sum()
+    ref1_freq = ref1_freq.rename("freq_ref").to_frame()
 
     # Normalize and collect all generated distributions
     freq_dfs = []
-    for i, dist in enumerate(gen_node_degree_distributions):
+    for i, dist in enumerate(ref2_or_gen_node_degree_distributions):
         norm = dist / dist.sum()
         freq_dfs.append(norm.rename(f"freq_{i}").to_frame())
 
@@ -169,7 +169,7 @@ def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distr
     gen_merged["freq_gen"] = gen_merged.mean(axis=1)
     gen_merged["std_gen"] = gen_merged.std(axis=1)
 
-    merged_df = pd.merge(ref_freq, gen_merged[["freq_gen", "std_gen"]], left_index=True, right_index=True, how='outer').fillna(0)
+    merged_df = pd.merge(ref1_freq, gen_merged[["freq_gen", "std_gen"]], left_index=True, right_index=True, how='outer').fillna(0)
     merged_df = merged_df.sort_index()
     if not os.path.exists(tsv_path):
         merged_df.to_csv(tsv_path, sep='\t')
@@ -179,7 +179,7 @@ def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distr
     fig.add_trace(go.Bar(
         x=merged_df.index,
         y=merged_df["freq_gen"],
-        name=model_name,
+        name=ref2_or_model_name,
         marker=dict(color='skyblue'),
         error_y=dict(type='data', array=merged_df["std_gen"], visible=True)
     ))
@@ -187,7 +187,7 @@ def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distr
     fig.add_trace(go.Bar(
         x=merged_df.index,
         y=merged_df["freq_ref"],
-        name=reference_data,
+        name=ref1_name,
         marker=dict(color='orange')
     ))
 
