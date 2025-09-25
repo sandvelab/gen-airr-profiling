@@ -451,7 +451,7 @@ def test_summarize_and_plot_dataset_connectivity(mocker):
         output_dir="/tmp/output",
         reference_data="test",
         distribution_type="connectivity",
-        file_name="test_dataset_connectivity.png",
+        file_name="test_dataset_connectivity",
     )
 
 
@@ -507,7 +507,7 @@ def test_summarize_and_plot_all(mocker):
     assert kwargs["output_dir"] == output_dir
     assert kwargs["reference_data"] == reference_datasets
     assert kwargs["distribution_type"] == "connectivity"
-    assert kwargs["file_name"] == "all_datasets_connectivity.png"
+    assert kwargs["file_name"] == "all_datasets_connectivity"
     assert kwargs["scoring_method"] == "JSD"
     assert kwargs["reference_score"] == mean_reference_score
 

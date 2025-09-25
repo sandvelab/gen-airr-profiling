@@ -204,12 +204,12 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
     for dataset in scores.mean_precision:
         plot_avg_scores(scores.mean_precision[dataset], scores.std_precision[dataset],
                         analysis_config.analysis_output_dir, "precision",
-                        f"{dataset}_precision.png", "precision",
+                        f"{dataset}_precision", "precision",
                         scoring_method="precision")
 
         plot_avg_scores(scores.mean_recall[dataset], scores.std_recall[dataset],
                         analysis_config.analysis_output_dir, "recall",
-                        f"{dataset}_recall.png", "recall",
+                        f"{dataset}_recall", "recall",
                         scoring_method="recall")
 
     plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,

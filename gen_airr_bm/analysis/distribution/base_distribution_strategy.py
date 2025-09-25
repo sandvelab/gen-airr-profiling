@@ -34,7 +34,7 @@ class BaseDistributionStrategy(ABC):
             reference_comparison_files = get_reference_files(analysis_config)
             for train_file, test_file in reference_comparison_files:
                 train_seqs = self.get_sequences_from_file(train_file)
-                test_seqs = self.get_sequences_from_file(test_file[0])
+                test_seqs = self.get_sequences_from_file(test_file)
                 ref_scores.extend(self.compute_divergence(test_seqs, train_seqs))
             return np.mean(ref_scores)
         else:
@@ -47,7 +47,7 @@ class BaseDistributionStrategy(ABC):
 
     def plot_scores(self, mean_scores: dict, std_scores: dict,
                     analysis_config: AnalysisConfig, distribution_type: str) -> None:
-        file_name = f"{distribution_type}.png"
+        file_name = f"{distribution_type}"
         plot_avg_scores(mean_scores, std_scores,
                         analysis_config.analysis_output_dir, analysis_config.reference_data,
                         file_name, distribution_type, "JSD")
@@ -59,7 +59,7 @@ class BaseDistributionStrategy(ABC):
         mean_scores_by_ref: {ref_label: {model: mean_score}}
         std_scores_by_ref: {ref_label: {model: std_score}}
         """
-        file_name = f"{distribution_type}_grouped.png"
+        file_name = f"{distribution_type}_grouped"
         plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref,
                                 analysis_config.analysis_output_dir, analysis_config.reference_data,
                                 file_name, distribution_type, "JSD", mean_reference_score)

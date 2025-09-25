@@ -260,7 +260,7 @@ def summarize_and_plot_dataset_connectivity(dataset_name: str, divergence_scores
         output_dir=output_dir,
         reference_data=reference,
         distribution_type="connectivity",
-        file_name=f"{dataset_name}_connectivity.png",
+        file_name=f"{dataset_name}_connectivity",
     )
 
 
@@ -289,7 +289,7 @@ def summarize_and_plot_all(divergence_scores_all: dict[str, dict[str, dict[str, 
         output_dir=output_dir,
         reference_data=reference_datasets,
         distribution_type="connectivity",
-        file_name="all_datasets_connectivity.png",
+        file_name="all_datasets_connectivity",
         scoring_method="JSD",
         reference_score=mean_reference_score
     )

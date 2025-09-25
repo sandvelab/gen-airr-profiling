@@ -29,7 +29,7 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
     model_memorization_scores = get_model_memorization_scores(analysis_config, output_dir, train_reference)
     mean_reference_memorization_score = get_reference_memorization_score(analysis_config, output_dir)
 
-    plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization.png")
+    plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization")
 
 
 def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: str, train_reference: str) -> dict:
@@ -62,7 +62,7 @@ def get_reference_memorization_score(analysis_config: AnalysisConfig, output_dir
     ref_scores = []
     reference_comparison_files = get_reference_files(analysis_config)
     for train_file, test_file in reference_comparison_files:
-        ref_score = get_memorization_scores(train_file, test_file, output_dir, "reference")
+        ref_score = get_memorization_scores(train_file, [test_file], output_dir, "reference")
         ref_scores.append(ref_score[0])
     mean_ref_memorization_score = np.mean(ref_scores)
 
@@ -128,15 +128,23 @@ def plot_results(model_scores, mean_reference_score, fig_dir, file_name) -> None
         model_scores (dict): Dictionary with model names as keys and lists of memorization scores as values.
         mean_reference_score (float): Mean memorization score for the reference data.
         fig_dir (str): Directory to save the plot.
-        file_name (str): Name of the output plot file.
+        file_name (str): Name of the output plot and tsv files (without extension).
     Returns:
         None
     """
+    os.makedirs(fig_dir, exist_ok=True)
+    png_path = os.path.join(fig_dir, file_name) + ".png"
+    tsv_path = os.path.join(fig_dir, file_name) + ".tsv"
+
     means = {k: np.mean(v) for k, v in model_scores.items()}
     stds = {k: np.std(v) for k, v in model_scores.items()}
 
     models, scores = zip(*sorted(means.items(), key=lambda x: x[1], reverse=True))
     errors = [stds[model] for model in models]
+
+    if not os.path.exists(tsv_path):
+        pd.DataFrame({"model": models, "mean_jaccard_similarity": scores, "std": errors}).to_csv(
+            tsv_path, sep="\t", index=False)
 
     fig = go.Figure()
 
@@ -162,7 +170,6 @@ def plot_results(model_scores, mean_reference_score, fig_dir, file_name) -> None
         annotation_position="top right"
     )
 
-    png_path = os.path.join(fig_dir, file_name)
     fig.write_image(png_path)
 
     print(f"Plot saved as PNG at: {png_path}")
