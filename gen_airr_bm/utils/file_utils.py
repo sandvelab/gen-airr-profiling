@@ -38,6 +38,6 @@ def get_reference_files(analysis_config: AnalysisConfig):
 
     for file in train_files:
         base_name = os.path.splitext(file)[0]
-        comparison_files_dir.append((os.path.join(train_dir, file), [os.path.join(test_dir, base_name + ".tsv")]))
+        comparison_files_dir.append((os.path.join(train_dir, file), os.path.join(test_dir, base_name + ".tsv")))
 
     return comparison_files_dir

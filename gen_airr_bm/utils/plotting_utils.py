@@ -87,7 +87,8 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
         yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
         xaxis_tickangle=-45,
         template="plotly_white",
-        colorway=pc.qualitative.Set2
+        colorway=pc.qualitative.Set2,
+        showlegend=True,
     )
 
     if reference_score is not None:

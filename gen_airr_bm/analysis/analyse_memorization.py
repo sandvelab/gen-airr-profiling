@@ -104,7 +104,10 @@ def compute_jaccard_similarity(compairr_helper_dir, reference_path, model_path, 
     file_identifier = f"{dataset_name}_{model_name}"
     unique_sequences_path = f"{compairr_helper_dir}/{file_identifier}_unique.tsv"
     concat_sequences_path = f"{compairr_helper_dir}/{file_identifier}_concat.tsv"
-    deduplicate_and_merge_two_datasets(reference_path, model_path, unique_sequences_path, concat_sequences_path)
+    if os.path.exists(unique_sequences_path) and os.path.exists(concat_sequences_path):
+        print(f"Deduplicated and merged files already exist for {file_identifier}. Skipping this step.")
+    else:
+        deduplicate_and_merge_two_datasets(reference_path, model_path, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
     run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_identifier,

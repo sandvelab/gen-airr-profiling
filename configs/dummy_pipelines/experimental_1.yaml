@@ -56,15 +56,8 @@ analyses:
     - name: "network"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
-      reference_data: "train"
+      reference_data: [ "train", "test" ]
       n_subsets: 10
-      n_unique_samples: 5
-    - name: "network"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: "test"
-      n_subsets: 10
-      n_unique_samples: 5
     - name: "precision_recall"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
