@@ -5,7 +5,7 @@ import pytest
 from gen_airr_bm.analysis.analyse_memorization import (
     run_memorization_analysis,
     get_model_memorization_scores,
-    get_reference_memorization_score,
+    get_mean_reference_memorization_score,
     get_memorization_scores,
     plot_results,
 )
@@ -34,7 +34,7 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
         return_value={"model1": [0.1, 0.2], "model2": [0.3]}
     )
     mock_get_reference_score = mocker.patch(
-        "gen_airr_bm.analysis.analyse_memorization.get_reference_memorization_score",
+        "gen_airr_bm.analysis.analyse_memorization.get_mean_reference_memorization_score",
         return_value=0.123
     )
     mock_plot_results = mocker.patch(
@@ -141,7 +141,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
         side_effect=seq
     )
 
-    mean_score = get_reference_memorization_score(
+    mean_score = get_mean_reference_memorization_score(
         analysis_config=sample_analysis_config,
         output_dir="/tmp/test_output/analysis_mem"
     )
@@ -172,10 +172,10 @@ def test_get_memorization_scores_calls_compute(mocker):
     )
 
     out = get_memorization_scores(
-        ref_file=ref_file,
-        gen_files=gen_files,
+        ref1_file=ref_file,
+        ref2_or_gen_files=gen_files,
         output_dir="/tmp/test_output/analysis_mem",
-        model_name="modelX"
+        name="modelX"
     )
 
     # Helper dir created

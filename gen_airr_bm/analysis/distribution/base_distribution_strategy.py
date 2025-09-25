@@ -4,6 +4,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_reference_files
 from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_avg_scores
@@ -29,7 +30,8 @@ class BaseDistributionStrategy(ABC):
         std_scores[model_name] = np.std(divergence_scores)
 
     def get_mean_reference_score(self, analysis_config: AnalysisConfig) -> float | None:
-        if "train" in analysis_config.reference_data and "test" in analysis_config.reference_data:
+        if (DatasetSplit.TRAIN.value in analysis_config.reference_data and
+                DatasetSplit.TEST.value in analysis_config.reference_data):
             ref_scores = []
             reference_comparison_files = get_reference_files(analysis_config)
             for train_file, test_file in reference_comparison_files:

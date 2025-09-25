@@ -74,7 +74,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
 
 def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files: list[str], helper_dir: str,
-                                              output_dir: str, model: str, reference: str, analysis_output_dir: str) -> (
+                                              output_dir: str, name: str, reference: str, analysis_output_dir: str) -> (
         tuple)[str, pd.Series, list[pd.Series]]:
     """ For a given dataset, this function computes connectivity distributions of reference set 1 (train or test) and
     either reference set 2 (test) or model generated sets. Connectivity distributions are then plotted as histograms.
@@ -83,8 +83,8 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
         ref2_or_gen_files (list[str]): List of one test file or list of generated sequence files.
         helper_dir (str): Directory for Compairr helper files.
         output_dir (str): Directory for Compairr output files.
-        model (str): Model name used for analysis.
         reference (str): Reference data identifier (train or test).
+        name (str): Name of generative model or name of second reference set.
         analysis_output_dir (str): Directory to save output plots.
     Returns:
         tuple: Dataset name, reference1 degree distribution, list of reference 2 or generated degree distributions.
@@ -92,9 +92,9 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
     dataset_name = os.path.splitext(os.path.basename(ref1_file))[0]
 
     ref1_degree_dist, ref2_or_gen_degree_dists = get_node_degree_distributions(ref1_file, ref2_or_gen_files, helper_dir,
-                                                                               output_dir, model, reference)
+                                                                               output_dir, name, reference)
 
-    plot_degree_distribution(ref1_degree_dist, ref2_or_gen_degree_dists, analysis_output_dir, model, reference,
+    plot_degree_distribution(ref1_degree_dist, ref2_or_gen_degree_dists, analysis_output_dir, name, reference,
                              dataset_name)
 
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
@@ -120,7 +120,7 @@ def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_
 
 
 def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compairr_output_helper_dir: str,
-                                  compairr_output_dir: str, model: str, dataset_split: str) -> tuple:
+                                  compairr_output_dir: str, name: str, dataset_split: str) -> tuple:
     """
     Compute node degree distributions for reference set 1 (train or test) and the corresponding generated files or
     reference set 2 (test).
@@ -129,7 +129,7 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
         ref2_or_gen_files (list): List of generated sequence files or list of one corresponding test file.
         compairr_output_helper_dir (str): Directory for Compairr helper files.
         compairr_output_dir (str): Directory for Compairr output files.
-        model (str): Model name used for analysis.
+        name (str): Name of generative model or name of second reference set.
         dataset_split (str): Reference data identifier (train or test).
     Returns:
         tuple: Reference1 node degree distribution and list of generated node degree distributions or list of one
@@ -137,7 +137,7 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
     """
     ref2_or_gen_degree_dists = []
     for file in ref2_or_gen_files:
-        connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, model)
+        connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, name)
         degree_dist = get_node_degree_from_compairr_output(connectivity)
         ref2_or_gen_degree_dists.append(degree_dist)
 

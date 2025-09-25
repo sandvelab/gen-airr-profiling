@@ -27,7 +27,7 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
         raise ValueError("Train and test data must be included in reference_data for memorization analysis.")
 
     model_memorization_scores = get_model_memorization_scores(analysis_config, output_dir, train_reference)
-    mean_reference_memorization_score = get_reference_memorization_score(analysis_config, output_dir)
+    mean_reference_memorization_score = get_mean_reference_memorization_score(analysis_config, output_dir)
 
     plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization")
 
@@ -51,13 +51,13 @@ def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: s
     return model_memorization_scores
 
 
-def get_reference_memorization_score(analysis_config: AnalysisConfig, output_dir: str) -> float:
+def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, output_dir: str) -> float:
     """ Get mean memorization score (Jaccard similarity) for the reference data.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         output_dir (str): Directory to save intermediate and final results.
     Returns:
-        float: Mean memorization score for the reference data.
+        float: Mean memorization score between the reference datasets (average train vs. test).
     """
     ref_scores = []
     reference_comparison_files = get_reference_files(analysis_config)
@@ -69,45 +69,46 @@ def get_reference_memorization_score(analysis_config: AnalysisConfig, output_dir
     return mean_ref_memorization_score
 
 
-def get_memorization_scores(ref_file, gen_files, output_dir, model_name) -> list:
-    """ Compute memorization scores (Jaccard similarities) between a train reference file and generated files.
+def get_memorization_scores(ref1_file: str, ref2_or_gen_files: list[str], output_dir: str, name: str) -> list:
+    """ Compute memorization scores (Jaccard similarities) between a train reference file and generated files or between
+    reference set 1 (train) and reference set 2 (test).
     Args:
-        ref_file (str): Path to the reference file.
-        gen_files (list): List of paths to generated files.
+        ref1_file (str): Path to the reference file 1 (train).
+        ref2_or_gen_files (list[str]): List of paths to generated files or list of one reference file (test).
         output_dir (str): Directory to save intermediate and final results.
-        model_name (str): Name of the model being evaluated.
+        name (str): Name of the model being evaluated or "reference".
     Returns:
         list: A list of memorization scores (Jaccard similarities) for each model.
     """
     memorization_scores = []
     compairr_helper_dir = f"{output_dir}/compairr_helper_files"
     os.makedirs(compairr_helper_dir, exist_ok=True)
-    for gen_file in gen_files:
-        score = compute_jaccard_similarity(compairr_helper_dir, ref_file, gen_file, output_dir, model_name)
+    for file in ref2_or_gen_files:
+        score = compute_jaccard_similarity(compairr_helper_dir, ref1_file, file, output_dir, name)
         memorization_scores.append(score)
 
     return memorization_scores
 
 
-def compute_jaccard_similarity(compairr_helper_dir, reference_path, model_path, output_dir, model_name) -> float:
+def compute_jaccard_similarity(compairr_helper_dir, set1_path, set2_path, output_dir, name) -> float:
     """ Compute Jaccard similarity between two datasets using CompAIRR.
     Args:
         compairr_helper_dir (str): Directory to save helper files for CompAIRR.
-        reference_path (str): Path to the reference dataset.
-        model_path (str): Path to the model-generated dataset.
+        set1_path (str): Path to the reference set 1 (train).
+        set2_path (str): Path to the model-generated set or second reference set (test).
         output_dir (str): Directory to save CompAIRR output.
-        model_name (str): Name of the model being evaluated.
+        name (str): Name of the model being evaluated or "reference".
     Returns:
         float: Jaccard similarity between the two datasets.
     """
-    dataset_name = os.path.splitext(os.path.basename(model_path))[0]
-    file_identifier = f"{dataset_name}_{model_name}"
+    dataset_name = os.path.splitext(os.path.basename(set2_path))[0]
+    file_identifier = f"{dataset_name}_{name}"
     unique_sequences_path = f"{compairr_helper_dir}/{file_identifier}_unique.tsv"
     concat_sequences_path = f"{compairr_helper_dir}/{file_identifier}_concat.tsv"
     if os.path.exists(unique_sequences_path) and os.path.exists(concat_sequences_path):
         print(f"Deduplicated and merged files already exist for {file_identifier}. Skipping this step.")
     else:
-        deduplicate_and_merge_two_datasets(reference_path, model_path, unique_sequences_path, concat_sequences_path)
+        deduplicate_and_merge_two_datasets(set1_path, set2_path, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
     run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_identifier,

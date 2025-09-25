@@ -4,20 +4,21 @@ import numpy as np
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_reference_files
 from gen_airr_bm.utils.plotting_utils import plot_grouped_avg_scores
 
 
 class AADistributionStrategy(BaseDistributionStrategy):
-    def compute_divergence(self, gen_seqs, ref_seqs):
+    def compute_divergence(self, seqs1, seqs2):
         scores = defaultdict(list)
         for length in range(10, 21):
-            gen_filtered = [s for s in gen_seqs if len(s) == length]
-            ref_filtered = [s for s in ref_seqs if len(s) == length]
-            gen_dist = compute_positional_aa_dist(gen_filtered)
-            ref_dist = compute_positional_aa_dist(ref_filtered)
-            scores[length].append(compute_jsd_aa(gen_dist, ref_dist))
+            filtered1 = [s for s in seqs1 if len(s) == length]
+            filtered2 = [s for s in seqs2 if len(s) == length]
+            dist1 = compute_positional_aa_dist(filtered1)
+            dist2 = compute_positional_aa_dist(filtered2)
+            scores[length].append(compute_jsd_aa(dist1, dist2))
         return scores
 
     def init_mean_std_scores(self):
@@ -41,7 +42,8 @@ class AADistributionStrategy(BaseDistributionStrategy):
             std_scores[length][model_name] = np.std(scores)
 
     def get_mean_reference_score(self, analysis_config: AnalysisConfig) -> list[float] | None:
-        if "train" in analysis_config.reference_data and "test" in analysis_config.reference_data:
+        if (DatasetSplit.TRAIN.value in analysis_config.reference_data and
+                DatasetSplit.TEST.value in analysis_config.reference_data):
             ref_scores = []
             reference_comparison_files = get_reference_files(analysis_config)
             for train_file, test_file in reference_comparison_files:

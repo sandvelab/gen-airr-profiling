@@ -10,10 +10,10 @@ class KmerDistributionStrategy(BaseDistributionStrategy):
     def __init__(self, k):
         self.k = k
 
-    def compute_divergence(self, gen_seqs, ref_seqs):
-        gen_dist = compute_kmer_distribution(gen_seqs, self.k)
-        ref_dist = compute_kmer_distribution(ref_seqs, self.k)
-        return [compute_jsd_kmers(gen_dist, ref_dist)]
+    def compute_divergence(self, seqs1, seqs2):
+        dist1 = compute_kmer_distribution(seqs1, self.k)
+        dist2 = compute_kmer_distribution(seqs2, self.k)
+        return [compute_jsd_kmers(dist1, dist2)]
 
 
 def compute_kmer_distribution(sequences, k):

@@ -6,12 +6,12 @@ from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDis
 
 
 class LengthDistributionStrategy(BaseDistributionStrategy):
-    def compute_divergence(self, gen_seqs, ref_seqs):
-        gen_lengths = [len(seq) for seq in gen_seqs]
-        ref_lengths = [len(seq) for seq in ref_seqs]
-        gen_dist = Counter(gen_lengths)
-        ref_dist = Counter(ref_lengths)
-        return [compute_jsd_length(gen_dist, ref_dist)]
+    def compute_divergence(self, seqs1, seqs2):
+        lengths1 = [len(seq) for seq in seqs1]
+        lengths2 = [len(seq) for seq in seqs2]
+        dist1 = Counter(lengths1)
+        dist2 = Counter(lengths2)
+        return [compute_jsd_length(dist1, dist2)]
 
 
 def compute_jsd_length(dist1, dist2):
