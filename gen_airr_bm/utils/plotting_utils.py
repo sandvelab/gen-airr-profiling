@@ -156,8 +156,9 @@ def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_deg
     tsv_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.tsv"
 
     # Normalize the reference distribution
+    suffixes = (f"_{ref1_name}", f"_{ref2_or_model_name}")
     ref1_freq = ref1_node_degree_distribution / ref1_node_degree_distribution.sum()
-    ref1_freq = ref1_freq.rename("freq_ref").to_frame()
+    ref1_freq = ref1_freq.rename(f"freq{suffixes[0]}").to_frame()
 
     # Normalize and collect all generated distributions
     freq_dfs = []
@@ -165,11 +166,12 @@ def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_deg
         norm = dist / dist.sum()
         freq_dfs.append(norm.rename(f"freq_{i}").to_frame())
 
-    gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
-    gen_merged["freq_gen"] = gen_merged.mean(axis=1)
-    gen_merged["std_gen"] = gen_merged.std(axis=1)
+    ref2_or_gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
+    ref2_or_gen_merged[f"freq{suffixes[1]}"] = ref2_or_gen_merged.mean(axis=1)
+    ref2_or_gen_merged[f"std{suffixes[1]}"] = ref2_or_gen_merged.std(axis=1)
 
-    merged_df = pd.merge(ref1_freq, gen_merged[["freq_gen", "std_gen"]], left_index=True, right_index=True, how='outer').fillna(0)
+    merged_df = pd.merge(ref1_freq, ref2_or_gen_merged[[f"freq{suffixes[1]}", f"std{suffixes[1]}"]], left_index=True,
+                         right_index=True, how='outer').fillna(0)
     merged_df = merged_df.sort_index()
     if not os.path.exists(tsv_path):
         merged_df.to_csv(tsv_path, sep='\t')
@@ -178,15 +180,15 @@ def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_deg
 
     fig.add_trace(go.Bar(
         x=merged_df.index,
-        y=merged_df["freq_gen"],
+        y=merged_df[f"freq{suffixes[1]}"],
         name=ref2_or_model_name,
         marker=dict(color='skyblue'),
-        error_y=dict(type='data', array=merged_df["std_gen"], visible=True)
+        error_y=dict(type='data', array=merged_df[f"std{suffixes[1]}"], visible=True)
     ))
 
     fig.add_trace(go.Bar(
         x=merged_df.index,
-        y=merged_df["freq_ref"],
+        y=merged_df[f"freq{suffixes[0]}"],
         name=ref1_name,
         marker=dict(color='orange')
     ))

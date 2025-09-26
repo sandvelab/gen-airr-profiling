@@ -69,12 +69,12 @@ def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, outpu
     return mean_ref_memorization_score
 
 
-def get_memorization_scores(ref1_file: str, ref2_or_gen_files: list[str], output_dir: str, name: str) -> list:
+def get_memorization_scores(train_file: str, test_or_gen_files: list[str], output_dir: str, name: str) -> list:
     """ Compute memorization scores (Jaccard similarities) between a train reference file and generated files or between
-    reference set 1 (train) and reference set 2 (test).
+    train and the corresponding test set.
     Args:
-        ref1_file (str): Path to the reference file 1 (train).
-        ref2_or_gen_files (list[str]): List of paths to generated files or list of one reference file (test).
+        train_file (str): Path to the train file.
+        test_or_gen_files (list[str]): List of paths to generated files or list of one test file.
         output_dir (str): Directory to save intermediate and final results.
         name (str): Name of the model being evaluated or "reference".
     Returns:
@@ -83,32 +83,33 @@ def get_memorization_scores(ref1_file: str, ref2_or_gen_files: list[str], output
     memorization_scores = []
     compairr_helper_dir = f"{output_dir}/compairr_helper_files"
     os.makedirs(compairr_helper_dir, exist_ok=True)
-    for file in ref2_or_gen_files:
-        score = compute_jaccard_similarity(compairr_helper_dir, ref1_file, file, output_dir, name)
+    for file in test_or_gen_files:
+        score = compute_jaccard_similarity(compairr_helper_dir, train_file, file, output_dir, name)
         memorization_scores.append(score)
 
     return memorization_scores
 
 
-def compute_jaccard_similarity(compairr_helper_dir, set1_path, set2_path, output_dir, name) -> float:
+def compute_jaccard_similarity(compairr_helper_dir: str, train_file: str, test_or_gen_file: str, output_dir: str,
+                               name: str) -> float:
     """ Compute Jaccard similarity between two datasets using CompAIRR.
     Args:
         compairr_helper_dir (str): Directory to save helper files for CompAIRR.
-        set1_path (str): Path to the reference set 1 (train).
-        set2_path (str): Path to the model-generated set or second reference set (test).
+        train_file (str): Path to the reference train set.
+        test_or_gen_file (str): Path to the model-generated set or to corresponding test set.
         output_dir (str): Directory to save CompAIRR output.
         name (str): Name of the model being evaluated or "reference".
     Returns:
         float: Jaccard similarity between the two datasets.
     """
-    dataset_name = os.path.splitext(os.path.basename(set2_path))[0]
+    dataset_name = os.path.splitext(os.path.basename(test_or_gen_file))[0]
     file_identifier = f"{dataset_name}_{name}"
     unique_sequences_path = f"{compairr_helper_dir}/{file_identifier}_unique.tsv"
     concat_sequences_path = f"{compairr_helper_dir}/{file_identifier}_concat.tsv"
     if os.path.exists(unique_sequences_path) and os.path.exists(concat_sequences_path):
         print(f"Deduplicated and merged files already exist for {file_identifier}. Skipping this step.")
     else:
-        deduplicate_and_merge_two_datasets(set1_path, set2_path, unique_sequences_path, concat_sequences_path)
+        deduplicate_and_merge_two_datasets(train_file, test_or_gen_file, unique_sequences_path, concat_sequences_path)
 
     compairr_output_dir = f"{output_dir}/compairr_output"
     run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_identifier,
@@ -123,7 +124,7 @@ def compute_jaccard_similarity(compairr_helper_dir, set1_path, set2_path, output
     return jaccard_similarity
 
 
-def plot_results(model_scores, mean_reference_score, fig_dir, file_name) -> None:
+def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str) -> None:
     """ Plot memorization scores for each model with std error bars and reference line.
     Args:
         model_scores (dict): Dictionary with model names as keys and lists of memorization scores as values.

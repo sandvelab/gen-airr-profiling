@@ -172,8 +172,8 @@ def test_get_memorization_scores_calls_compute(mocker):
     )
 
     out = get_memorization_scores(
-        ref1_file=ref_file,
-        ref2_or_gen_files=gen_files,
+        train_file=ref_file,
+        test_or_gen_files=gen_files,
         output_dir="/tmp/test_output/analysis_mem",
         name="modelX"
     )
