@@ -19,23 +19,8 @@ class MainConfig:
         self.input_dir = data.get("input_dir", None)
         self.data_generation_configs = []
         self.model_configs = []
-        # if analyses are not present in the config, we want empty list
-        self.analysis_configs = [
-            AnalysisConfig(analysis["name"], analysis["model_names"],
-                           f"{self.output_dir}/analyses/{analysis['name']}/"
-                           f"{'_'.join(m.lower() for m in analysis['model_names'])}",
-                           self.output_dir, analysis["default_model_name"], analysis.get("reference_data", None),
-                           analysis.get("n_subsets", None))
-            for analysis in data.get("analyses", [])
-        ] if data.get("analyses") else []
-
-        self.tuning_configs = [
-            TuningConfig(tuning["tuning_method"], tuning["model_names"], tuning["reference_data"],
-                         f"{self.output_dir}/tuning/{tuning['tuning_method']}/"
-                         f"{'_'.join(m.lower() for m in tuning['model_names'])}",
-                         self.output_dir)
-            for tuning in data.get("tuning", [])
-        ] if data.get("tuning") else []
+        self.analysis_configs = []
+        self.tuning_configs = []
 
         base_seed = data["seed"]
         experimental_datasets = []
@@ -75,6 +60,30 @@ class MainConfig:
                         for model_data in data["models"]]
                 )
 
+        if "analyses" in data:
+            self.analysis_configs.extend([
+                AnalysisConfig(analysis=analysis["name"],
+                               model_names=analysis["model_names"],
+                               analysis_output_dir=f"{self.output_dir}/analyses/{analysis['name']}/"
+                                                   f"{'_'.join(m.lower() for m in analysis['model_names'])}",
+                               root_output_dir=self.output_dir,
+                               default_model_name=analysis["default_model_name"],
+                               reference_data=analysis.get("reference_data", None),
+                               n_subsets=analysis.get("n_subsets", None))
+                for analysis in data.get("analyses", [])
+            ])
+
+        if "tuning" in data:
+            self.tuning_configs.extend([
+                TuningConfig(tuning_method=tuning["tuning_method"],
+                             model_names=tuning["model_names"],
+                             reference_data=tuning["reference_data"],
+                             tuning_output_dir=f"{self.output_dir}/tuning/{tuning['tuning_method']}/"
+                                               f"{'_'.join(m.lower() for m in tuning['model_names'])}",
+                             root_output_dir=self.output_dir)
+                for tuning in data.get("tuning", [])
+            ])
+
     def __repr__(self):
         return (f"MainConfig(n_experiments={self.n_experiments}, simulation_configs={self.data_generation_configs},"
-                f" training={self.model_configs})")
+                f" training={self.model_configs}, analyses={self.analysis_configs}, tuning={self.tuning_configs})")
