@@ -4,6 +4,7 @@ import yaml
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.data_generation_config import DataGenerationConfig
 from gen_airr_bm.core.model_config import ModelConfig
+from gen_airr_bm.core.tuning_config import TuningConfig
 
 
 class MainConfig:
@@ -27,6 +28,14 @@ class MainConfig:
                            analysis.get("n_subsets", None))
             for analysis in data.get("analyses", [])
         ] if data.get("analyses") else []
+
+        self.tuning_configs = [
+            TuningConfig(tuning["tuning_method"], tuning["model_names"], tuning["reference_data"],
+                         f"{self.output_dir}/tuning/{tuning['tuning_method']}/"
+                         f"{'_'.join(m.lower() for m in tuning['model_names'])}",
+                         self.output_dir)
+            for tuning in data.get("tuning", [])
+        ] if data.get("tuning") else []
 
         base_seed = data["seed"]
         experimental_datasets = []

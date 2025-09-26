@@ -63,3 +63,7 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
+tuning:
+    - tuning_method: "sequence_features"
+      model_names: [ "pwm", "vae" ]
+      reference_data: [ "train", "test" ]

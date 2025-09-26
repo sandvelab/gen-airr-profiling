@@ -5,6 +5,7 @@ from gen_airr_bm.analysis.analysis_orchestrator import AnalysisOrchestrator
 from gen_airr_bm.core.main_config import MainConfig
 from gen_airr_bm.data_processing.data_generation_orchestrator import DataGenerationOrchestrator
 from gen_airr_bm.training.training_orchestrator import TrainingOrchestrator
+from gen_airr_bm.tuning.tuning_orchestrator import TuningOrchestrator
 
 
 def run_data_generation(data_generation, orchestrator):
@@ -22,12 +23,18 @@ def run_analysis(analysis, orchestrator):
     orchestrator.run_analysis(analysis)
 
 
+def run_tuning(tuning, orchestrator):
+    print(f"Running tuning: {tuning}")
+    orchestrator.run_tuning(tuning)
+
+
 def main(config_path, break_main=False):
     config = MainConfig(config_path)
 
     data_generation_orchestrator = DataGenerationOrchestrator()
     training_orchestrator = TrainingOrchestrator()
     analysis_orchestrator = AnalysisOrchestrator()
+    tuning_orchestrator = TuningOrchestrator()
 
     if break_main:
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -44,6 +51,11 @@ def main(config_path, break_main=False):
                                   config.analysis_configs):
                 pass
 
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for _ in executor.map(lambda tuning: run_tuning(tuning, tuning_orchestrator),
+                                  config.tuning_configs):
+                pass
+
     else:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(lambda data_generation: run_data_generation(data_generation, data_generation_orchestrator),
@@ -56,6 +68,10 @@ def main(config_path, break_main=False):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.map(lambda analysis: run_analysis(analysis, analysis_orchestrator),
                          config.analysis_configs)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.map(lambda tuning: run_tuning(tuning, tuning_orchestrator),
+                         config.tuning_configs)
 
 
 if __name__ == "__main__":
