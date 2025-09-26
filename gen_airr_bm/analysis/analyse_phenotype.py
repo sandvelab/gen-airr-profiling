@@ -12,6 +12,12 @@ from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets,
 
 
 def run_phenotype_analysis(analysis_config: AnalysisConfig):
+    """ Run phenotype clustering analysis on the generated sequences of two different phenotypes.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+    Returns:
+        None
+    """
     print(f"Running phenotype analysis for {analysis_config}")
     if len(analysis_config.model_names) != 1:
         raise ValueError("Phenotype analysis only supports one model")
@@ -28,6 +34,14 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
 
 # TODO: There's a lot of file operations here, we should consider refactoring this function a bit more
 def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
+    """ Calculate the Jaccard similarities matrix between all pairs of datasets in the given directory.
+    Args:
+        sequences_dir (str): Directory containing the generated sequence datasets.
+        output_dir (str): Directory to save intermediate and final results.
+        model_name (str): Name of the model for labeling purposes.
+    Returns:
+        tuple: A tuple containing the similarities matrix (list of lists) and the list of dataset names.
+    """
     os.makedirs(output_dir, exist_ok=True)
 
     generated_datasets = os.listdir(sequences_dir)
@@ -71,6 +85,18 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
 
 
 def plot_cluster_heatmap(output_dir, similarities_matrix, model_name):
+    """ Plot a clustered heatmap of the similarities matrix using seaborn.
+    Args:
+        output_dir (str): Directory to save the heatmap plot.
+        similarities_matrix (pd.DataFrame): DataFrame containing the similarities matrix.
+        model_name (str): Name of the model for labeling purposes.
+    Returns:
+        None
+    """
+    tsv_path = f"{output_dir}/similarities_matrix.tsv"
+    if not os.path.exists(tsv_path):
+        similarities_matrix.to_csv(tsv_path, sep='\t')
+
     g = sns.clustermap(similarities_matrix, annot=True, method='average', metric='euclidean')
     g.fig.suptitle(f"Jaccard Similarity: {model_name}", fontsize=14, fontweight='bold', y=1.0)
     g.savefig(f"{output_dir}/cluster_heatmap.png")

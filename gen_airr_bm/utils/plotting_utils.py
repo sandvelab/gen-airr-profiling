@@ -8,20 +8,41 @@ import plotly.colors as pc
 
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
                     distribution_type, scoring_method="JSD"):
+    """ Plots a bar chart for mean scores across models.
+    Args:
+        mean_scores_dict: dict of {model: mean_score}
+        std_scores_dict: dict of {model: std_score}
+        output_dir: output directory
+        reference_data: string or list, used for subfolder naming
+        file_name: output file name without extension
+        distribution_type: used for titles. e.g. "connectivity"
+        scoring_method: used for titles. e.g. "JSD"
+    Returns:
+        None
+    """
     fig_dir = os.path.join(output_dir, reference_data)
     os.makedirs(fig_dir, exist_ok=True)
+    png_path = os.path.join(fig_dir, file_name) + ".png"
+    plotting_data_file = os.path.join(fig_dir, file_name) + ".tsv"
 
-    models, scores = zip(*sorted(mean_scores_dict.items(), key=lambda x: x[1], reverse=True))
-    errors = [std_scores_dict[model] for model in models]
+    plotting_df = pd.DataFrame({
+        "Model": list(mean_scores_dict.keys()),
+        "Mean_Score": list(mean_scores_dict.values()),
+        "Std_Dev": [std_scores_dict.get(m, 0) for m in mean_scores_dict]
+    })
+    plotting_df = plotting_df.sort_values("Mean_Score", ascending=False)
 
-    fig = go.Figure()
+    if not os.path.exists(plotting_data_file):
+        plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
 
-    fig.add_trace(go.Bar(
-        x=models,
-        y=scores,
-        error_y=dict(type='data', array=errors, visible=True),
-        marker=dict(color='skyblue'),
-    ))
+    fig = go.Figure(
+        go.Bar(
+            x=plotting_df["Model"],
+            y=plotting_df["Mean_Score"],
+            error_y=dict(type="data", array=plotting_df["Std_Dev"], visible=True),
+            marker=dict(color="skyblue"),
+        )
+    )
 
     fig.update_layout(
         title=f"Average {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
@@ -32,10 +53,8 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
         template="plotly_white"
     )
 
-    png_path = os.path.join(fig_dir, file_name)
     fig.write_image(png_path)
-
-    print(f"Plot saved as PNG at: {png_path}")
+    print(f"Plot saved as PNG at: {png_path}.png")
 
 
 def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, reference_data, file_name,
@@ -48,9 +67,9 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
         std_scores_by_ref: dict of {ref_label: {model: std_score}}
         output_dir: output directory
         reference_data: string or list, used for subfolder naming
-        file_name: output file name
-        distribution_type: e.g. "cdr3"
-        scoring_method: e.g. "JSD"
+        file_name: output file name without extension
+        distribution_type: used for titles. e.g. "connectivity"
+        scoring_method: used for titles. e.g. "JSD"
         reference_score: optional float, to plot a reference line
     Returns:
         None
@@ -62,20 +81,35 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
 
     fig_dir = os.path.join(output_dir, ref_folder)
     os.makedirs(fig_dir, exist_ok=True)
+    png_path = os.path.join(fig_dir, file_name) + ".png"
+    plotting_data_file = os.path.join(fig_dir, file_name) + ".tsv"
 
     all_models = sorted({model for ref_scores in mean_scores_by_ref.values() for model in ref_scores})
     all_refs = sorted(mean_scores_by_ref.keys())
 
-    data = []
-    for ref_label in all_refs:
-        means = [mean_scores_by_ref.get(ref_label, {}).get(model, None) for model in all_models]
-        stds = [std_scores_by_ref.get(ref_label, {}).get(model, 0) for model in all_models]
-        data.append(go.Bar(
-            name=ref_label.capitalize(),
-            x=all_models,
-            y=means,
-            error_y=dict(type='data', array=stds, visible=True),
-        ))
+    plotting_df = pd.DataFrame([{"Reference": ref,
+                                 "Model": model,
+                                 "Mean_Score": mean_scores_by_ref.get(ref, {}).get(model, None),
+                                 "Std_Dev": std_scores_by_ref.get(ref, {}).get(model, 0)}
+                                for ref in all_refs
+                                for model in all_models])
+
+    if not os.path.exists(plotting_data_file):
+        plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
+
+    data = [
+        go.Bar(
+            name=ref.capitalize(),
+            x=plotting_df.loc[plotting_df["Reference"] == ref, "Model"],
+            y=plotting_df.loc[plotting_df["Reference"] == ref, "Mean_Score"],
+            error_y=dict(
+                type="data",
+                array=plotting_df.loc[plotting_df["Reference"] == ref, "Std_Dev"],
+                visible=True,
+            ),
+        )
+        for ref in all_refs
+    ]
 
     fig = go.Figure(data=data)
     fig.update_layout(
@@ -99,48 +133,63 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
             annotation_position="top right"
         )
 
-    png_path = os.path.join(fig_dir, file_name)
     fig.write_image(png_path)
     print(f"Plot saved as PNG at: {png_path}")
 
 
-def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distributions, output_dir, model_name, reference_data,
-                              dataset_name):
-    """Plot histograms of the two node degree distributions in one plot (with error bars for generated)."""
-    fig_dir = os.path.join(output_dir, reference_data)
+def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_degree_distributions, output_dir,
+                             ref2_or_model_name, ref1_name, dataset_name):
+    """Plot histograms of the two node degree distributions in one plot (with error bars for generated).
+    Args:
+        ref1_node_degree_distribution: pd.Series, index=node_degree, value=count
+        ref2_or_gen_node_degree_distributions: list of pd.Series, each with index=node_degree, value=count
+        output_dir: output directory
+        ref2_or_model_name: name of the generative model or the second reference set (test)
+        ref1_name: string, used for subfolder naming (e.g. 'train')
+        dataset_name: name of the dataset
+    Returns:
+        None
+    """
+    fig_dir = os.path.join(output_dir, ref1_name)
     os.makedirs(fig_dir, exist_ok=True)
+    png_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.png"
+    tsv_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.tsv"
 
     # Normalize the reference distribution
-    ref_freq = ref_node_degree_distribution / ref_node_degree_distribution.sum()
-    ref_freq = ref_freq.rename("freq_ref").to_frame()
+    suffixes = (f"_{ref1_name}", f"_{ref2_or_model_name}")
+    ref1_freq = ref1_node_degree_distribution / ref1_node_degree_distribution.sum()
+    ref1_freq = ref1_freq.rename(f"freq{suffixes[0]}").to_frame()
 
     # Normalize and collect all generated distributions
     freq_dfs = []
-    for i, dist in enumerate(gen_node_degree_distributions):
+    for i, dist in enumerate(ref2_or_gen_node_degree_distributions):
         norm = dist / dist.sum()
         freq_dfs.append(norm.rename(f"freq_{i}").to_frame())
 
-    gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
-    gen_merged["freq_gen"] = gen_merged.mean(axis=1)
-    gen_merged["std_gen"] = gen_merged.std(axis=1)
+    ref2_or_gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
+    ref2_or_gen_merged[f"freq{suffixes[1]}"] = ref2_or_gen_merged.mean(axis=1)
+    ref2_or_gen_merged[f"std{suffixes[1]}"] = ref2_or_gen_merged.std(axis=1)
 
-    merged_df = pd.merge(ref_freq, gen_merged[["freq_gen", "std_gen"]], left_index=True, right_index=True, how='outer').fillna(0)
+    merged_df = pd.merge(ref1_freq, ref2_or_gen_merged[[f"freq{suffixes[1]}", f"std{suffixes[1]}"]], left_index=True,
+                         right_index=True, how='outer').fillna(0)
     merged_df = merged_df.sort_index()
+    if not os.path.exists(tsv_path):
+        merged_df.to_csv(tsv_path, sep='\t')
 
     fig = go.Figure()
 
     fig.add_trace(go.Bar(
         x=merged_df.index,
-        y=merged_df["freq_gen"],
-        name=model_name,
+        y=merged_df[f"freq{suffixes[1]}"],
+        name=ref2_or_model_name,
         marker=dict(color='skyblue'),
-        error_y=dict(type='data', array=merged_df["std_gen"], visible=True)
+        error_y=dict(type='data', array=merged_df[f"std{suffixes[1]}"], visible=True)
     ))
 
     fig.add_trace(go.Bar(
         x=merged_df.index,
-        y=merged_df["freq_ref"],
-        name=reference_data,
+        y=merged_df[f"freq{suffixes[0]}"],
+        name=ref1_name,
         marker=dict(color='orange')
     ))
 
@@ -152,9 +201,7 @@ def plot_degree_distribution(ref_node_degree_distribution, gen_node_degree_distr
         barmode="group"
     )
 
-    png_path = f"{fig_dir}/histogram_{dataset_name}_{model_name}_{reference_data}.png"
     fig.write_image(png_path)
-
     print(f"Plot saved as PNG at: {png_path}")
 
 
@@ -313,6 +360,10 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
         Recall_mean=('Recall', 'mean'),
         Recall_std=('Recall', 'std')
     ).reset_index()
+
+    plotting_data_file = os.path.join(fig_dir, "precision_recall_data.tsv")
+    if not os.path.exists(plotting_data_file):
+        grouped.to_csv(plotting_data_file, sep="\t", index=False)
 
     # Calculate average precision for each model across all datasets
     model_avg_precision = df.groupby('Model')['Precision'].mean().sort_values(ascending=False)

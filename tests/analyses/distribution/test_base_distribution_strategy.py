@@ -75,5 +75,5 @@ def test_plot_scores_calls_plot_jsd_scores(mocker):
     assert args[1] == std_scores
     assert args[2] == "output/analysis"
     assert args[3] == "ref"
-    assert args[4] == "dummy.png"
+    assert args[4] == "dummy"
     assert args[5] == "dummy"

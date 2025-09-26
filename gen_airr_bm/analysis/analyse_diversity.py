@@ -30,7 +30,7 @@ def run_diversity_analysis(analysis_config: AnalysisConfig) -> None:
 
     for metric_name, diversity_function in diversity_metrics.items():
         output_path = (f"{analysis_config.analysis_output_dir}/diversity_scores_"
-                       f"{metric_name.lower().replace(' ', '_')}.png")
+                       f"{metric_name.lower().replace(' ', '_')}")
         compute_and_plot_diversity_scores(analysis_config, reference_dirs, output_path,
                                           diversity_function, metric_name)
 
@@ -182,7 +182,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     Args:
         reference_diversities (dict): Dictionary with reference dataset names and their diversity scores.
         models_diversities (dict): Dictionary with model names and their diversity scores.
-        output_path (str): Path to save the output plot.
+        output_path (str): Path to save the output plot and plotting data.
         metric_name (str): Name of the metric for labeling the plot.
     Returns:
         None
@@ -198,6 +198,8 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
             data.append({"dataset": dataset, metric_name.lower(): value, "source": model_name})
 
     df = pd.DataFrame(data)
+    if not os.path.exists(output_path + ".tsv"):
+        df.to_csv(os.path.join(output_path) + ".tsv", sep="\t", index=False)
 
     fig = px.scatter(
         df,
@@ -212,4 +214,4 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     fig.update_traces(marker=dict(size=10, opacity=0.8), selector=dict(mode='markers'))
     fig.update_layout(legend_title_text="Dataset", xaxis_title="Source", yaxis_title=metric_name)
 
-    fig.write_image(output_path)
+    fig.write_image(output_path + ".png")

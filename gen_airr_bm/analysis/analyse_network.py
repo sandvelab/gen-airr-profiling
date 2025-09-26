@@ -58,7 +58,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
                     get_connectivity_distributions_by_dataset(ref_file, gen_files, compairr_helper_dir,
                                                               compairr_output_dir, model_name, reference,
                                                               analysis_config.analysis_output_dir))
-                divergence_scores = calculate_divergence_scores(ref_degree_dist, gen_degree_dists)
+                divergence_scores = calculate_divergence_scores(ref_degree_dist, gen_degree_dists, reference, model_name)
                 divergence_scores_all[reference][dataset_name][model_name].extend(divergence_scores)
 
         for dataset_name, divergence_scores in divergence_scores_all[reference].items():
@@ -74,7 +74,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
 
 def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files: list[str], helper_dir: str,
-                                              output_dir: str, model: str, reference: str, analysis_output_dir: str) -> (
+                                              output_dir: str, name: str, reference: str, analysis_output_dir: str) -> (
         tuple)[str, pd.Series, list[pd.Series]]:
     """ For a given dataset, this function computes connectivity distributions of reference set 1 (train or test) and
     either reference set 2 (test) or model generated sets. Connectivity distributions are then plotted as histograms.
@@ -83,8 +83,8 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
         ref2_or_gen_files (list[str]): List of one test file or list of generated sequence files.
         helper_dir (str): Directory for Compairr helper files.
         output_dir (str): Directory for Compairr output files.
-        model (str): Model name used for analysis.
         reference (str): Reference data identifier (train or test).
+        name (str): Name of generative model or name of second reference set.
         analysis_output_dir (str): Directory to save output plots.
     Returns:
         tuple: Dataset name, reference1 degree distribution, list of reference 2 or generated degree distributions.
@@ -92,35 +92,37 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
     dataset_name = os.path.splitext(os.path.basename(ref1_file))[0]
 
     ref1_degree_dist, ref2_or_gen_degree_dists = get_node_degree_distributions(ref1_file, ref2_or_gen_files, helper_dir,
-                                                                               output_dir, model, reference)
+                                                                               output_dir, name, reference)
 
-    plot_degree_distribution(ref1_degree_dist, ref2_or_gen_degree_dists, analysis_output_dir, model, reference,
+    plot_degree_distribution(ref1_degree_dist, ref2_or_gen_degree_dists, analysis_output_dir, name, reference,
                              dataset_name)
 
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
 
 
-def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series]) -> (
-        list)[float]:
+def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series],
+                                dist1_name: str, dist2_name: str) -> list[float]:
     """ Calculate divergence scores (JSD) between reference set 1 (train or test) and generated degree distributions or
     between reference set 1 (train) and reference set 2 (test) degree distributions.
     Args:
         ref1_degree_dist (pd.Series): Node degree distribution for reference sequences. Either train or test sequences.
         ref2_or_gen_degree_dists (list[pd.Series]): List of node degree distributions for reference set 2 or generated
         sequences.
+        dist1_name (str): Name of the first distribution.
+        dist2_name (str): Name of the second distribution.
     Returns:
         list: List of divergence scores (JSD) for each generated distribution compared to the reference or list or one
         score for one reference set 1 distribution (train) compared to corresponding reference set 2 distribution (test).
     """
     divergence_scores = []
     for dist in ref2_or_gen_degree_dists:
-        jsd_score = calculate_jsd(dist, ref1_degree_dist)
+        jsd_score = calculate_jsd(dist, ref1_degree_dist, dist2_name, dist1_name)
         divergence_scores.extend(jsd_score)
     return divergence_scores
 
 
 def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compairr_output_helper_dir: str,
-                                  compairr_output_dir: str, model: str, dataset_split: str) -> tuple:
+                                  compairr_output_dir: str, name: str, dataset_split: str) -> tuple:
     """
     Compute node degree distributions for reference set 1 (train or test) and the corresponding generated files or
     reference set 2 (test).
@@ -129,7 +131,7 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
         ref2_or_gen_files (list): List of generated sequence files or list of one corresponding test file.
         compairr_output_helper_dir (str): Directory for Compairr helper files.
         compairr_output_dir (str): Directory for Compairr output files.
-        model (str): Model name used for analysis.
+        name (str): Name of generative model or name of second reference set.
         dataset_split (str): Reference data identifier (train or test).
     Returns:
         tuple: Reference1 node degree distribution and list of generated node degree distributions or list of one
@@ -137,7 +139,7 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
     """
     ref2_or_gen_degree_dists = []
     for file in ref2_or_gen_files:
-        connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, model)
+        connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, name)
         degree_dist = get_node_degree_from_compairr_output(connectivity)
         ref2_or_gen_degree_dists.append(degree_dist)
 
@@ -165,7 +167,8 @@ def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compair
             get_connectivity_distributions_by_dataset(train_file, [test_file], compairr_output_helper_dir,
                                                       compairr_output_dir, DatasetSplit.TEST.value,
                                                       DatasetSplit.TRAIN.value, analysis_config.analysis_output_dir))
-        divergence_scores = calculate_divergence_scores(train_node_degree, test_node_degree)
+        divergence_scores = calculate_divergence_scores(train_node_degree, test_node_degree, DatasetSplit.TRAIN.value,
+                                                        DatasetSplit.TEST.value)
         ref_scores.extend(divergence_scores)
     mean_ref_divergence_score = np.mean(ref_scores)
 
@@ -220,20 +223,23 @@ def get_node_degree_from_compairr_output(compairr_result: pd.DataFrame) -> pd.Se
     return node_degree_distribution
 
 
-def calculate_jsd(gen_node_degree_distribution: pd.Series, ref_node_degree_distribution: pd.Series) -> list:
+def calculate_jsd(node_degree_dist1: pd.Series, node_degree_dist2: pd.Series, dist1_name: str, dist2_name: str) -> list:
     """Compute divergence between two node degree distributions.
     Args:
-        gen_node_degree_distribution (pd.Series): Node degree distribution for generated sequences.
-        ref_node_degree_distribution (pd.Series): Node degree distribution for reference sequences (test or train).
+        node_degree_dist1 (pd.Series): Node degree distribution for set 1.
+        node_degree_dist2 (pd.Series): Node degree distribution for set 2.
+        dist1_name (str): Name of the first distribution.
+        dist2_name (str): Name of the second distribution.
     Returns:
         list: List containing Jensen-Shannon divergence score.
         """
-    merged_df = pd.merge(gen_node_degree_distribution, ref_node_degree_distribution, how='outer',
-                         suffixes=('_gen', '_ref'),
+    suffixes = (f"_{dist1_name}", f"_{dist2_name}")
+    merged_df = pd.merge(node_degree_dist1, node_degree_dist2, how='outer',
+                         suffixes=suffixes,
                          left_index=True, right_index=True).fillna(0)
 
-    p = merged_df['count_gen'] / merged_df['count_gen'].sum()
-    q = merged_df['count_ref'] / merged_df['count_ref'].sum()
+    p = merged_df[f'count{suffixes[0]}'] / merged_df[f'count{suffixes[0]}'].sum()
+    q = merged_df[f'count{suffixes[1]}'] / merged_df[f'count{suffixes[1]}'].sum()
 
     jsd = jensenshannon(p, q, base=2)
 
@@ -260,7 +266,7 @@ def summarize_and_plot_dataset_connectivity(dataset_name: str, divergence_scores
         output_dir=output_dir,
         reference_data=reference,
         distribution_type="connectivity",
-        file_name=f"{dataset_name}_connectivity.png",
+        file_name=f"{dataset_name}_connectivity",
     )
 
 
@@ -289,7 +295,7 @@ def summarize_and_plot_all(divergence_scores_all: dict[str, dict[str, dict[str, 
         output_dir=output_dir,
         reference_data=reference_datasets,
         distribution_type="connectivity",
-        file_name="all_datasets_connectivity.png",
+        file_name="all_datasets_connectivity",
         scoring_method="JSD",
         reference_score=mean_reference_score
     )
