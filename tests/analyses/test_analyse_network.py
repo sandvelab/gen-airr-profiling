@@ -30,8 +30,7 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_root",
         default_model_name="humanTRB",
         reference_data=["train", "test"],
-        n_subsets=5,
-        n_unique_samples=10
+        n_subsets=5
     )
 
 
@@ -108,7 +107,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     mock_gcd.side_effect = gcd_side_effect
 
     # calculate_divergence_scores_per_dataset must accept (pd.Series, list[pd.Series]) and return list[float]
-    def calc_div_side_effect(ref_dd, gen_dds):
+    def calc_div_side_effect(ref_dd, gen_dds, ref_name="ref", gen_name="gen"):
         assert ref_dd is ref_degree_dist
         assert gen_dds == gen_degree_dists
         return [0.1, 0.2]
@@ -215,7 +214,7 @@ def test_calculate_divergence_scores(mocker):
         pd.Series([2, 2], index=[0, 1])
     ]
 
-    scores = calculate_divergence_scores(ref_dist, gen_dists)
+    scores = calculate_divergence_scores(ref_dist, gen_dists, dist1_name="ref", dist2_name="gen")
 
     assert scores == [0.1, 0.3, 0.2]
     assert mock_calc_jsd.call_count == 3
@@ -388,7 +387,7 @@ def test_calculate_jsd_identical_distributions():
     dist1 = pd.Series([2, 1], index=[0, 1], name='count')
     dist2 = pd.Series([2, 1], index=[0, 1], name='count')
 
-    result = calculate_jsd(dist1, dist2)
+    result = calculate_jsd(dist1, dist2, dist1_name="dist1", dist2_name="dist2")
 
     assert len(result) == 1
     assert result[0] == pytest.approx(0.0, abs=1e-10)
@@ -399,7 +398,7 @@ def test_calculate_jsd_different_distributions():
     dist1 = pd.Series([3, 0], index=[0, 1], name='count')
     dist2 = pd.Series([0, 3], index=[0, 1], name='count')
 
-    result = calculate_jsd(dist1, dist2)
+    result = calculate_jsd(dist1, dist2, dist1_name="dist1", dist2_name="dist2")
 
     assert len(result) == 1
     assert 0 < result[0] <= 1  # JSD should be between 0 and 1
@@ -410,7 +409,7 @@ def test_calculate_jsd_different_indices():
     dist1 = pd.Series([2], index=[0], name='count')
     dist2 = pd.Series([2], index=[1], name='count')
 
-    result = calculate_jsd(dist1, dist2)
+    result = calculate_jsd(dist1, dist2, dist1_name="dist1", dist2_name="dist2")
 
     assert len(result) == 1
     assert 0 < result[0] <= 1
@@ -421,7 +420,7 @@ def test_calculate_jsd_empty_distributions():
     dist1 = pd.Series([], dtype=int, name='count')
     dist2 = pd.Series([], dtype=int, name='count')
 
-    result = calculate_jsd(dist1, dist2)
+    result = calculate_jsd(dist1, dist2, dist1_name="dist1", dist2_name="dist2")
 
     assert len(result) == 1
     # JSD of empty distributions should be NaN or 0
@@ -451,7 +450,7 @@ def test_summarize_and_plot_dataset_connectivity(mocker):
         output_dir="/tmp/output",
         reference_data="test",
         distribution_type="connectivity",
-        file_name="test_dataset_connectivity.png",
+        file_name="test_dataset_connectivity",
     )
 
 
@@ -507,7 +506,7 @@ def test_summarize_and_plot_all(mocker):
     assert kwargs["output_dir"] == output_dir
     assert kwargs["reference_data"] == reference_datasets
     assert kwargs["distribution_type"] == "connectivity"
-    assert kwargs["file_name"] == "all_datasets_connectivity.png"
+    assert kwargs["file_name"] == "all_datasets_connectivity"
     assert kwargs["scoring_method"] == "JSD"
     assert kwargs["reference_score"] == mean_reference_score
 

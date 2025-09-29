@@ -20,8 +20,7 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_output",
         default_model_name="humanTRB",
         reference_data=["test"],
-        n_subsets=5,
-        n_unique_samples=10
+        n_subsets=5
     )
 
 
@@ -229,7 +228,7 @@ def test_gini_coefficient_variations(sequences, expected_gini):
     assert pytest.approx(result, rel=1e-9) == expected_gini
 
 
-def test_plot_diversity_scatter_plotly(mocker):
+def test_plot_diversity_scatter_plotly(mocker, tmp_path):
     mock_fig = mocker.Mock()
     mock_px_scatter = mocker.patch("gen_airr_bm.analysis.analyse_diversity.px.scatter", return_value=mock_fig)
 
@@ -239,7 +238,7 @@ def test_plot_diversity_scatter_plotly(mocker):
     models_diversities = {
         "modelA": {"ds1": 0.15, "ds2": 0.25}
     }
-    output_path = "/fake/output/path.png"
+    output_path = str(tmp_path / "path")
     metric_name = "Gini Coefficient"
 
     plot_diversity_scatter_plotly(reference_diversities, models_diversities, output_path, metric_name)
@@ -257,4 +256,4 @@ def test_plot_diversity_scatter_plotly(mocker):
         expected_df.sort_values(by=["source", "dataset"]).reset_index(drop=True)
     )
 
-    mock_fig.write_image.assert_called_once_with(output_path)
+    mock_fig.write_image.assert_called_once_with(output_path + ".png")

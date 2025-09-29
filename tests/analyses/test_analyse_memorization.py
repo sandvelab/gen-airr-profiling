@@ -5,7 +5,7 @@ import pytest
 from gen_airr_bm.analysis.analyse_memorization import (
     run_memorization_analysis,
     get_model_memorization_scores,
-    get_reference_memorization_score,
+    get_mean_reference_memorization_score,
     get_memorization_scores,
     plot_results,
 )
@@ -21,8 +21,7 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_output",
         default_model_name="humanTRB",
         reference_data=["train", "test"],
-        n_subsets=5,
-        n_unique_samples=10
+        n_subsets=5
     )
 
 
@@ -34,7 +33,7 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
         return_value={"model1": [0.1, 0.2], "model2": [0.3]}
     )
     mock_get_reference_score = mocker.patch(
-        "gen_airr_bm.analysis.analyse_memorization.get_reference_memorization_score",
+        "gen_airr_bm.analysis.analyse_memorization.get_mean_reference_memorization_score",
         return_value=0.123
     )
     mock_plot_results = mocker.patch(
@@ -59,7 +58,7 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
         {"model1": [0.1, 0.2], "model2": [0.3]},
         0.123,
         "/tmp/test_output/analysis_mem",
-        "memorization.png"
+        "memorization"
     )
 
 
@@ -141,7 +140,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
         side_effect=seq
     )
 
-    mean_score = get_reference_memorization_score(
+    mean_score = get_mean_reference_memorization_score(
         analysis_config=sample_analysis_config,
         output_dir="/tmp/test_output/analysis_mem"
     )
@@ -150,7 +149,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     assert mock_get_mem_scores.call_count == len(file_pairs)
     for i, (train_f, test_f) in enumerate(file_pairs):
         assert mock_get_mem_scores.call_args_list[i].args == (
-            train_f, test_f, "/tmp/test_output/analysis_mem", "reference"
+            train_f, [test_f], "/tmp/test_output/analysis_mem", "reference"
         )
 
     # Expected mean of the first (and only) elements per pair
@@ -172,10 +171,10 @@ def test_get_memorization_scores_calls_compute(mocker):
     )
 
     out = get_memorization_scores(
-        ref_file=ref_file,
-        gen_files=gen_files,
+        train_file=ref_file,
+        test_or_gen_files=gen_files,
         output_dir="/tmp/test_output/analysis_mem",
-        model_name="modelX"
+        name="modelX"
     )
 
     # Helper dir created
@@ -207,7 +206,7 @@ def test_plot_results(mocker):
     }
     mean_reference_score = 0.42
     fig_dir = "/tmp/out/mem"
-    file_name = "mem_plot.png"
+    file_name = "mem_plot"
 
     # Execute
     plot_results(model_scores, mean_reference_score, fig_dir, file_name)
@@ -247,4 +246,4 @@ def test_plot_results(mocker):
     assert f"{mean_reference_score:.3f}" in hline_kwargs["annotation_text"]
 
     # Saved to correct path
-    mock_fig.write_image.assert_called_once_with(os.path.join(fig_dir, file_name))
+    mock_fig.write_image.assert_called_once_with(os.path.join(fig_dir, file_name + ".png"))

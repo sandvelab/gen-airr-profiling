@@ -23,8 +23,7 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_output",
         default_model_name="humanTRB",
         reference_data=["train", "test"],  # include both for upper reference
-        n_subsets=3,
-        n_unique_samples=10,
+        n_subsets=3
     )
 
 

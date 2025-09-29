@@ -164,22 +164,22 @@ def get_precision_recall_reference(train_file, test_file, compairr_output_dir) -
     return precision, recall
 
 
-def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, compairr_output_dir: str, model_name: str,
+def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, compairr_output_dir: str, name: str,
                                    metric: str) -> float:
     """ Compute the overlap ratio between two sequence sets using CompAIRR for precision or recall.
     Args:
         search_for_file (str): Path to the file of sequences for which to search for existence in another sequence set.
         search_in_file (str): Path to the file to search for existence in.
         compairr_output_dir (str): Directory to store CompAIRR output files.
-        model_name (str): Name of the model used for generation, or "upper_reference" for the upper reference.
+        name (str): Name of the model used for generation, or "upper_reference" for the upper reference.
         metric (str): Metric type, either "precision" or "recall".
     Returns:
         float: Ratio of non-zero overlap counts to total counts.
     """
     if metric == "precision":
-        file_name = f"{os.path.splitext(os.path.basename(search_for_file))[0]}_{model_name}_{metric}"
+        file_name = f"{os.path.splitext(os.path.basename(search_for_file))[0]}_{name}_{metric}"
     else:
-        file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{model_name}_{metric}"
+        file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{name}_{metric}"
 
     run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name, allowed_mismatches=1,
                            indels=True)
@@ -204,12 +204,12 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
     for dataset in scores.mean_precision:
         plot_avg_scores(scores.mean_precision[dataset], scores.std_precision[dataset],
                         analysis_config.analysis_output_dir, "precision",
-                        f"{dataset}_precision.png", "precision",
+                        f"{dataset}_precision", "precision",
                         scoring_method="precision")
 
         plot_avg_scores(scores.mean_recall[dataset], scores.std_recall[dataset],
                         analysis_config.analysis_output_dir, "recall",
-                        f"{dataset}_recall.png", "recall",
+                        f"{dataset}_recall", "recall",
                         scoring_method="recall")
 
     plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,
