@@ -152,7 +152,8 @@ class TrainingOrchestrator:
             model_config.n_subset_samples
         )
 
-    def run_training(self, model_config: ModelConfig, output_dir: str) -> None:
+    @staticmethod
+    def run_training(model_config: ModelConfig, output_dir: str) -> None:
         """Runs immuneML training for model in the config.
         Args:
             model_config (ModelConfig): Configuration for the model training.
@@ -168,12 +169,12 @@ class TrainingOrchestrator:
 
             immuneml_output_dir = Path(model_config.output_dir) / model_config.name / train_data_file_name
             train_data_full_path = train_data_dir / train_data_file
-            model_config.locus = self.get_default_locus_name(str(train_data_full_path))
+            model_config.locus = TrainingOrchestrator.get_default_locus_name(str(train_data_full_path))
 
-            self.save_train_data(model_config, output_dir, str(train_data_full_path), train_data_file_name)
-            self.save_test_data(model_config, output_dir)
+            TrainingOrchestrator.save_train_data(model_config, output_dir, str(train_data_full_path), train_data_file_name)
+            TrainingOrchestrator.save_test_data(model_config, output_dir)
 
             immuneml_output_dir.mkdir(parents=True, exist_ok=True)
-            self.run_single_training(model_config.config, str(train_data_full_path), str(immuneml_output_dir),
+            TrainingOrchestrator.run_single_training(model_config.config, str(train_data_full_path), str(immuneml_output_dir),
                                      model_config.locus)
-            self.save_generated_sequences(model_config, output_dir, str(immuneml_output_dir), train_data_file_name)
+            TrainingOrchestrator.save_generated_sequences(model_config, output_dir, str(immuneml_output_dir), train_data_file_name)
