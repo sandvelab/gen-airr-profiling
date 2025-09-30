@@ -57,7 +57,7 @@ class MainConfig:
                 self.model_configs.extend(
                     [ModelConfig(
                         name=model_data["name"],
-                        config=model_data["config"],
+                        immuneml_model_config=model_data["immuneml_model_config"],
                         experiment=exp_idx,
                         train_dir=model_data.get("train_dir", ""),
                         test_dir=model_data.get("test_dir", None),

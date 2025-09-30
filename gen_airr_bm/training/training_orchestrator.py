@@ -156,7 +156,7 @@ class TrainingOrchestrator:
             immuneml_output_dir = Path(model_config.output_dir) / model_config.name / ref_data_file_name
             immuneml_output_dir.mkdir(parents=True, exist_ok=True)
 
-            TrainingOrchestrator.run_single_training(model_config.config, str(train_data_full_path),
+            TrainingOrchestrator.run_single_training(model_config.immuneml_model_config, str(train_data_full_path),
                                                      str(immuneml_output_dir),
                                                      model_config.locus)
             TrainingOrchestrator.save_generated_sequences(model_config, output_dir, str(immuneml_output_dir),

@@ -15,7 +15,7 @@ def make_model_config(tmp_path, **overrides):
         test_dir="test_in",
         name="modelX",
         n_subset_samples=3,
-        config="immuneml_model_config.yaml",
+        immuneml_model_config="immuneml_model_config.yaml",
         train_dir="train_in",
         locus=None,
     )
