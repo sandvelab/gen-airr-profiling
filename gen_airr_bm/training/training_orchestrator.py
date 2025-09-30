@@ -131,7 +131,7 @@ class TrainingOrchestrator:
 
     @staticmethod
     def run_training(model_config: ModelConfig, output_dir: str) -> None:
-        """Runs immuneML training for model in the config.
+        """Runs ImmuneML training and handles data saving and preprocessing for CompAIRR.
         Args:
             model_config (ModelConfig): Configuration for the model training.
             output_dir (str): Directory to save the output.
