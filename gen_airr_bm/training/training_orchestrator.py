@@ -110,8 +110,8 @@ class TrainingOrchestrator:
 
             for test_data_file in test_data_files:
                 test_data_src = test_data_dir / test_data_file
-                train_data_dst = test_out_dir / f"{Path(test_data_file).stem}_{model_config.experiment}.tsv"
-                os.system(f"cp -n {test_data_src} {train_data_dst}")
+                test_data_dst = test_out_dir / f"{Path(test_data_file).stem}_{model_config.experiment}.tsv"
+                os.system(f"cp -n {test_data_src} {test_data_dst}")
 
             compairr_test_dir = Path(output_dir) / "test_compairr_sequences"
             preprocess_files_for_compairr(str(test_out_dir), str(compairr_test_dir))
