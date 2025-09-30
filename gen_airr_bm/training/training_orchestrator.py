@@ -107,10 +107,11 @@ class TrainingOrchestrator:
         # Immuneml saves generated sequences in a specific directory structure
         immuneml_generated_sequences_dir = Path(immuneml_output_dir) / "immuneml/gen_model/generated_sequences/model"
         # Generated sequences files might have different names, so we need to find the correct one
-        immuneml_generated_sequences_file = [
+        (immuneml_generated_sequences_file,) = [
             f for f in os.listdir(immuneml_generated_sequences_dir)
             if f.endswith(".tsv") and (immuneml_generated_sequences_dir / f).is_file()
-        ][0]
+        ]
+
         generated_sequences_dir = Path(output_dir) / "generated_sequences" / model_config.name
         generated_sequences_dir.mkdir(parents=True, exist_ok=True)
 
