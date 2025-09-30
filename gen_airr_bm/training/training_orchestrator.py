@@ -81,14 +81,14 @@ class TrainingOrchestrator:
         Returns:
             None
         """
-        train_dir_dst = Path(output_dir) / "train_sequences"
-        train_dir_dst.mkdir(parents=True, exist_ok=True)
+        train_data_dir_dst = Path(output_dir) / "train_sequences"
+        train_data_dir_dst.mkdir(parents=True, exist_ok=True)
 
-        train_data_dst = train_dir_dst / f"{train_data_file_name}_{model_config.experiment}.tsv"
-        os.system(f"cp -n {train_data_full_path} {train_data_dst}")
+        train_data_file_dst = train_data_dir_dst / f"{train_data_file_name}_{model_config.experiment}.tsv"
+        os.system(f"cp -n {train_data_full_path} {train_data_file_dst}")
 
         compairr_train_dir = Path(output_dir) / "train_compairr_sequences"
-        preprocess_files_for_compairr(str(train_dir_dst), str(compairr_train_dir))
+        preprocess_files_for_compairr(str(train_data_dir_dst), str(compairr_train_dir))
 
     # TODO: If we decide to always have one test set, we can remove the if condition here and merge this function
     #  with the train data saving.
@@ -102,19 +102,19 @@ class TrainingOrchestrator:
             None
         """
         if model_config.test_dir:
-            test_out_dir = Path(output_dir) / "test_sequences"
-            test_out_dir.mkdir(parents=True, exist_ok=True)
+            test_data_dir_dst = Path(output_dir) / "test_sequences"
+            test_data_dir_dst.mkdir(parents=True, exist_ok=True)
 
             test_data_dir = Path(model_config.output_dir) / model_config.test_dir
             test_data_files = [f for f in os.listdir(test_data_dir) if (test_data_dir / f).is_file()]
 
             for test_data_file in test_data_files:
-                test_data_src = test_data_dir / test_data_file
-                test_data_dst = test_out_dir / f"{Path(test_data_file).stem}_{model_config.experiment}.tsv"
-                os.system(f"cp -n {test_data_src} {test_data_dst}")
+                test_data_file_path_src = test_data_dir / test_data_file
+                test_data_file_path_dst = test_data_dir_dst / f"{Path(test_data_file).stem}_{model_config.experiment}.tsv"
+                os.system(f"cp -n {test_data_file_path_src} {test_data_file_path_dst}")
 
             compairr_test_dir = Path(output_dir) / "test_compairr_sequences"
-            preprocess_files_for_compairr(str(test_out_dir), str(compairr_test_dir))
+            preprocess_files_for_compairr(str(test_data_dir_dst), str(compairr_test_dir))
 
     @staticmethod
     def save_generated_sequences(model_config: ModelConfig, output_dir: str, immuneml_output_dir: str,
@@ -138,9 +138,9 @@ class TrainingOrchestrator:
         generated_sequences_dir = Path(output_dir) / "generated_sequences" / model_config.name
         generated_sequences_dir.mkdir(parents=True, exist_ok=True)
 
-        gen_data_src = immuneml_generated_sequences_dir / immuneml_generated_sequences_file
-        gen_data_dst = generated_sequences_dir / f"{train_data_file_name}_{model_config.experiment}.tsv"
-        os.system(f"cp -n {gen_data_src} {gen_data_dst}")
+        gen_data_file_path_src = immuneml_generated_sequences_dir / immuneml_generated_sequences_file
+        gen_data_file_path_dst = generated_sequences_dir / f"{train_data_file_name}_{model_config.experiment}.tsv"
+        os.system(f"cp -n {gen_data_file_path_src} {gen_data_file_path_dst}")
 
         compairr_model_dir = Path(output_dir) / "generated_compairr_sequences" / model_config.name
         preprocess_files_for_compairr(str(generated_sequences_dir), str(compairr_model_dir))
