@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.model_config import ModelConfig
 from gen_airr_bm.training.immuneml_runner import run_immuneml_command, write_immuneml_config
 from gen_airr_bm.utils.compairr_utils import preprocess_files_for_compairr
@@ -70,51 +71,26 @@ class TrainingOrchestrator:
                                  sep='\t', index=False)
 
     @staticmethod
-    def save_train_data(model_config: ModelConfig, output_dir: str, train_data_full_path: str,
-                        train_data_file_name: str) -> None:
-        """Saves the training data to the output directory and preprocesses it for CompAIRR.
+    def save_ref_data(model_config: ModelConfig, output_dir: str, ref_data_full_path: str,
+                      ref_data_file_name: str, ref_name: DatasetSplit) -> None:
+        """Saves the reference data (test or train) to the output directory and preprocesses it for CompAIRR.
         Args:
             model_config (ModelConfig): Configuration for the model training.
             output_dir (str): Directory to save the output.
-            train_data_full_path (str): Full path to the training data file.
-            train_data_file_name (str): Filename of the training data file (without extension).
+            ref_data_full_path (str): Full path to the reference data file.
+            ref_data_file_name (str): Filename of the reference data file (without extension).
+            ref_name (DatasetSplit): Name of the reference dataset split (e.g., TRAIN, TEST).
         Returns:
             None
         """
-        train_data_dir_dst = Path(output_dir) / "train_sequences"
-        train_data_dir_dst.mkdir(parents=True, exist_ok=True)
+        ref_data_dir_dst = Path(output_dir) / f"{ref_name.value}_sequences"
+        ref_data_dir_dst.mkdir(parents=True, exist_ok=True)
 
-        train_data_file_dst = train_data_dir_dst / f"{train_data_file_name}_{model_config.experiment}.tsv"
-        os.system(f"cp -n {train_data_full_path} {train_data_file_dst}")
+        ref_data_file_dst = ref_data_dir_dst / f"{ref_data_file_name}_{model_config.experiment}.tsv"
+        os.system(f"cp -n {ref_data_full_path} {ref_data_file_dst}")
 
-        compairr_train_dir = Path(output_dir) / "train_compairr_sequences"
-        preprocess_files_for_compairr(str(train_data_dir_dst), str(compairr_train_dir))
-
-    # TODO: If we decide to always have one test set, we can remove the if condition here and merge this function
-    #  with the train data saving.
-    @staticmethod
-    def save_test_data(model_config: ModelConfig, output_dir: str) -> None:
-        """Saves the test data to the output directory and preprocesses it for CompAIRR if test_dir is specified.
-        Args:
-            model_config (ModelConfig): Configuration for the model training.
-            output_dir (str): Directory to save the output.
-        Returns:
-            None
-        """
-        if model_config.test_dir:
-            test_data_dir_dst = Path(output_dir) / "test_sequences"
-            test_data_dir_dst.mkdir(parents=True, exist_ok=True)
-
-            test_data_dir = Path(model_config.output_dir) / model_config.test_dir
-            test_data_files = [f for f in os.listdir(test_data_dir) if (test_data_dir / f).is_file()]
-
-            for test_data_file in test_data_files:
-                test_data_file_path_src = test_data_dir / test_data_file
-                test_data_file_path_dst = test_data_dir_dst / f"{Path(test_data_file).stem}_{model_config.experiment}.tsv"
-                os.system(f"cp -n {test_data_file_path_src} {test_data_file_path_dst}")
-
-            compairr_test_dir = Path(output_dir) / "test_compairr_sequences"
-            preprocess_files_for_compairr(str(test_data_dir_dst), str(compairr_test_dir))
+        compairr_ref_dir = Path(output_dir) / f"{ref_name.value}_compairr_sequences"
+        preprocess_files_for_compairr(str(ref_data_dir_dst), str(compairr_ref_dir))
 
     @staticmethod
     def save_generated_sequences(model_config: ModelConfig, output_dir: str, immuneml_output_dir: str,
@@ -162,19 +138,25 @@ class TrainingOrchestrator:
             None
         """
         train_data_dir = Path(model_config.output_dir) / model_config.train_dir
+        test_data_dir = Path(model_config.output_dir) / model_config.test_dir
         train_data_files = [f for f in os.listdir(train_data_dir) if (train_data_dir / f).is_file()]
 
-        for train_data_file in train_data_files:
-            train_data_file_name = Path(train_data_file).stem
-
-            immuneml_output_dir = Path(model_config.output_dir) / model_config.name / train_data_file_name
-            train_data_full_path = train_data_dir / train_data_file
+        for ref_data_file in train_data_files:
+            ref_data_file_name = Path(ref_data_file).stem
+            train_data_full_path = train_data_dir / ref_data_file
+            test_data_full_path = test_data_dir / ref_data_file
             model_config.locus = TrainingOrchestrator.get_default_locus_name(str(train_data_full_path))
 
-            TrainingOrchestrator.save_train_data(model_config, output_dir, str(train_data_full_path), train_data_file_name)
-            TrainingOrchestrator.save_test_data(model_config, output_dir)
+            TrainingOrchestrator.save_ref_data(model_config, output_dir, str(train_data_full_path),
+                                               ref_data_file_name, DatasetSplit.TRAIN)
+            TrainingOrchestrator.save_ref_data(model_config, output_dir, str(test_data_full_path), ref_data_file_name,
+                                               DatasetSplit.TEST)
 
+            immuneml_output_dir = Path(model_config.output_dir) / model_config.name / ref_data_file_name
             immuneml_output_dir.mkdir(parents=True, exist_ok=True)
-            TrainingOrchestrator.run_single_training(model_config.config, str(train_data_full_path), str(immuneml_output_dir),
-                                     model_config.locus)
-            TrainingOrchestrator.save_generated_sequences(model_config, output_dir, str(immuneml_output_dir), train_data_file_name)
+
+            TrainingOrchestrator.run_single_training(model_config.config, str(train_data_full_path),
+                                                     str(immuneml_output_dir),
+                                                     model_config.locus)
+            TrainingOrchestrator.save_generated_sequences(model_config, output_dir, str(immuneml_output_dir),
+                                                          ref_data_file_name)

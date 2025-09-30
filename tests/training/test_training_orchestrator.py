@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pandas as pd
 import pytest
 
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.training.training_orchestrator import TrainingOrchestrator
 
 
@@ -11,7 +12,7 @@ def make_model_config(tmp_path, **overrides):
     defaults = dict(
         experiment="expA",
         output_dir=str(tmp_path),
-        test_dir=None,
+        test_dir="test_in",
         name="modelX",
         n_subset_samples=3,
         config="cfg.yaml",
@@ -72,7 +73,7 @@ def test_divide_generated_sequences(tmp_path):
     assert sorted(p.name for p in out_dir.iterdir()) == ["gen_0.tsv", "gen_1.tsv", "gen_2.tsv"]
 
 
-def test_save_train_data(tmp_path, mocker):
+def test_save_ref_data(tmp_path, mocker):
     src = tmp_path / "in.tsv"
     src.write_text("locus\tv\nTRB\t1\n")
     model_config = make_model_config(tmp_path)
@@ -82,11 +83,12 @@ def test_save_train_data(tmp_path, mocker):
         "gen_airr_bm.training.training_orchestrator.preprocess_files_for_compairr"
     )
 
-    TrainingOrchestrator.save_train_data(
+    TrainingOrchestrator.save_ref_data(
         model_config=model_config,
         output_dir=str(tmp_path / "work"),
-        train_data_full_path=str(src),
-        train_data_file_name="trainA",
+        ref_data_full_path=str(src),
+        ref_data_file_name="trainA",
+        ref_name=DatasetSplit.TRAIN
     )
 
     dst = tmp_path / "work" / "train_sequences" / "trainA_expA.tsv"
@@ -94,36 +96,6 @@ def test_save_train_data(tmp_path, mocker):
     mock_prep.assert_called_once_with(
         str(tmp_path / "work" / "train_sequences"),
         str(tmp_path / "work" / "train_compairr_sequences"),
-    )
-
-
-def test_save_test_data(tmp_path, mocker):
-    in_dir = tmp_path / "proj" / "tests_in"
-    in_dir.mkdir(parents=True)
-    for n in ["a.tsv", "b.tsv"]:
-        (in_dir / n).write_text("locus\tv\nTRB\t1\n")
-
-    model_config = make_model_config(
-        tmp_path, output_dir=str(tmp_path / "proj"), test_dir="tests_in"
-    )
-
-    mock_system = mocker.patch.object(os, "system", return_value=0)
-    mock_prep = mocker.patch(
-        "gen_airr_bm.training.training_orchestrator.preprocess_files_for_compairr"
-    )
-
-    TrainingOrchestrator.save_test_data(
-        model_config=model_config, output_dir=str(tmp_path / "work")
-    )
-
-    test_out = tmp_path / "work" / "test_sequences"
-    # two cp calls with expected args (order not guaranteed by os.listdir)
-    expected1 = f"cp -n {in_dir / 'a.tsv'} {test_out / 'a_expA.tsv'}"
-    expected2 = f"cp -n {in_dir / 'b.tsv'} {test_out / 'b_expA.tsv'}"
-    called_cmds = [c.args[0] for c in mock_system.call_args_list]
-    assert set(called_cmds) == {expected1, expected2}
-    mock_prep.assert_called_once_with(
-        str(test_out), str(tmp_path / "work" / "test_compairr_sequences")
     )
 
 
@@ -169,7 +141,7 @@ def test_run_training(tmp_path, mocker):
     odir = tmp_path / "proj"
     train_dir = odir / "train_in"
     train_dir.mkdir(parents=True)
-    # two train files -> pipeline should run twice
+
     for n in ["A.tsv", "B.tsv"]:
         (train_dir / n).write_text("locus\tv\nTRB\t1\n")
 
@@ -178,8 +150,7 @@ def test_run_training(tmp_path, mocker):
     m_get_locus = mocker.patch.object(
         TrainingOrchestrator, "get_default_locus_name", return_value="TRB"
     )
-    m_save_train = mocker.patch.object(TrainingOrchestrator, "save_train_data")
-    m_save_test = mocker.patch.object(TrainingOrchestrator, "save_test_data")
+    m_save_ref = mocker.patch.object(TrainingOrchestrator, "save_ref_data")
     m_run_single = mocker.patch.object(TrainingOrchestrator, "run_single_training")
     m_save_gen = mocker.patch_object = mocker.patch.object(
         TrainingOrchestrator, "save_generated_sequences"
@@ -190,7 +161,6 @@ def test_run_training(tmp_path, mocker):
     )
 
     assert m_get_locus.call_count == 2
-    assert m_save_train.call_count == 2
-    assert m_save_test.call_count == 2
+    assert m_save_ref.call_count == 4
     assert m_run_single.call_count == 2
     assert m_save_gen.call_count == 2
