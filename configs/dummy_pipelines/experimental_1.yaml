@@ -10,22 +10,22 @@ data_generation:
   input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
 models:
     - name: "vae"
-      config: "configs/dummy_generative_models/SimpleVAE.yaml"
+      immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
     - name: "pwm"
-      config: "configs/dummy_generative_models/PWM.yaml"
+      immuneml_model_config: "configs/dummy_generative_models/PWM.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
     - name: "sonnia"
-      config: "configs/dummy_generative_models/SoNNia.yaml"
+      immuneml_model_config: "configs/dummy_generative_models/SoNNia.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
     - name: "lstm"
-      config: "configs/dummy_generative_models/SimpleLSTM.yaml"
+      immuneml_model_config: "configs/dummy_generative_models/SimpleLSTM.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
