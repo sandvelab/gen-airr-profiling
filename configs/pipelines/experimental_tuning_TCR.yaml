@@ -1,0 +1,107 @@
+n_experiments: 1
+output_dir: "results/tuning/TCR"
+input_dir: "data/tuning/TCR"
+seed: 42
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 22500
+  default_model_name: "humanTRB"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+models:
+    - name: "lstm_base"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/Base.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "lstm_h128_lr01_l2"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_h128_lr01_l2.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "lstm_e500_lr01"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e500_lr01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "lstm_e500_b500_t14_l2"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e500_b500_t14_l2.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "lstm_e500_b500_t08_l2"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e500_b500_t08_l2.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "lstm_e300_h128_t1_l4"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e300_h128_t1_l4.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "Akbar"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/Akbar.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "A_s"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "A_s_b500"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s_b500.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "A_s_b500_t14"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s_b500_t14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "A_s_t04"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s_t04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "A_xs_e100_b500_t08"
+      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_xs_e100_b500_t08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "lstm_base", "lstm_h128_lr01_l2", "lstm_e500_lr01", "lstm_e500_b500_t14_l2",
+                     "lstm_e500_b500_t08_l2", "lstm_e300_h128_t1_l4", "Akbar", "A_s", "A_s_b500", "A_s_b500_t14",
+                     "A_s_t04", "A_xs_e100_b500_t08" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+#    - name: "memorization"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 45
+#    - name: "diversity"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 45
+#    - name: "phenotype"
+#      model_names: ["pwm"]
+#      default_model_name: "humanTRB"
+#    - name: "phenotype"
+#      model_names: ["sonnia"]
+#      default_model_name: "humanTRB"
+#    - name: "phenotype"
+#      model_names: [ "vae" ]
+#      default_model_name: "humanTRB"
+#    - name: "network"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 45
+#    - name: "precision_recall"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 45
