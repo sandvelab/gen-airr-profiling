@@ -30,5 +30,5 @@ instructions:
     export_combined_dataset: False
     dataset: dataset
     method: model
-    gen_examples_count: 1000000
+    gen_examples_count: 140000
     number_of_processes: 1
