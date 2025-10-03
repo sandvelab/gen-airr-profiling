@@ -10,57 +10,32 @@ data_generation:
   input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 models:
     - name: "lstm_base"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/Base.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/Base.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
     - name: "lstm_h128_lr01_l2"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_h128_lr01_l2.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/B_h128_lr01_l2.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
     - name: "lstm_e500_lr01"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e500_lr01.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/B_e500_lr01.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
     - name: "lstm_e500_b500_t14_l2"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e500_b500_t14_l2.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/B_e500_b500_t14_l2.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
     - name: "lstm_e500_b500_t08_l2"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e500_b500_t08_l2.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/B_e500_b500_t08_l2.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
     - name: "lstm_e300_h128_t1_l4"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/B_e300_h128_t1_l4.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "Akbar"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/Akbar.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "A_s"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "A_s_b500"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s_b500.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "A_s_b500_t14"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s_b500_t14.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "A_s_t04"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_s_t04.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/B_e300_h128_t1_l4.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
