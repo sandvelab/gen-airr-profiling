@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from gen_airr_bm.core.tuning_config import TuningConfig
 
@@ -12,11 +13,11 @@ def validate_analyses_data(tuning_config: TuningConfig, required_analyses: list)
         list: List of validated analysis paths.
     """
     model_names = tuning_config.model_names
-    analyses_dir = os.path.join(tuning_config.root_output_dir, "analyses")
+    analyses_dir = Path(tuning_config.root_output_dir) / "analyses"
 
     validated_analyses_paths = []
     for analysis in required_analyses:
-        analysis_path = os.path.join(analyses_dir, analysis, '_'.join(model_names))
+        analysis_path = analyses_dir / analysis / '_'.join(model_names)
         if not os.path.exists(analysis_path):
             raise FileNotFoundError(f"Required analysis '{analysis}' with models {model_names} not found in "
                                     f"{analyses_dir}. Please run this analysis before tuning using method "

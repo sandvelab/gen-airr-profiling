@@ -147,6 +147,8 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
     if not os.path.exists(tsv_path):
         pd.DataFrame({"model": models, "mean_jaccard_similarity": scores, "std": errors}).to_csv(
             tsv_path, sep="\t", index=False)
+        with open(os.path.join(fig_dir, file_name) + "_mean_ref.tsv", "w") as f:
+            f.write(f"{mean_reference_score}\n")
 
     fig = go.Figure()
 

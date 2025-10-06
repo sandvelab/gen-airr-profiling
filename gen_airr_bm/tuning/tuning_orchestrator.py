@@ -1,11 +1,13 @@
 from gen_airr_bm.core.tuning_config import TuningConfig
-from gen_airr_bm.tuning.tuning_sequence_features import run_sequence_features_tuning
+from gen_airr_bm.tuning.tuning_reduced_dim import run_reduced_dim_tuning
+from gen_airr_bm.tuning.tuning_overlap import run_overlap_tuning
 
 
 class TuningOrchestrator:
     """Orchestrates which tuning method to run based on the config."""
     TUNING_METHODS = {
-        "sequence_features": run_sequence_features_tuning,
+        "reduced_dimensionality": run_reduced_dim_tuning,
+        "overlap": run_overlap_tuning
     }
 
     def run_tuning(self, tuning_config: TuningConfig):
