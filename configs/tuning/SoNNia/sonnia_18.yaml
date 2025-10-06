@@ -1,0 +1,30 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    model:
+      SoNNia:
+        batch_size: 500
+        epochs: 30
+        default_model_name: 'humanTRB'
+        deep: True
+        include_joint_genes: True
+        n_gen_seqs: 1000000
+        num_processes: 1
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: True
+    dataset: dataset
+    method: model
+    gen_examples_count: 140000
+    number_of_processes: 1
+    training_percentage: 1
