@@ -39,9 +39,9 @@ def get_overlap_results(tuning_config: TuningConfig) -> tuple[pd.DataFrame, floa
     root_output_dir = tuning_config.root_output_dir
     model_names = tuning_config.model_names
     memorization_path = Path(root_output_dir) / "analyses/memorization" / '_'.join(model_names) / "memorization"
-    memorization_df = pd.read_csv(memorization_path / ".tsv", sep="\t")
+    memorization_df = pd.read_csv(str(memorization_path) + ".tsv", sep="\t")
 
-    with open(memorization_path / "_mean_ref.tsv", "r") as f:
+    with open(str(memorization_path) + "_mean_ref.tsv", "r") as f:
         memorization_mean_ref_score = float(f.readline().strip())
 
     precision_path = glob.glob(str(root_output_dir) + "/analyses/precision_recall/" + '_'.join(model_names) +
