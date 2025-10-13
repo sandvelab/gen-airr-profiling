@@ -66,16 +66,14 @@ def compute_overlap_difference(tuning_config: TuningConfig, memorization_df, pre
 
     rows = []
     for k in tuning_config.k_values:
-        # get difference between mean memorization scores and the reference memorization score
-        abs_mem_diffs = abs(memorization_scores["mean_overlap_score"].values - memorization_mean_ref_score)
-        overlap_difference = precision_scores["Mean_Score"].values - k * abs_mem_diffs
+        memorization_scores["abs_mem_diffs"] = abs(memorization_scores["mean_overlap_score"].values - memorization_mean_ref_score)
+        overlap_difference = precision_scores["Mean_Score"].values - k * memorization_scores["abs_mem_diffs"].values
         for model, diff in zip(precision_scores["Model"].values, overlap_difference):
             rows.append({
                 "Model": model,
                 "Overlap_Difference": diff,
-                "Mean_Precision": precision_scores.loc[precision_scores["Model"] == model, "Mean_Score"].values[0],
-                "Mean_Memorization": memorization_scores.loc[memorization_scores["model"] == model,
-                                                             "mean_overlap_score"].values[0],
+                "precision": precision_scores.loc[precision_scores["Model"] == model, "Mean_Score"].values[0],
+                "abs_mem_diff": memorization_scores.loc[memorization_scores["model"] == model, "abs_mem_diffs"].values[0],
                 "k_value": k
             })
     overlap_difference_df = pd.DataFrame(rows)
@@ -94,8 +92,8 @@ def plot_overlap_results(overlap_difference_df, output_dir):
         None
     """
     scatterplot_df = overlap_difference_df.groupby("Model", as_index=False).agg({
-        "Mean_Precision": "mean",
-        "Mean_Memorization": "mean"
+        "precision": "mean",
+        "abs_mem_diff": "mean"
     })
 
     scatterplot_df["Model_Sort"] = scatterplot_df["Model"].apply(lambda x: int(x.split('_')[-1]) if '_' in x and
@@ -105,16 +103,19 @@ def plot_overlap_results(overlap_difference_df, output_dir):
 
     fig1 = px.scatter(
         scatterplot_df,
-        x="Mean_Precision",
-        y="Mean_Memorization",
+        x="precision",
+        y="abs_mem_diff",
         color="Model",
-        color_discrete_sequence=px.colors.qualitative.Light24,
+        symbol="Model",
+        color_discrete_sequence=px.colors.qualitative.Dark24,
         category_orders={"Model": model_sort},
-        title="Mean Precision vs Mean Memorization per Model"
+        title="Mean Precision vs Absolute Memorization Difference per Model"
     )
 
-    fig1.update_traces(marker=dict(size=8))
+    fig1.update_traces(marker=dict(size=6))
     fig1.update_layout(
+        width=800,
+        height=600,
         legend=dict(
             orientation="h",
             yanchor="top",
@@ -141,7 +142,7 @@ def plot_overlap_results(overlap_difference_df, output_dir):
         color="k_value",
         category_orders={"k_value": k_sorted},
         title="Overlap Score by Model and k-value",
-        hover_data=["Mean_Precision", "Mean_Memorization"]
+        hover_data=["precision", "abs_mem_diff"]
     )
 
     fig2.update_layout(
