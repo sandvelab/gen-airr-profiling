@@ -67,3 +67,7 @@ tuning:
     - tuning_method: "sequence_features"
       model_names: [ "pwm", "vae" ]
       reference_data: [ "train", "test" ]
+    - tuning_method: "overlap"
+      model_names: [ "pwm", "vae" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1]
