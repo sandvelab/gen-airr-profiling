@@ -41,7 +41,7 @@ models:
       test_dir: "test"
       n_subset_samples: 22500
     - name: "A_xs_e100_b500_t08"
-      immuneml_model_config: "configs/model_parameter_tuning/LSTM/A_xs_e100_b500_t08.yaml"
+      immuneml_model_config: "configs/tuning/LSTM/A_xs_e100_b500_t08.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
