@@ -33,7 +33,7 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: str, train_reference: str) -> dict:
-    """ Get memorization scores (Jaccard similarities) for each model.
+    """ Get memorization scores (sequence overlap) for each model.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         output_dir (str): Directory to save intermediate and final results.
@@ -52,7 +52,7 @@ def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: s
 
 
 def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, output_dir: str) -> float:
-    """ Get mean memorization score (Jaccard similarity) for the reference data.
+    """ Get mean memorization score (sequence overlap) for the reference data.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         output_dir (str): Directory to save intermediate and final results.
@@ -70,7 +70,7 @@ def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, outpu
 
 
 def get_memorization_scores(train_file: str, test_or_gen_files: list[str], output_dir: str, name: str) -> list:
-    """ Compute memorization scores (Jaccard similarities) between a train reference file and generated files or between
+    """ Compute memorization scores (sequence overlap) between a train reference file and generated files or between
     train and the corresponding test set.
     Args:
         train_file (str): Path to the train file.
@@ -78,50 +78,37 @@ def get_memorization_scores(train_file: str, test_or_gen_files: list[str], outpu
         output_dir (str): Directory to save intermediate and final results.
         name (str): Name of the model being evaluated or "reference".
     Returns:
-        list: A list of memorization scores (Jaccard similarities) for each model.
+        list: A list of memorization scores (sequence overlap) for each model.
     """
     memorization_scores = []
-    compairr_helper_dir = f"{output_dir}/compairr_helper_files"
-    os.makedirs(compairr_helper_dir, exist_ok=True)
+    compairr_output_dir = f"{output_dir}/compairr_output"
     for file in test_or_gen_files:
-        score = compute_jaccard_similarity(compairr_helper_dir, train_file, file, output_dir, name)
+        score = compute_overlap_score(train_file, file, compairr_output_dir, name)
         memorization_scores.append(score)
 
     return memorization_scores
 
 
-def compute_jaccard_similarity(compairr_helper_dir: str, train_file: str, test_or_gen_file: str, output_dir: str,
-                               name: str) -> float:
-    """ Compute Jaccard similarity between two datasets using CompAIRR.
+def compute_overlap_score(train_file: str, test_or_gen_file: str, compairr_output_dir: str, name: str) -> float:
+    """ Compute overlap score between two datasets using CompAIRR.
     Args:
-        compairr_helper_dir (str): Directory to save helper files for CompAIRR.
         train_file (str): Path to the reference train set.
         test_or_gen_file (str): Path to the model-generated set or to corresponding test set.
-        output_dir (str): Directory to save CompAIRR output.
+        compairr_output_dir (str): Directory to save CompAIRR output.
         name (str): Name of the model being evaluated or "reference".
     Returns:
-        float: Jaccard similarity between the two datasets.
+        float: Overlap score between the two datasets.
     """
     dataset_name = os.path.splitext(os.path.basename(test_or_gen_file))[0]
     file_identifier = f"{dataset_name}_{name}"
-    unique_sequences_path = f"{compairr_helper_dir}/{file_identifier}_unique.tsv"
-    concat_sequences_path = f"{compairr_helper_dir}/{file_identifier}_concat.tsv"
-    if os.path.exists(unique_sequences_path) and os.path.exists(concat_sequences_path):
-        print(f"Deduplicated and merged files already exist for {file_identifier}. Skipping this step.")
-    else:
-        deduplicate_and_merge_two_datasets(train_file, test_or_gen_file, unique_sequences_path, concat_sequences_path)
+    run_compairr_existence(compairr_output_dir, test_or_gen_file, train_file, file_identifier, allowed_mismatches=0,
+                           indels=False)
+    compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_identifier}_overlap.tsv", sep='\t',
+                                  names=['sequence_id', 'overlap_count'], header=0)
+    n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
+    ratio = n_nonzero_rows / len(compairr_result)
 
-    compairr_output_dir = f"{output_dir}/compairr_output"
-    run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_identifier,
-                           allowed_mismatches=0, indels=False)
-
-    overlap_df = pd.read_csv(f"{compairr_output_dir}/{file_identifier}_overlap.tsv", sep='\t')
-    n_nonzero_rows = overlap_df[(overlap_df['dataset_1'] != 0) & (overlap_df['dataset_2'] != 0)].shape[0]
-
-    union = pd.read_csv(unique_sequences_path, sep='\t').shape[0]
-    jaccard_similarity = n_nonzero_rows / union
-
-    return jaccard_similarity
+    return ratio
 
 
 def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str) -> None:
@@ -145,7 +132,7 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
     errors = [stds[model] for model in models]
 
     if not os.path.exists(tsv_path):
-        pd.DataFrame({"model": models, "mean_jaccard_similarity": scores, "std": errors}).to_csv(
+        pd.DataFrame({"model": models, "mean_overlap_score": scores, "std": errors}).to_csv(
             tsv_path, sep="\t", index=False)
         with open(os.path.join(fig_dir, file_name) + "_mean_ref.tsv", "w") as f:
             f.write(f"{mean_reference_score}\n")
@@ -162,7 +149,7 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
     fig.update_layout(
         title=f"Average Memorization Scores Across Models",
         xaxis_title="Models",
-        yaxis_title=f"Mean Jaccard Similarity",
+        yaxis_title=f"Mean Overlap Score",
         xaxis_tickangle=-45,
         template="plotly_white"
     )

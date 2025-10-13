@@ -166,7 +166,7 @@ def test_get_memorization_scores_calls_compute(mocker):
 
     # Return increasing scores per call
     mock_compute = mocker.patch(
-        "gen_airr_bm.analysis.analyse_memorization.compute_jaccard_similarity",
+        "gen_airr_bm.analysis.analyse_memorization.compute_overlap_score",
         side_effect=[0.11, 0.22, 0.33]
     )
 
@@ -177,16 +177,11 @@ def test_get_memorization_scores_calls_compute(mocker):
         name="modelX"
     )
 
-    # Helper dir created
-    mock_makedirs.assert_called_once()
-    helper_dir = f"/tmp/test_output/analysis_mem/compairr_helper_files"
-    assert mock_makedirs.call_args.kwargs.get("exist_ok") is True
-
-    # compute_jaccard_similarity called for each gen file
+    # compute_overlap_score called for each gen file
     assert mock_compute.call_count == len(gen_files)
     for i, gen in enumerate(gen_files):
         assert mock_compute.call_args_list[i].args == (
-            helper_dir, ref_file, gen, "/tmp/test_output/analysis_mem", "modelX"
+            ref_file, gen, "/tmp/test_output/analysis_mem/compairr_output", "modelX"
         )
 
     # Expected output
@@ -234,7 +229,7 @@ def test_plot_results(mocker):
     layout_kwargs = mock_fig.update_layout.call_args.kwargs
     assert "Average Memorization Scores Across Models" in layout_kwargs["title"]
     assert layout_kwargs["xaxis_title"] == "Models"
-    assert layout_kwargs["yaxis_title"] == "Mean Jaccard Similarity"
+    assert layout_kwargs["yaxis_title"] == "Mean Overlap Score"
     assert layout_kwargs["xaxis_tickangle"] == -45
     assert layout_kwargs["template"] == "plotly_white"
 
