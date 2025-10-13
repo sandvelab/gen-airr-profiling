@@ -81,7 +81,7 @@ class MainConfig:
                              tuning_output_dir=f"{self.output_dir}/tuning/{tuning['tuning_method']}/"
                                                f"{'_'.join(m.lower() for m in tuning['model_names'])}",
                              root_output_dir=self.output_dir,
-                             k_values=tuning["k_values"])
+                             k_values=tuning.get("k_values", None))
                 for tuning in data.get("tuning", [])
             ])
 

@@ -64,7 +64,7 @@ analyses:
       reference_data: [ "train", "test" ]
       n_subsets: 10
 tuning:
-    - tuning_method: "sequence_features"
+    - tuning_method: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       reference_data: [ "train", "test" ]
     - tuning_method: "overlap"
