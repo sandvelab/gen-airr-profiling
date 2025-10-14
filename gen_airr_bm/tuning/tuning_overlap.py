@@ -9,7 +9,7 @@ from gen_airr_bm.core.tuning_config import TuningConfig
 from gen_airr_bm.utils.tuning_utils import validate_analyses_data
 
 
-def run_overlap_tuning(tuning_config: TuningConfig):
+def run_overlap_tuning(tuning_config: TuningConfig) -> None:
     """ Runs parameter tuning by overlap with train and validation reference set.
         Args:
             tuning_config: Configuration for the tuning, including paths and model names.
@@ -22,20 +22,21 @@ def run_overlap_tuning(tuning_config: TuningConfig):
     print(f"Validated analyses for tuning: {validated_analyses_paths}")
     os.makedirs(tuning_config.tuning_output_dir, exist_ok=True)
 
-    memorization_df, memorization_mean_ref_score, precision_df = get_overlap_results(tuning_config)
+    memorization_df, memorization_mean_ref_score, precision_df, precision_mean_ref_score = get_overlap_results(tuning_config)
     overlap_difference_df = compute_overlap_difference(tuning_config, memorization_df, precision_df,
-                                                       memorization_mean_ref_score)
+                                                       memorization_mean_ref_score, precision_mean_ref_score)
 
-    plot_overlap_results(overlap_difference_df, tuning_config.tuning_output_dir)
+    plot_precision_memorization_scatter(overlap_difference_df, tuning_config.tuning_output_dir,
+                                        memorization_mean_ref_score, precision_mean_ref_score)
+    plot_tuning_score_by_k(overlap_difference_df, tuning_config.tuning_output_dir)
 
 
-def get_overlap_results(tuning_config: TuningConfig) -> tuple[pd.DataFrame, float, pd.DataFrame]:
+def get_overlap_results(tuning_config: TuningConfig) -> tuple:
     """ Collects results from memorization and precision analyses for tuning purposes.
     Args:
         tuning_config: Configuration for the tuning, including paths and model names.
     Returns:
         tuple: DataFrame of memorization results, mean reference memorization score, and DataFrame of precision results.
-
     """
     root_output_dir = tuning_config.root_output_dir
     model_names = tuning_config.model_names
@@ -45,76 +46,93 @@ def get_overlap_results(tuning_config: TuningConfig) -> tuple[pd.DataFrame, floa
     with open(str(memorization_path) + "_mean_ref.tsv", "r") as f:
         memorization_mean_ref_score = float(f.readline().strip())
 
-    precision_path = glob.glob(str(root_output_dir) + "/analyses/precision_recall/" + '_'.join(model_names) +
-                               "/precision/*.tsv")
-    precision_df = pd.read_csv(precision_path[0], sep="\t")
+    mean_precision_ref_path = glob.glob(str(root_output_dir) + "/analyses/precision_recall/" + '_'.join(model_names) +
+                                        "/test/precision_recall_data.tsv")
+    precision_df = pd.read_csv(mean_precision_ref_path[0], sep="\t")
+    precision_mean_ref_score = precision_df[precision_df["Model"] == "upper_reference"]["Precision_mean"].values[0]
 
-    return memorization_df, memorization_mean_ref_score, precision_df
+    return memorization_df, memorization_mean_ref_score, precision_df, precision_mean_ref_score
 
 
-def compute_overlap_difference(tuning_config: TuningConfig, memorization_df, precision_df, memorization_mean_ref_score):
+def compute_overlap_difference(tuning_config: TuningConfig, memorization_df: pd.DataFrame, precision_df: pd.DataFrame,
+                               memorization_mean_ref_score: float, precision_mean_ref_score: float) -> pd.DataFrame:
     """ Computes the difference between the overlap results from memorization and precision analyses.
     Args:
         tuning_config: Configuration for the tuning, including paths and model names.
         memorization_df: DataFrame containing results from memorization analysis.
         precision_df: DataFrame containing results from precision analysis.
+        memorization_mean_ref_score: Mean reference score from memorization analysis.
+        precision_mean_ref_score: Mean reference score from precision analysis.
     Returns:
         DataFrame: DataFrame containing the overlap difference.
     """
-    precision_scores = precision_df[["Model", "Mean_Score"]].sort_values(by="Model")
+    precision_scores = precision_df[precision_df[["Model", "Precision_mean"]].sort_values(by="Model")
+                                    ["Model"] != "upper_reference"]
     memorization_scores = memorization_df[["model", "mean_overlap_score"]].sort_values(by="model")
 
     rows = []
     for k in tuning_config.k_values:
-        memorization_scores["abs_mem_diffs"] = abs(memorization_scores["mean_overlap_score"].values - memorization_mean_ref_score)
-        overlap_difference = precision_scores["Mean_Score"].values - k * memorization_scores["abs_mem_diffs"].values
-        for model, diff in zip(precision_scores["Model"].values, overlap_difference):
+        abs_memorization_diff = abs(memorization_scores["mean_overlap_score"].values - memorization_mean_ref_score)
+        abs_precision_diff = abs(precision_scores["Precision_mean"].values - precision_mean_ref_score)
+        overlap_difference = 1 - (abs_precision_diff + k * abs_memorization_diff)
+        for model, score, prec, mem, abs_prec, abs_mem in zip(precision_scores["Model"].values,
+                                                              overlap_difference,
+                                                              precision_scores["Precision_mean"].values,
+                                                              memorization_scores["mean_overlap_score"].values,
+                                                              abs_precision_diff,
+                                                              abs_memorization_diff):
             rows.append({
-                "Model": model,
-                "Overlap_Difference": diff,
-                "precision": precision_scores.loc[precision_scores["Model"] == model, "Mean_Score"].values[0],
-                "abs_mem_diff": memorization_scores.loc[memorization_scores["model"] == model, "abs_mem_diffs"].values[0],
+                "model": model,
+                "overlap_difference": score,
+                "realism": prec,
+                "memorization": mem,
+                "abs_realism_diff": abs_prec,
+                "abs_memorization_diff": abs_mem,
                 "k_value": k
             })
     overlap_difference_df = pd.DataFrame(rows)
 
-    overlap_difference_path = Path(tuning_config.tuning_output_dir) / "overlap_difference.tsv"
+    overlap_difference_path = Path(tuning_config.tuning_output_dir) / "combined_overlap_scores.tsv"
     overlap_difference_df.to_csv(overlap_difference_path, sep="\t", index=False)
     return overlap_difference_df
 
 
-def plot_overlap_results(overlap_difference_df, output_dir):
-    """ Plots the overlap difference results.
+def plot_precision_memorization_scatter(overlap_difference_df: pd.DataFrame, output_dir: str,
+                                        memorization_mean_ref_score: float, precision_mean_ref_score: float) -> None:
+    """ Plots the precision and memorization scores as scatter plots.
     Args:
         overlap_difference_df: DataFrame containing the overlap difference results.
         output_dir: Directory to save the plots.
+        memorization_mean_ref_score: Mean reference score from memorization analysis.
+        precision_mean_ref_score: Mean reference score from precision analysis.
     Returns:
         None
     """
-    scatterplot_df = overlap_difference_df.groupby("Model", as_index=False).agg({
-        "precision": "mean",
-        "abs_mem_diff": "mean"
+    scatterplot_df = overlap_difference_df.groupby("model", as_index=False).agg({
+        "realism": "mean",
+        "memorization": "mean"
     })
 
-    scatterplot_df["Model_Sort"] = scatterplot_df["Model"].apply(lambda x: int(x.split('_')[-1]) if '_' in x and
+    scatterplot_df["model_sort"] = scatterplot_df["model"].apply(lambda x: int(x.split('_')[-1]) if '_' in x and
                                                                  x.split('_')[-1].isdigit() else x)
-    scatterplot_df = scatterplot_df.sort_values(by="Model_Sort")
-    model_sort = scatterplot_df["Model"].tolist()
+    scatterplot_df = scatterplot_df.sort_values(by="model_sort")
+    model_sort = scatterplot_df["model"].tolist()
 
-    fig1 = px.scatter(
+    fig = px.scatter(
         scatterplot_df,
-        x="precision",
-        y="abs_mem_diff",
-        color="Model",
-        symbol="Model",
+        x="realism",
+        y="memorization",
+        color="model",
+        symbol="model",
         color_discrete_sequence=px.colors.qualitative.Dark24,
-        category_orders={"Model": model_sort},
-        title="Mean Precision vs Absolute Memorization Difference per Model"
+        category_orders={"model": model_sort},
     )
 
-    fig1.update_traces(marker=dict(size=6))
-    fig1.update_layout(
-        width=800,
+    fig.update_traces(marker=dict(size=6))
+    fig.update_layout(
+        title={'text': f"Realism and memorization scores by model. Red dashed lines indicate reference scores.",
+               'font': {'size': 15}},
+        width=750,
         height=600,
         legend=dict(
             orientation="h",
@@ -127,29 +145,69 @@ def plot_overlap_results(overlap_difference_df, output_dir):
         margin=dict(b=120)
     )
 
-    plot1_path = Path(output_dir) / "overlap_scatter.png"
-    fig1.write_image(plot1_path)
+    fig.add_shape(
+        type="line",
+        x0=precision_mean_ref_score, x1=precision_mean_ref_score,
+        y0=scatterplot_df["memorization"].min(), y1=scatterplot_df["memorization"].max(),
+        line=dict(color="red", width=0.8, dash="dash")
+    )
 
-    overlap_difference_df["Model_Sort"] = overlap_difference_df["Model"].apply(lambda x: int(x.split('_')[-1]) if '_' in x and
-                                                                x.split('_')[-1].isdigit() else x)
-    overlap_difference_df = overlap_difference_df.sort_values(by="Model_Sort")
+    fig.add_shape(
+        type="line",
+        x0=scatterplot_df["realism"].min(), x1=scatterplot_df["realism"].max(),
+        y0=memorization_mean_ref_score, y1=memorization_mean_ref_score,
+        line=dict(color="red", width=0.8, dash="dash")
+    )
+
+    fig.add_annotation(
+        x=precision_mean_ref_score, y=scatterplot_df["memorization"].max(),
+        text=f"x = {precision_mean_ref_score:.2f}",
+        showarrow=False,
+        font=dict(color="red", size=10),
+        xshift=-30
+    )
+
+    fig.add_annotation(
+        x=scatterplot_df["realism"].min(), y=memorization_mean_ref_score,
+        text=f"y = {memorization_mean_ref_score:.2f}",
+        showarrow=False,
+        font=dict(color="red", size=10),
+        yshift=10
+    )
+
+    plot_path = Path(output_dir) / "realism_memorization_scatter.png"
+    fig.write_image(plot_path)
+
+
+def plot_tuning_score_by_k(overlap_difference_df: pd.DataFrame, output_dir: str) -> None:
+    """ Plots the overlap tuning scores by model and k-value.
+    Args:
+        overlap_difference_df: DataFrame containing the overlap difference results.
+        output_dir: Directory to save the plots.
+    Returns:
+        None
+    """
+    overlap_difference_df["model_sort"] = overlap_difference_df["model"].apply(
+        lambda x: int(x.split('_')[-1]) if '_' in x and
+                                           x.split('_')[-1].isdigit() else x)
+    overlap_difference_df = overlap_difference_df.sort_values(by="model_sort")
     overlap_difference_df["k_value"] = overlap_difference_df["k_value"].astype(str)
     k_sorted = sorted(overlap_difference_df["k_value"].unique())
-    fig2 = px.scatter(
+    fig = px.scatter(
         overlap_difference_df,
-        x="Model",
-        y="Overlap_Difference",
+        x="model",
+        y="overlap_difference",
         color="k_value",
         category_orders={"k_value": k_sorted},
         title="Overlap Score by Model and k-value",
-        hover_data=["precision", "abs_mem_diff"]
+        hover_data=["abs_realism_diff", "abs_memorization_diff"]
     )
 
-    fig2.update_layout(
+    fig.update_layout(
         xaxis_title="Model",
         yaxis_title="Overlap Score",
         legend_title="k value"
     )
 
-    plot2_path = Path(output_dir) / "overlap_difference_by_k.png"
-    fig2.write_image(plot2_path)
+    plot_path = Path(output_dir) / "overlap_score_by_k.png"
+    fig.write_image(plot_path)
