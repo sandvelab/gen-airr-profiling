@@ -77,7 +77,9 @@ def save_and_plot_summary(tuning_config: TuningConfig, summary: pd.DataFrame, be
     summary.to_csv(summary_path, sep="\t")
     print(f"Saved tuning summary for tuning method {tuning_config.tuning_method} to {summary_path}")
 
-    #color_palette = px.colors.sequential.Blues_r
+    color_palette = px.colors.qualitative.Safe
+    summary = summary.sort_values(by="Mean_Score", ascending=False)
+    summary = summary[summary["Reference"] == "validation"]
 
     fig = px.bar(
         summary,
@@ -87,12 +89,13 @@ def save_and_plot_summary(tuning_config: TuningConfig, summary: pd.DataFrame, be
         barmode="group",
         title=f"Mean JSD across reduced dimensionality methods. Best model: {best_model}",
         labels={"Mean_Score": "Mean Score", "Reference": "Dataset Type"},
-        #color_discrete_sequence=color_palette,
+        color_discrete_sequence=color_palette,
     )
 
     fig.update_layout(
         title_x=0.5,
-        yaxis_title="Mean",
+        yaxis_title="Mean JSD",
+        xaxis_title="Model",
         template="plotly_white",
         font=dict(size=11),
     )
