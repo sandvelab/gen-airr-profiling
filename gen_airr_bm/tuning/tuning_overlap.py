@@ -145,22 +145,27 @@ def plot_precision_memorization_scatter(overlap_difference_df: pd.DataFrame, out
         margin=dict(b=120)
     )
 
+    x_max = max(scatterplot_df["realism"].max(), precision_mean_ref_score)
+    y_max = max(scatterplot_df["memorization"].max(), memorization_mean_ref_score)
+    x_min = min(scatterplot_df["realism"].min(), precision_mean_ref_score)
+    y_min = min(scatterplot_df["memorization"].min(), memorization_mean_ref_score)
+
     fig.add_shape(
         type="line",
         x0=precision_mean_ref_score, x1=precision_mean_ref_score,
-        y0=scatterplot_df["memorization"].min(), y1=scatterplot_df["memorization"].max(),
+        y0=y_min, y1=y_max,
         line=dict(color="red", width=0.8, dash="dash")
     )
 
     fig.add_shape(
         type="line",
-        x0=scatterplot_df["realism"].min(), x1=scatterplot_df["realism"].max(),
+        x0=x_min, x1=x_max,
         y0=memorization_mean_ref_score, y1=memorization_mean_ref_score,
         line=dict(color="red", width=0.8, dash="dash")
     )
 
     fig.add_annotation(
-        x=precision_mean_ref_score, y=scatterplot_df["memorization"].max(),
+        x=precision_mean_ref_score, y=y_min,
         text=f"x = {precision_mean_ref_score:.2f}",
         showarrow=False,
         font=dict(color="red", size=10),
@@ -168,11 +173,12 @@ def plot_precision_memorization_scatter(overlap_difference_df: pd.DataFrame, out
     )
 
     fig.add_annotation(
-        x=scatterplot_df["realism"].min(), y=memorization_mean_ref_score,
+        x=x_min, y=memorization_mean_ref_score,
         text=f"y = {memorization_mean_ref_score:.2f}",
         showarrow=False,
         font=dict(color="red", size=10),
-        yshift=10
+        yshift=10,
+        xshift=30
     )
 
     plot_path = Path(output_dir) / "realism_memorization_scatter.png"
