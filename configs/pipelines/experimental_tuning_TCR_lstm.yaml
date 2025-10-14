@@ -118,3 +118,4 @@ tuning:
                      "lstm_e500_b500_t08_l2", "lstm_e300_h128_t1_l4", "Akbar", "A_s", "A_s_b500", "A_s_b500_t14",
                      "A_s_t04", "A_xs_e100_b500_t08" ]
       reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]

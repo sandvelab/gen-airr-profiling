@@ -1,5 +1,5 @@
-n_experiments: 2
-output_dir: "results_dummy/experimental"
+n_experiments: 1
+output_dir: "results_dummy/experimental_tuning"
 input_dir: "data/experimental/dummy"
 seed: 42
 data_generation:
@@ -8,6 +8,7 @@ data_generation:
   n_samples: 100
   default_model_name: "humanTRB"
   input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
+
 models:
     - name: "vae"
       immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
@@ -19,16 +20,7 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
-    - name: "sonnia"
-      immuneml_model_config: "configs/dummy_generative_models/SoNNia.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
-    - name: "lstm"
-      immuneml_model_config: "configs/dummy_generative_models/SimpleLSTM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
+
 analyses:
     - name: "memorization"
       model_names: [ "pwm", "vae" ]
@@ -39,27 +31,17 @@ analyses:
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
-    - name: "diversity"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
-    - name: "phenotype"
-      model_names: ["pwm"]
-      default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: ["sonnia"]
-      default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: [ "vae" ]
-      default_model_name: "humanTRB"
-    - name: "network"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
     - name: "precision_recall"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "pwm", "vae" ]
+      reference_data: [ "train", "test" ]
+    - tuning_method: "overlap"
+      model_names: [ "pwm", "vae" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]

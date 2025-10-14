@@ -74,6 +74,8 @@ class MainConfig:
             ])
 
         if "tuning" in data:
+            if self.n_experiments > 1:
+                raise ValueError("Parameter tuning can only be performed with a single experiment (n_experiments=1).")
             self.tuning_configs.extend([
                 TuningConfig(tuning_method=tuning["tuning_method"],
                              model_names=tuning["model_names"],
