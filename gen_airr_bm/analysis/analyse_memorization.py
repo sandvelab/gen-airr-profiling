@@ -101,8 +101,8 @@ def compute_overlap_score(train_file: str, test_or_gen_file: str, compairr_outpu
     """
     dataset_name = os.path.splitext(os.path.basename(test_or_gen_file))[0]
     file_identifier = f"{dataset_name}_{name}"
-    run_compairr_existence(compairr_output_dir, test_or_gen_file, train_file, file_identifier, allowed_mismatches=0,
-                           indels=False)
+    run_compairr_existence(compairr_output_dir, test_or_gen_file, train_file, file_identifier, allowed_mismatches=1,
+                           indels=True)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_identifier}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
