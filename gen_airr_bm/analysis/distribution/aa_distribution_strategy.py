@@ -71,8 +71,8 @@ class AADistributionStrategy(BaseDistributionStrategy):
             mean_reference_score = mean_reference_scores[length-10] if mean_reference_scores else None
             plot_grouped_avg_scores(mean_by_ref, std_by_ref,
                                     analysis_config.analysis_output_dir, analysis_config.reference_data,
-                                    file_name, f"{distribution_type} {length}", "JSD",
-                                    mean_reference_score)
+                                    file_name, f"{distribution_type} (sequence length: {length})",
+                                    "JSD", mean_reference_score)
 
 
 def compute_positional_aa_dist(sequences):

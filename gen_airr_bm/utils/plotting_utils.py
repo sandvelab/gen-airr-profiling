@@ -45,10 +45,9 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     )
 
     fig.update_layout(
-        title=f"Average {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across Models and "
-              f"{reference_data.capitalize()} Data",
+        title=f"Comparison of Model and Reference {distribution_type.capitalize()} Distributions",
         xaxis_title="Models",
-        yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
+        yaxis_title=f"Mean {scoring_method} score",
         xaxis_tickangle=-45,
         template="plotly_white"
     )
@@ -114,11 +113,10 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
     fig = go.Figure(data=data)
     fig.update_layout(
         barmode='group',
-        title={'text': f"Avg {scoring_method} Scores Comparing {distribution_type.capitalize()} Distributions Across "
-                       f"Models and References",
+        title={'text': f"Comparison of Model and Reference {distribution_type.capitalize()} Distributions",
                'font': {'size': 14}},
         xaxis_title="Models",
-        yaxis_title=f"Mean score for {distribution_type.capitalize()} Distributions",
+        yaxis_title=f"Mean {scoring_method} score",
         xaxis_tickangle=-45,
         template="plotly_white",
         colorway=pc.qualitative.Set2,
