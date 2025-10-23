@@ -30,7 +30,8 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_root",
         default_model_name="humanTRB",
         reference_data=["train", "test"],
-        n_subsets=5
+        n_subsets=5,
+        subfolder_name="analysis_subfolder"
     )
 
 
