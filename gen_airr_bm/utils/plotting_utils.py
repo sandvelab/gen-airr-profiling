@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -88,8 +89,11 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
 
     plotting_df = pd.DataFrame([{"Reference": ref,
                                  "Model": model,
-                                 "Mean_Score": mean_scores_by_ref.get(ref, {}).get(model, None),
-                                 "Std_Dev": std_scores_by_ref.get(ref, {}).get(model, 0)}
+                                 "Mean_Score": mean_scores_by_ref.get(ref, {}).get(model, np.nan),
+                                 "Std_Dev": std_scores_by_ref.get(ref, {}).get(model, 0),
+                                 "abs_diff_to_ref": (abs(mean_scores_by_ref.get(ref, {}).get(model, np.nan) -
+                                                     reference_score)
+                                                     if reference_score is not None else np.nan)}
                                 for ref in all_refs
                                 for model in all_models])
 
