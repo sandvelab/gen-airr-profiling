@@ -27,21 +27,26 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
+      subfolder_name: "tuning models"
     - name: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
+      subfolder_name: "tuning models"
     - name: "precision_recall"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
+      subfolder_name: "tuning models"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       reference_data: [ "train", "test" ]
+      subfolder_name: "tuning models"
     - tuning_method: "overlap"
       model_names: [ "pwm", "vae" ]
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "tuning models"
