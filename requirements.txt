@@ -1,4 +1,4 @@
-git+https://github.com/uio-bmi/immuneML.git@development
+git+https://github.com/uio-bmi/immuneML.git@add-progen#egg=immuneML[gen_models]
 logomaker
 kaleido==0.2.1
 statsmodels
