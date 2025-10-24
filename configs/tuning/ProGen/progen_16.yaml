@@ -14,7 +14,7 @@ definitions:
         locus: beta
         tokenizer_path: 'progen2/tokenizer.json'
         trained_model_path: 'progen2/progen2-oas'
-        device: cpu
+        device: cuda
         num_frozen_layers: 19
         num_epochs: 2
         learning_rate: 0.00004
