@@ -2,12 +2,12 @@ n_experiments: 1
 output_dir: "RESULTS_TUNING_OCT24/TCR"
 input_dir: "data/tuning/TCR"
 seed: 42
-data_generation:
-  experimental: True
-  method: "experimental"
-  n_samples: 22500
-  default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 22500
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
     - name: "progen_01"
