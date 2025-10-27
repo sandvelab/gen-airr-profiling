@@ -10,106 +10,106 @@ seed: 42
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
-    - name: "progen_01"
-      immuneml_model_config: "configs/tuning/ProGen/progen_01.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_02"
-      immuneml_model_config: "configs/tuning/ProGen/progen_02.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_03"
-      immuneml_model_config: "configs/tuning/ProGen/progen_03.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_04"
-      immuneml_model_config: "configs/tuning/ProGen/progen_04.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_05"
-      immuneml_model_config: "configs/tuning/ProGen/progen_05.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_06"
-      immuneml_model_config: "configs/tuning/ProGen/progen_06.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_07"
-      immuneml_model_config: "configs/tuning/ProGen/progen_07.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_08"
-      immuneml_model_config: "configs/tuning/ProGen/progen_08.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_09"
-      immuneml_model_config: "configs/tuning/ProGen/progen_09.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_10"
-      immuneml_model_config: "configs/tuning/ProGen/progen_10.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_11"
-      immuneml_model_config: "configs/tuning/ProGen/progen_11.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_12"
-      immuneml_model_config: "configs/tuning/ProGen/progen_12.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_13"
-      immuneml_model_config: "configs/tuning/ProGen/progen_13.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_14"
-      immuneml_model_config: "configs/tuning/ProGen/progen_14.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_15"
-      immuneml_model_config: "configs/tuning/ProGen/progen_15.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_16"
-      immuneml_model_config: "configs/tuning/ProGen/progen_16.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_17"
-      immuneml_model_config: "configs/tuning/ProGen/progen_17.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_18"
-      immuneml_model_config: "configs/tuning/ProGen/progen_18.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_19"
-      immuneml_model_config: "configs/tuning/ProGen/progen_19.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "progen_20"
-      immuneml_model_config: "configs/tuning/ProGen/progen_20.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
+#    - name: "progen_01"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_01.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_02"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_02.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_03"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_03.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_04"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_04.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_05"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_05.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_06"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_06.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_07"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_07.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_08"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_08.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_09"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_09.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_10"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_10.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_11"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_11.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_12"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_12.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_13"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_13.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_14"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_14.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_15"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_15.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_16"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_16.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_17"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_17.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_18"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_18.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_19"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_19.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
+#    - name: "progen_20"
+#      immuneml_model_config: "configs/tuning/ProGen/progen_20.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 22500
     - name: "progen_21"
       immuneml_model_config: "configs/tuning/ProGen/progen_21.yaml"
       train_dir: "train"
