@@ -1,14 +1,14 @@
 n_experiments: 1
-output_dir: "results/tuning/TCR_sonnia"
+output_dir: "RESULTS_TUNING_OCT24/TCR"
 input_dir: "data/tuning/TCR"
 seed: 42
 
-data_generation:
-  experimental: True
-  method: "experimental"
-  n_samples: 22500
-  default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 22500
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
     - name: "sonnia_01"
@@ -16,48 +16,43 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_1"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_1.yaml"
+    - name: "sonnia_02"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_02.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_2"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_2.yaml"
+    - name: "sonnia_03"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_03.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_3"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_3.yaml"
+    - name: "sonnia_04"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_04.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_4"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_4.yaml"
+    - name: "sonnia_05"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_05.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_5"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_5.yaml"
+    - name: "sonnia_06"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_06.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_6"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_6.yaml"
+    - name: "sonnia_07"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_07.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_7"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_7.yaml"
+    - name: "sonnia_08"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_08.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
-    - name: "sonnia_8"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_8.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 22500
-    - name: "sonnia_9"
-      immuneml_model_config: "configs/tuning/SoNNia/sonnia_9.yaml"
+    - name: "sonnia_09"
+      immuneml_model_config: "configs/tuning/SoNNia/sonnia_09.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 22500
@@ -139,57 +134,65 @@ models:
 
 analyses:
     - name: "reduced_dimensionality"
-      model_names: [ "sonnia_01", "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10" ]
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
-      subfolder_name: "all models"
+      subfolder_name: "all soNNia models"
     - name: "memorization"
-      model_names: [ "sonnia_01", "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all models"
-    - name: "network"
-      model_names: [ "sonnia_01", "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all models"
-    - name: "precision_recall"
-      model_names: [ "sonnia_01", "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all models"
-    - name: "diversity"
-      model_names: [ "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10", "sonnia_11", "sonnia_12",
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
                       "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
                       "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all models"
+      subfolder_name: "all soNNia models"
+    - name: "network"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all soNNia models"
+    - name: "precision_recall"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all soNNia models"
+    - name: "diversity"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all soNNia models"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
-      model_names: [ "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10", "sonnia_11", "sonnia_12",
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
                       "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
                       "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
       reference_data: [ "train", "test" ]
-      subfolder_name: "all models"
+      subfolder_name: "all soNNia models"
     - tuning_method: "overlap"
-      model_names: [ "sonnia_1", "sonnia_2", "sonnia_3", "sonnia_4", "sonnia_5", "sonnia_6",
-                      "sonnia_7", "sonnia_8", "sonnia_9", "sonnia_10", "sonnia_11", "sonnia_12",
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
                       "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
                       "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all models"
+      subfolder_name: "all soNNia models"
 
 
