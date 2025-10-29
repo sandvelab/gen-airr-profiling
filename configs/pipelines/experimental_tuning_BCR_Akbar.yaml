@@ -1,0 +1,237 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_OCT24/BCR"
+input_dir: "data/tuning/BCR"
+seed: 42
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 17500
+  default_model_name: "humanIGH"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+
+models:
+    - name: "A_01"
+      immuneml_model_config: "configs/tuning/Akbar/A_01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_02"
+      immuneml_model_config: "configs/tuning/Akbar/A_02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_03"
+      immuneml_model_config: "configs/tuning/Akbar/A_03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_04"
+      immuneml_model_config: "configs/tuning/Akbar/A_04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_05"
+      immuneml_model_config: "configs/tuning/Akbar/A_05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_06"
+      immuneml_model_config: "configs/tuning/Akbar/A_06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_07"
+      immuneml_model_config: "configs/tuning/Akbar/A_07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_08"
+      immuneml_model_config: "configs/tuning/Akbar/A_08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_09"
+      immuneml_model_config: "configs/tuning/Akbar/A_09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_10"
+      immuneml_model_config: "configs/tuning/Akbar/A_10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_11"
+      immuneml_model_config: "configs/tuning/Akbar/A_11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_12"
+      immuneml_model_config: "configs/tuning/Akbar/A_12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_13"
+      immuneml_model_config: "configs/tuning/Akbar/A_13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_14"
+      immuneml_model_config: "configs/tuning/Akbar/A_14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_15"
+      immuneml_model_config: "configs/tuning/Akbar/A_15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_16"
+      immuneml_model_config: "configs/tuning/Akbar/A_16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_17"
+      immuneml_model_config: "configs/tuning/Akbar/A_17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_18"
+      immuneml_model_config: "configs/tuning/Akbar/A_18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_19"
+      immuneml_model_config: "configs/tuning/Akbar/A_19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_20"
+      immuneml_model_config: "configs/tuning/Akbar/A_20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_21"
+      immuneml_model_config: "configs/tuning/Akbar/A_21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_22"
+      immuneml_model_config: "configs/tuning/Akbar/A_22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_23"
+      immuneml_model_config: "configs/tuning/Akbar/A_23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_24"
+      immuneml_model_config: "configs/tuning/Akbar/A_24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_25"
+      immuneml_model_config: "configs/tuning/Akbar/A_25.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_26"
+      immuneml_model_config: "configs/tuning/Akbar/A_26.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_27"
+      immuneml_model_config: "configs/tuning/Akbar/A_27.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_28"
+      immuneml_model_config: "configs/tuning/Akbar/A_28.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_29"
+      immuneml_model_config: "configs/tuning/Akbar/A_29.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_30"
+      immuneml_model_config: "configs/tuning/Akbar/A_30.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_31"
+      immuneml_model_config: "configs/tuning/Akbar/A_31.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+    - name: "A_32"
+      immuneml_model_config: "configs/tuning/Akbar/A_32.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 17500
+
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all Akbar models"
+    - name: "memorization"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 8
+      subfolder_name: "all Akbar models"
+    - name: "diversity"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 8
+      subfolder_name: "all Akbar models"
+    - name: "network"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 8
+      subfolder_name: "all Akbar models"
+    - name: "precision_recall"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 8
+      subfolder_name: "all Akbar models"
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all Akbar models"
+
+    - tuning_method: "overlap"
+      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "all Akbar models"
