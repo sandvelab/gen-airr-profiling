@@ -14,7 +14,7 @@ definitions:
         batch_size: 500
         epochs: 100
         default_model_name: 'humanTRB'
-        deep: True
+        deep: False
         include_joint_genes: True
         n_gen_seqs: 1000000
         num_processes: 1
