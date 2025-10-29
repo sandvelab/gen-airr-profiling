@@ -1,0 +1,188 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_OCT24/TCR"
+input_dir: "data/tuning/TCR"
+seed: 42
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 22500
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+
+models:
+    - name: "VAE01"
+      immuneml_model_config: "configs/tuning/VAE/VAE01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE02"
+      immuneml_model_config: "configs/tuning/VAE/VAE02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE03"
+      immuneml_model_config: "configs/tuning/VAE/VAE03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE04"
+      immuneml_model_config: "configs/tuning/VAE/VAE04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE05"
+      immuneml_model_config: "configs/tuning/VAE/VAE05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE06"
+      immuneml_model_config: "configs/tuning/VAE/VAE06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE07"
+      immuneml_model_config: "configs/tuning/VAE/VAE07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE08"
+      immuneml_model_config: "configs/tuning/VAE/VAE08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE09"
+      immuneml_model_config: "configs/tuning/VAE/VAE09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE10"
+      immuneml_model_config: "configs/tuning/VAE/VAE10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE11"
+      immuneml_model_config: "configs/tuning/VAE/VAE11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE12"
+      immuneml_model_config: "configs/tuning/VAE/VAE12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE13"
+      immuneml_model_config: "configs/tuning/VAE/VAE13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE14"
+      immuneml_model_config: "configs/tuning/VAE/VAE14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE15"
+      immuneml_model_config: "configs/tuning/VAE/VAE15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE16"
+      immuneml_model_config: "configs/tuning/VAE/VAE16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE17"
+      immuneml_model_config: "configs/tuning/VAE/VAE17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE18"
+      immuneml_model_config: "configs/tuning/VAE/VAE18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE19"
+      immuneml_model_config: "configs/tuning/VAE/VAE19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE20"
+      immuneml_model_config: "configs/tuning/VAE/VAE20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE21"
+      immuneml_model_config: "configs/tuning/VAE/VAE21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE22"
+      immuneml_model_config: "configs/tuning/VAE/VAE22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE23"
+      immuneml_model_config: "configs/tuning/VAE/VAE23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+    - name: "VAE24"
+      immuneml_model_config: "configs/tuning/VAE/VAE24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 22500
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all VAE models"
+    - name: "memorization"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all VAE models"
+    - name: "diversity"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all VAE models"
+    - name: "network"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all VAE models"
+    - name: "precision_recall"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all VAE models"
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all VAE models"
+
+    - tuning_method: "overlap"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "all VAE models"
