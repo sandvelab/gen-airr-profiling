@@ -70,7 +70,9 @@ class MainConfig:
                                default_model_name=analysis["default_model_name"],
                                reference_data=analysis.get("reference_data", None),
                                subfolder_name=analysis.get("subfolder_name", ""),
-                               n_subsets=analysis.get("n_subsets", None))
+                               n_subsets=analysis.get("n_subsets", None),
+                               allowed_mismatches=analysis.get("allowed_mismatches", 0),
+                               indels=analysis.get("indels", False))
                 for analysis in data.get("analyses", [])
             ])
 
@@ -85,7 +87,8 @@ class MainConfig:
                                                f"{'_'.join(tuning['subfolder_name'].split())}",
                              root_output_dir=self.output_dir,
                              k_values=tuning.get("k_values", None),
-                             subfolder_name=tuning.get("subfolder_name", ""))
+                             subfolder_name=tuning.get("subfolder_name", ""),
+                             hyperparameter_table_path=tuning["hyperparameter_table_path"])
                 for tuning in data.get("tuning", [])
             ])
 

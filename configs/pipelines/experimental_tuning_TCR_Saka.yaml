@@ -189,7 +189,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all Saka models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all Saka models dist 0"
     - name: "diversity"
       model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
                      "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
@@ -216,7 +218,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all Saka models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all Saka models dist 0"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
@@ -226,7 +230,7 @@ tuning:
                      "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
       reference_data: [ "train", "test" ]
       subfolder_name: "all Saka models"
-
+      hyperparameter_table_path: "data/hyperparameter_tables/Saka.tsv"
     - tuning_method: "overlap"
       model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
                      "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
@@ -234,4 +238,5 @@ tuning:
                      "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all Saka models"
+      subfolder_name: "all Saka models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/Saka.tsv"

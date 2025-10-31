@@ -35,7 +35,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
-      subfolder_name: "dummy models"
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all dummy models dist 1"
     - name: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
@@ -70,4 +72,6 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
-      subfolder_name: "dummy models"
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all dummy models dist 1"

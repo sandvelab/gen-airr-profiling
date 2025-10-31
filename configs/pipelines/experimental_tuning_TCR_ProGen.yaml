@@ -211,7 +211,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all ProGen models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all ProGen models dist 0"
     - name: "diversity"
       model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
                      "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
@@ -241,7 +243,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all ProGen models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all ProGen models dist 0"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
@@ -252,7 +256,7 @@ tuning:
                      "progen_33", "progen_34", "progen_35", "progen_36" ]
       reference_data: [ "train", "test" ]
       subfolder_name: "all ProGen models"
-
+      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
     - tuning_method: "overlap"
       model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
                      "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
@@ -261,4 +265,5 @@ tuning:
                      "progen_33", "progen_34", "progen_35", "progen_36" ]
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all ProGen models"
+      subfolder_name: "all ProGen models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"

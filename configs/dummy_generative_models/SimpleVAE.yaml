@@ -25,6 +25,7 @@ definitions:
         v_gene_embed_dim: 30
         warmup_epochs: 1
         validation_split: 0.1
+        learning_rate: 0.001
 
 instructions:
   gen_model:

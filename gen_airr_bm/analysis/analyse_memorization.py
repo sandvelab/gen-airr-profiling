@@ -46,7 +46,7 @@ def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: s
         comparison_files_dir = get_sequence_files(analysis_config, model_name, train_reference)
         model_memorization_scores[model_name] = []
         for ref_file, gen_files in comparison_files_dir.items():
-            model_memorization_scores[model_name].extend(get_memorization_scores(ref_file, gen_files,
+            model_memorization_scores[model_name].extend(get_memorization_scores(analysis_config, ref_file, gen_files,
                                                                                  output_dir, model_name))
     return model_memorization_scores
 
@@ -62,17 +62,18 @@ def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, outpu
     ref_scores = []
     reference_comparison_files = get_reference_files(analysis_config)
     for train_file, test_file in reference_comparison_files:
-        ref_score = get_memorization_scores(train_file, [test_file], output_dir, "reference")
+        ref_score = get_memorization_scores(analysis_config, train_file, [test_file], output_dir, "reference")
         ref_scores.append(ref_score[0])
     mean_ref_memorization_score = np.mean(ref_scores)
 
     return mean_ref_memorization_score
 
 
-def get_memorization_scores(train_file: str, test_or_gen_files: list[str], output_dir: str, name: str) -> list:
+def get_memorization_scores(analysis_config: AnalysisConfig, train_file: str, test_or_gen_files: list[str], output_dir: str, name: str) -> list:
     """ Compute memorization scores (sequence overlap) between a train reference file and generated files or between
     train and the corresponding test set.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         train_file (str): Path to the train file.
         test_or_gen_files (list[str]): List of paths to generated files or list of one test file.
         output_dir (str): Directory to save intermediate and final results.
@@ -83,15 +84,16 @@ def get_memorization_scores(train_file: str, test_or_gen_files: list[str], outpu
     memorization_scores = []
     compairr_output_dir = f"{output_dir}/compairr_output"
     for file in test_or_gen_files:
-        score = compute_overlap_score(train_file, file, compairr_output_dir, name)
+        score = compute_overlap_score(analysis_config, train_file, file, compairr_output_dir, name)
         memorization_scores.append(score)
 
     return memorization_scores
 
 
-def compute_overlap_score(train_file: str, test_or_gen_file: str, compairr_output_dir: str, name: str) -> float:
+def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test_or_gen_file: str, compairr_output_dir: str, name: str) -> float:
     """ Compute overlap score between two datasets using CompAIRR.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         train_file (str): Path to the reference train set.
         test_or_gen_file (str): Path to the model-generated set or to corresponding test set.
         compairr_output_dir (str): Directory to save CompAIRR output.
@@ -101,8 +103,8 @@ def compute_overlap_score(train_file: str, test_or_gen_file: str, compairr_outpu
     """
     dataset_name = os.path.splitext(os.path.basename(test_or_gen_file))[0]
     file_identifier = f"{dataset_name}_{name}"
-    run_compairr_existence(compairr_output_dir, test_or_gen_file, train_file, file_identifier, allowed_mismatches=1,
-                           indels=True)
+    run_compairr_existence(compairr_output_dir, test_or_gen_file, train_file, file_identifier,
+                           allowed_mismatches=analysis_config.allowed_mismatches, indels=analysis_config.indels)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_identifier}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]

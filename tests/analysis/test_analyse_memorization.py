@@ -22,7 +22,9 @@ def sample_analysis_config():
         default_model_name="humanTRB",
         reference_data=["train", "test"],
         n_subsets=5,
-        subfolder_name="analysis_subfolder"
+        subfolder_name="analysis_subfolder",
+        allowed_mismatches=0,
+        indels=False,
     )
 
 
@@ -90,7 +92,7 @@ def test_get_model_memorization_scores(mocker, sample_analysis_config):
     )
 
     # Side effect returns one value per generated file to match lengths
-    def mem_scores_side_effect(ref_file, gen_files, output_dir, model_name):
+    def mem_scores_side_effect(analysis_config, ref_file, gen_files, output_dir, model_name):
         return [0.0] * len(gen_files)
 
     mock_get_mem_scores = mocker.patch(
@@ -150,7 +152,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     assert mock_get_mem_scores.call_count == len(file_pairs)
     for i, (train_f, test_f) in enumerate(file_pairs):
         assert mock_get_mem_scores.call_args_list[i].args == (
-            train_f, [test_f], "/tmp/test_output/analysis_mem", "reference"
+            sample_analysis_config, train_f, [test_f], "/tmp/test_output/analysis_mem", "reference"
         )
 
     # Expected mean of the first (and only) elements per pair
@@ -158,7 +160,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     assert mean_score == expected_mean
 
 
-def test_get_memorization_scores_calls_compute(mocker):
+def test_get_memorization_scores_calls_compute(mocker, sample_analysis_config):
     ref_file = "/ref/train.tsv"
     gen_files = ["/gen/a.tsv", "/gen/b.tsv", "/gen/c.tsv"]
 
@@ -172,6 +174,7 @@ def test_get_memorization_scores_calls_compute(mocker):
     )
 
     out = get_memorization_scores(
+        analysis_config=sample_analysis_config,
         train_file=ref_file,
         test_or_gen_files=gen_files,
         output_dir="/tmp/test_output/analysis_mem",
@@ -182,7 +185,7 @@ def test_get_memorization_scores_calls_compute(mocker):
     assert mock_compute.call_count == len(gen_files)
     for i, gen in enumerate(gen_files):
         assert mock_compute.call_args_list[i].args == (
-            ref_file, gen, "/tmp/test_output/analysis_mem/compairr_output", "modelX"
+            sample_analysis_config, ref_file, gen, "/tmp/test_output/analysis_mem/compairr_output", "modelX"
         )
 
     # Expected output

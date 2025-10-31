@@ -149,7 +149,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all soNNia models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all soNNia models dist 0"
     - name: "network"
       model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
                       "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
@@ -167,7 +169,9 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      subfolder_name: "all soNNia models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all soNNia models dist 0"
     - name: "diversity"
       model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
                       "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
@@ -186,6 +190,7 @@ tuning:
                       "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
       reference_data: [ "train", "test" ]
       subfolder_name: "all soNNia models"
+      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
     - tuning_method: "overlap"
       model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
                       "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
@@ -193,6 +198,5 @@ tuning:
                       "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all soNNia models"
-
-
+      subfolder_name: "all soNNia models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"

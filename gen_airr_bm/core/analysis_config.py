@@ -1,6 +1,7 @@
 class AnalysisConfig:
     def __init__(self, analysis: str, model_names: list, analysis_output_dir: str, root_output_dir: str,
-                 default_model_name: str, reference_data: str | list, subfolder_name: str, n_subsets: int = None):
+                 default_model_name: str, reference_data: str | list, subfolder_name: str, n_subsets: int = None,
+                 allowed_mismatches: int = 0, indels: bool = False):
         self.analysis = analysis
         self.model_names = model_names
         self.analysis_output_dir = analysis_output_dir
@@ -9,6 +10,8 @@ class AnalysisConfig:
         self.reference_data = reference_data
         self.subfolder_name = subfolder_name
         self.n_subsets = n_subsets
+        self.allowed_mismatches = allowed_mismatches
+        self.indels = indels
 
     def __repr__(self):
         return (f"AnalysisConfig(analysis={self.analysis}, model_names={self.model_names}, "

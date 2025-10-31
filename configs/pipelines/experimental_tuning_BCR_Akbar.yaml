@@ -189,7 +189,9 @@ analyses:
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 8
-      subfolder_name: "all Akbar models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all Akbar models dist 0"
     - name: "diversity"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -216,7 +218,9 @@ analyses:
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 8
-      subfolder_name: "all Akbar models"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all Akbar models dist 0"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
@@ -226,7 +230,7 @@ tuning:
                      "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
       reference_data: [ "train", "test" ]
       subfolder_name: "all Akbar models"
-
+      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
     - tuning_method: "overlap"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -234,4 +238,5 @@ tuning:
                      "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all Akbar models"
+      subfolder_name: "all Akbar models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"

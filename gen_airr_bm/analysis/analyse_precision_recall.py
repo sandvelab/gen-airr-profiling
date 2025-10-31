@@ -84,8 +84,8 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     for ref_file, gen_files in comparison_files_dir.items():
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-        precision_scores, recall_scores = get_precision_recall_scores(ref_file, gen_files, compairr_output_dir,
-                                                                      model)
+        precision_scores, recall_scores = get_precision_recall_scores(analysis_config, ref_file, gen_files,
+                                                                      compairr_output_dir, model)
 
         mean_p, std_p = np.mean(precision_scores), np.std(precision_scores)
         mean_r, std_r = np.mean(recall_scores), np.std(recall_scores)
@@ -118,15 +118,18 @@ def add_upper_reference(analysis_config: AnalysisConfig, train_reference: str, t
         train_file = f"{train_dir}/{dataset}.tsv"
         test_file = f"{test_dir}/{dataset}.tsv"
 
-        ref_precision, ref_recall = get_precision_recall_reference(train_file, test_file, compairr_output_dir)
+        ref_precision, ref_recall = get_precision_recall_reference(analysis_config, train_file, test_file,
+                                                                   compairr_output_dir)
 
         scores.precision_all[dataset]["upper_reference"] = [ref_precision]
         scores.recall_all[dataset]["upper_reference"] = [ref_recall]
 
 
-def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_dir: str, model: str) -> tuple:
+def get_precision_recall_scores(analysis_config: AnalysisConfig, ref_file: str, gen_files: list,
+                                compairr_output_dir: str, model: str) -> tuple:
     """ Get precision and recall scores for the generated files compared to the reference file.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         ref_file (str): Path to the reference file.
         gen_files (list): List of paths to generated files.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -136,9 +139,9 @@ def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_
     """
     precision_scores, recall_scores = [], []
     for gen_file in gen_files:
-        precision = compute_compairr_overlap_ratio(gen_file, ref_file, compairr_output_dir,
+        precision = compute_compairr_overlap_ratio(analysis_config, gen_file, ref_file, compairr_output_dir,
                                                    model, "precision")
-        recall = compute_compairr_overlap_ratio(ref_file, gen_file, compairr_output_dir,
+        recall = compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir,
                                                 model, "recall")
 
         precision_scores.append(precision)
@@ -147,9 +150,11 @@ def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_
     return precision_scores, recall_scores
 
 
-def get_precision_recall_reference(train_file, test_file, compairr_output_dir) -> tuple:
+def get_precision_recall_reference(analysis_config: AnalysisConfig, train_file: str, test_file: str,
+                                   compairr_output_dir: str) -> tuple:
     """ Get precision and recall scores for the upper reference between train and test files.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         train_file (str): Path to the train file (train used as replacement of generated (model) file for upper
         reference.
         test_file (str): Path to the test file.
@@ -157,17 +162,18 @@ def get_precision_recall_reference(train_file, test_file, compairr_output_dir) -
     Returns:
         tuple: Precision and recall scores for the upper reference.
     """
-    precision = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
+    precision = compute_compairr_overlap_ratio(analysis_config, train_file, test_file, compairr_output_dir,
                                                'upper_reference', "precision")
-    recall = compute_compairr_overlap_ratio(test_file, train_file, compairr_output_dir,
+    recall = compute_compairr_overlap_ratio(analysis_config, test_file, train_file, compairr_output_dir,
                                             'upper_reference', "recall")
     return precision, recall
 
 
-def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, compairr_output_dir: str, name: str,
-                                   metric: str) -> float:
+def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_file: str, search_in_file: str,
+                                   compairr_output_dir: str, name: str, metric: str) -> float:
     """ Compute the overlap ratio between two sequence sets using CompAIRR for precision or recall.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         search_for_file (str): Path to the file of sequences for which to search for existence in another sequence set.
         search_in_file (str): Path to the file to search for existence in.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -181,8 +187,8 @@ def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, co
     else:
         file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{name}_{metric}"
 
-    run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name, allowed_mismatches=1,
-                           indels=True)
+    run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name,
+                           allowed_mismatches=analysis_config.allowed_mismatches, indels=analysis_config.indels)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
