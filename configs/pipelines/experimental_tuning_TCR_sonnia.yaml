@@ -171,6 +171,7 @@ analyses:
       n_subsets: 6
       allowed_mismatches: 0
       indels: False
+      deduplicate: True
       subfolder_name: "all soNNia models dist 0"
     - name: "diversity"
       model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",

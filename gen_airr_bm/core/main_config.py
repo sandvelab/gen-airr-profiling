@@ -72,7 +72,8 @@ class MainConfig:
                                subfolder_name=analysis.get("subfolder_name", ""),
                                n_subsets=analysis.get("n_subsets", None),
                                allowed_mismatches=analysis.get("allowed_mismatches", 0),
-                               indels=analysis.get("indels", False))
+                               indels=analysis.get("indels", False),
+                               deduplicate=analysis.get("deduplicate", False))
                 for analysis in data.get("analyses", [])
             ])
 

@@ -220,6 +220,7 @@ analyses:
       n_subsets: 6
       allowed_mismatches: 0
       indels: False
+      deduplicate: True
       subfolder_name: "all Akbar models dist 0"
 
 tuning:

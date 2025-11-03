@@ -42,6 +42,7 @@ analyses:
       n_subsets: 10
       allowed_mismatches: 0
       indels: False
+      deduplicate: True
       subfolder_name: "tuning models dist 0"
 
 tuning:

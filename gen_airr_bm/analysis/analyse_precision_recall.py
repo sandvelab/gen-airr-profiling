@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
-from gen_airr_bm.utils.compairr_utils import run_compairr_existence
+from gen_airr_bm.utils.compairr_utils import run_compairr_existence, deduplicate_single_dataset
 from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall
 
 
@@ -187,6 +187,9 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
     else:
         file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{name}_{metric}"
 
+    if analysis_config.deduplicate:
+        search_for_file, search_in_file = run_sequence_deduplication(analysis_config, search_for_file, search_in_file)
+
     run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name,
                            allowed_mismatches=analysis_config.allowed_mismatches, indels=analysis_config.indels)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
@@ -195,6 +198,42 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
     ratio = n_nonzero_rows / len(compairr_result)
 
     return ratio
+
+
+def run_sequence_deduplication(analysis_config: AnalysisConfig, sequence_file1: str, sequence_file2: str) -> list:
+    """ Run sequence deduplication on the given sequence files.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        sequence_file1 (str): Path to the first sequence file.
+        sequence_file2 (str): Path to the second sequence file.
+    Returns:
+        list: Paths to the deduplicated sequence files.
+    """
+    compairr_output_helper_dir = f"{analysis_config.analysis_output_dir}/compairr_helper_files"
+    os.makedirs(compairr_output_helper_dir, exist_ok=True)
+
+    unique_sequence_files = []
+    for sequence_file in [sequence_file1, sequence_file2]:
+
+        # TODO: Improve dataset type extraction for file naming?
+        if "generated_compairr_sequences" in sequence_file:
+            dataset_type = sequence_file.split("/")[-2]
+        elif "train_compairr_sequences" in sequence_file:
+            dataset_type = "train"
+        elif "test_compairr_sequences" in sequence_file:
+            dataset_type = "test"
+        else:
+            raise ValueError(f"Could not extract dataset type from file path: {sequence_file}")
+
+        unique_sequences_path = f"{compairr_output_helper_dir}/unique_{dataset_type}_{os.path.basename(sequence_file)}"
+
+        if os.path.exists(unique_sequences_path):
+            print(f"Unique sequences already exist for {sequence_file}. Skipping execution.")
+        else:
+            deduplicate_single_dataset(sequence_file, unique_sequences_path)
+        unique_sequence_files.append(unique_sequences_path)
+
+    return unique_sequence_files
 
 
 def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: PrecisionRecallScores,

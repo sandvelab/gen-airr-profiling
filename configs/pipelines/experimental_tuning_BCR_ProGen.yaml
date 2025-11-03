@@ -245,6 +245,7 @@ analyses:
       n_subsets: 8
       allowed_mismatches: 0
       indels: False
+      deduplicate: True
       subfolder_name: "all ProGen models dist 0"
 
 tuning:
