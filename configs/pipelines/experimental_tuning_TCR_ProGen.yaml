@@ -193,60 +193,85 @@ seed: 42
 
 
 analyses:
-    - name: "reduced_dimensionality"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      subfolder_name: "all ProGen models"
-    - name: "memorization"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      subfolder_name: "all ProGen models dist 0"
-    - name: "memorization"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: True
-      subfolder_name: "all ProGen models dist 0 deduplicated"
-    - name: "diversity"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all ProGen models"
-    - name: "network"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all ProGen models"
+#    - name: "reduced_dimensionality"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      subfolder_name: "all ProGen models"
+#    - name: "memorization"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      subfolder_name: "all ProGen models dist 0"
+#    - name: "memorization"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: True
+#      subfolder_name: "all ProGen models dist 0 deduplicated"
+#    - name: "diversity"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      subfolder_name: "all ProGen models"
+#    - name: "network"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      subfolder_name: "all ProGen models"
+#    - name: "precision_recall"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      subfolder_name: "all ProGen models dist 0"
+#    - name: "precision_recall"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: True
+#      subfolder_name: "all ProGen models dist 0 deduplicated"
     - name: "precision_recall"
       model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
                      "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
@@ -256,50 +281,37 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      subfolder_name: "all ProGen models dist 0"
-    - name: "precision_recall"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: True
-      subfolder_name: "all ProGen models dist 0 deduplicated"
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all ProGen models dist 1"
 
-tuning:
-    - tuning_method: "reduced_dimensionality"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      reference_data: [ "train", "test" ]
-      subfolder_name: "all ProGen models"
-      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      reference_data: [ "train", "test" ]
-      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all ProGen models dist 0"
-      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
-                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
-                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
-                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
-                     "progen_33", "progen_34", "progen_35", "progen_36" ]
-      reference_data: [ "train", "test" ]
-      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-      subfolder_name: "all ProGen models dist 0 deduplicated"
-      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
+#tuning:
+#    - tuning_method: "reduced_dimensionality"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      reference_data: [ "train", "test" ]
+#      subfolder_name: "all ProGen models"
+#      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+#      subfolder_name: "all ProGen models dist 0"
+#      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+#                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+#                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+#                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+#                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+#      subfolder_name: "all ProGen models dist 0 deduplicated"
+#      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
