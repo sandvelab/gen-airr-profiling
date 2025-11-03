@@ -29,7 +29,8 @@ def run_overlap_tuning(tuning_config: TuningConfig) -> None:
     plot_tuning_score_by_k(overlap_score_df, tuning_config.tuning_output_dir)
 
     save_and_plot_tuning_results(tuning_config, "overlap", overlap_score_df,
-                                 tuning_config.tuning_output_dir, plot_title="Tuning score based on realism")
+                                 tuning_config.tuning_output_dir, plot_title="Tuning score based on realism",
+                                 plot_ascending_scores=False)
 
 
 def get_overlap_results(tuning_config: TuningConfig) -> tuple:
@@ -70,7 +71,7 @@ def compute_overlap_score(tuning_config: TuningConfig, memorization_df: pd.DataF
 
     rows = []
     for k in tuning_config.k_values:
-        overlap_score_k_scaled = (precision_scores["Precision_mean"].values + k *
+        overlap_score_k_scaled = (precision_scores["Precision_mean"].values - k *
                                   memorization_scores["mean_overlap_score"].values)
         overlap_score = precision_scores["Precision_mean"].values
         for model, score_k, score, prec, mem in zip(precision_scores["Model"].values,

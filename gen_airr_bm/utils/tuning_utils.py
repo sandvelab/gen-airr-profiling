@@ -44,7 +44,7 @@ def validate_analyses_data(tuning_config: TuningConfig, required_analyses: list)
 
 
 def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str, summary_df: pd.DataFrame,
-                                 output_dir: str, plot_title: str) -> None:
+                                 output_dir: str, plot_title: str, plot_ascending_scores: bool = True) -> None:
     """ Saves the tuning summary to a TSV file and generates a scatter plot with table of hyperparameter values.
     Args:
         tuning_config: Configuration for the tuning, including paths and model names.
@@ -52,6 +52,7 @@ def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str
         summary_df: DataFrame containing the summary of analyses results.
         output_dir: Directory where the summary and plot will be saved.
         plot_title: Title for the generated plot.
+        plot_ascending_scores: Whether to plot scores in ascending order (default is False).
     Returns:
         None
     """
@@ -73,7 +74,7 @@ def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str
         .rename(columns={"index": "Model"})
     )
     summary_df = summary_df.merge(hyperparams_long, on="Model", how="left")
-    summary_sorted = summary_df.sort_values("Score", ascending=True)
+    summary_sorted = summary_df.sort_values("Score", ascending=plot_ascending_scores)
 
     models = summary_sorted["Model"].tolist()
     parameter_values = summary_sorted[parameter_names].T.values

@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from collections import defaultdict
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets, run_compairr_existence
+from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
 
 
@@ -103,6 +103,11 @@ def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test
     """
     dataset_name = os.path.splitext(os.path.basename(test_or_gen_file))[0]
     file_identifier = f"{dataset_name}_{name}"
+
+    # TODO: decide on deduplication necessary in memorization analysis
+    if analysis_config.deduplicate:
+        test_or_gen_file, train_file = run_sequence_deduplication(analysis_config, test_or_gen_file, train_file)
+
     run_compairr_existence(compairr_output_dir, test_or_gen_file, train_file, file_identifier,
                            allowed_mismatches=analysis_config.allowed_mismatches, indels=analysis_config.indels)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_identifier}_overlap.tsv", sep='\t',
