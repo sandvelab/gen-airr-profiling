@@ -88,7 +88,7 @@ def test_compute_overlap_score(sample_tuning_config):
         model = row.Model
         prec = prec_df.loc[prec_df.Model == model, "Precision_mean"].values[0]
         mem = mem_df.loc[mem_df.model == model, "mean_overlap_score"].values[0]
-        assert row.Overlap_score_k_scaled == pytest.approx(prec + 1 * mem)
+        assert row.Overlap_score_k_scaled == pytest.approx(prec - 1 * mem)
 
 
 def test_run_overlap_tuning(sample_tuning_config, tmp_path, mocker):
@@ -120,7 +120,7 @@ def test_run_overlap_tuning(sample_tuning_config, tmp_path, mocker):
     mocker.patch('gen_airr_bm.tuning.tuning_overlap.plot_tuning_score_by_k', side_effect=lambda *args, **kwargs: plot_calls.setdefault('by_k', True))
 
     saved = {}
-    def fake_save(cfg_arg, name, df, outdir, plot_title=None):
+    def fake_save(cfg_arg, name, df, outdir, plot_title=None, plot_ascending_scores=False):
         saved['called'] = (name, outdir)
     mocker.patch('gen_airr_bm.tuning.tuning_overlap.save_and_plot_tuning_results', side_effect=fake_save)
 
