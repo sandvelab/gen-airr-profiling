@@ -25,7 +25,7 @@ def run_reduced_dim_tuning(tuning_config: TuningConfig) -> None:
 
     for analysis_name, summary_df in zip(summary_names, summary_dfs):
         save_and_plot_tuning_results(tuning_config, analysis_name, summary_df, tuning_config.tuning_output_dir,
-                                     plot_title="Absolute difference to reference JSD score.")
+                                     plot_title=f"JSD scores between reference and generated {analysis_name} distributions")
 
 
 def collect_analyses_results(tuning_config: TuningConfig) -> tuple:
@@ -49,15 +49,15 @@ def collect_analyses_results(tuning_config: TuningConfig) -> tuple:
             amino_acid_dfs.append(df)
 
     aa_data = pd.concat(amino_acid_dfs, ignore_index=True)
-    aa_summary = aa_data.groupby(["Reference", "Model"], as_index=False)["abs_diff_to_ref"].mean()
+    aa_summary = aa_data.groupby(["Reference", "Model"], as_index=False)["Mean_Score"].mean()
 
     kmer_data = pd.read_csv(os.path.join(analyses_dir, "kmer_grouped.tsv"), sep="\t")
-    kmer_summary = kmer_data.groupby(["Reference", "Model"], as_index=False)["abs_diff_to_ref"].mean()
+    kmer_summary = kmer_data.groupby(["Reference", "Model"], as_index=False)["Mean_Score"].mean()
 
     seq_len_data = pd.read_csv(os.path.join(analyses_dir, "length_grouped.tsv"), sep="\t")
-    length_summary = seq_len_data.groupby(["Reference", "Model"], as_index=False)["abs_diff_to_ref"].mean()
+    length_summary = seq_len_data.groupby(["Reference", "Model"], as_index=False)["Mean_Score"].mean()
 
     for df in [aa_summary, kmer_summary, length_summary]:
-        df.rename(columns={"abs_diff_to_ref": "Score"}, inplace=True)
+        df.rename(columns={"Mean_Score": "Score"}, inplace=True)
 
     return aa_summary, kmer_summary, length_summary

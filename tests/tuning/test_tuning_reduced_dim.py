@@ -42,12 +42,12 @@ def test_collect_analyses_results(sample_tuning_config, tmp_path):
     aa1 = pd.DataFrame({
         "Reference": ["refA", "refA"],
         "Model": ["model1", "model1"],
-        "abs_diff_to_ref": [0.1, 0.3]
+        "Mean_Score": [0.1, 0.3]
     })
     aa2 = pd.DataFrame({
         "Reference": ["refA"],
         "Model": ["model2"],
-        "abs_diff_to_ref": [0.2]
+        "Mean_Score": [0.2]
     })
     _write_tsv(analyses_dir / "aminoacid_model1.tsv", aa1)
     _write_tsv(analyses_dir / "aminoacid_model2.tsv", aa2)
@@ -56,7 +56,7 @@ def test_collect_analyses_results(sample_tuning_config, tmp_path):
     kmer = pd.DataFrame({
         "Reference": ["refA", "refA"],
         "Model": ["model1", "model2"],
-        "abs_diff_to_ref": [0.05, 0.15]
+        "Mean_Score": [0.05, 0.15]
     })
     _write_tsv(analyses_dir / "kmer_grouped.tsv", kmer)
 
@@ -64,7 +64,7 @@ def test_collect_analyses_results(sample_tuning_config, tmp_path):
     length_df = pd.DataFrame({
         "Reference": ["refA", "refA"],
         "Model": ["model1", "model2"],
-        "abs_diff_to_ref": [0.2, 0.4]
+        "Mean_Score": [0.2, 0.4]
     })
     _write_tsv(analyses_dir / "length_grouped.tsv", length_df)
 
@@ -93,10 +93,10 @@ def test_run_reduced_dim_tuning(sample_tuning_config, tmp_path, mocker):
     analyses_dir.mkdir(parents=True)
 
     # Create minimal files needed by collect_analyses_results
-    aa = pd.DataFrame({"Reference": ["refA"], "Model": ["m"], "abs_diff_to_ref": [0.5]})
+    aa = pd.DataFrame({"Reference": ["refA"], "Model": ["m"], "Mean_Score": [0.5]})
     _write_tsv(analyses_dir / "aminoacid_m.tsv", aa)
-    _write_tsv(analyses_dir / "kmer_grouped.tsv", pd.DataFrame({"Reference":["refA"], "Model":["m"], "abs_diff_to_ref":[0.6]}))
-    _write_tsv(analyses_dir / "length_grouped.tsv", pd.DataFrame({"Reference":["refA"], "Model":["m"], "abs_diff_to_ref":[0.7]}))
+    _write_tsv(analyses_dir / "kmer_grouped.tsv", pd.DataFrame({"Reference":["refA"], "Model":["m"], "Mean_Score":[0.6]}))
+    _write_tsv(analyses_dir / "length_grouped.tsv", pd.DataFrame({"Reference":["refA"], "Model":["m"], "Mean_Score":[0.7]}))
 
     # patch validate_analyses_data to avoid external checks and return the analyses path
     mocker.patch('gen_airr_bm.tuning.tuning_reduced_dim.validate_analyses_data', return_value=[str(analyses_dir)])
@@ -117,7 +117,7 @@ def test_run_reduced_dim_tuning(sample_tuning_config, tmp_path, mocker):
     assert set(names) == {"aminoacid", "kmer", "length"}
 
     # Check that the dataframes contain the Score column
-    for _, df, outdir, title in calls:
+    for analysis_name, df, outdir, title in calls:
         assert "Score" in df.columns
         assert outdir == sample_tuning_config.tuning_output_dir
-        assert title == "Absolute difference to reference JSD score."
+        assert title == f"JSD scores between reference and generated {analysis_name} distributions"
