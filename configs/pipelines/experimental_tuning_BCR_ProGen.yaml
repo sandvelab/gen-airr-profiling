@@ -1,11 +1,11 @@
 n_experiments: 1
-output_dir: "RESULTS_TUNING_OCT24/BCR"
+output_dir: "RESULTS_TUNING_OCT24/BCR_10K"
 input_dir: "data/tuning/BCR"
 seed: 42
 #data_generation:
 #  experimental: True
 #  method: "experimental"
-#  n_samples: 17500
+#  n_samples: 10700
 #  default_model_name: "humanIGH"
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
@@ -14,182 +14,182 @@ models:
       immuneml_model_config: "configs/tuning/ProGen/progen_01.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_02"
       immuneml_model_config: "configs/tuning/ProGen/progen_02.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_03"
       immuneml_model_config: "configs/tuning/ProGen/progen_03.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_04"
       immuneml_model_config: "configs/tuning/ProGen/progen_04.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_05"
       immuneml_model_config: "configs/tuning/ProGen/progen_05.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_06"
       immuneml_model_config: "configs/tuning/ProGen/progen_06.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_07"
       immuneml_model_config: "configs/tuning/ProGen/progen_07.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_08"
       immuneml_model_config: "configs/tuning/ProGen/progen_08.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_09"
       immuneml_model_config: "configs/tuning/ProGen/progen_09.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_10"
       immuneml_model_config: "configs/tuning/ProGen/progen_10.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_11"
       immuneml_model_config: "configs/tuning/ProGen/progen_11.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_12"
       immuneml_model_config: "configs/tuning/ProGen/progen_12.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_13"
       immuneml_model_config: "configs/tuning/ProGen/progen_13.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_14"
       immuneml_model_config: "configs/tuning/ProGen/progen_14.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_15"
       immuneml_model_config: "configs/tuning/ProGen/progen_15.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_16"
       immuneml_model_config: "configs/tuning/ProGen/progen_16.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_17"
       immuneml_model_config: "configs/tuning/ProGen/progen_17.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_18"
       immuneml_model_config: "configs/tuning/ProGen/progen_18.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_19"
       immuneml_model_config: "configs/tuning/ProGen/progen_19.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_20"
       immuneml_model_config: "configs/tuning/ProGen/progen_20.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_21"
       immuneml_model_config: "configs/tuning/ProGen/progen_21.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_22"
       immuneml_model_config: "configs/tuning/ProGen/progen_22.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_23"
       immuneml_model_config: "configs/tuning/ProGen/progen_23.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_24"
       immuneml_model_config: "configs/tuning/ProGen/progen_24.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_25"
       immuneml_model_config: "configs/tuning/ProGen/progen_25.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_26"
       immuneml_model_config: "configs/tuning/ProGen/progen_26.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_27"
       immuneml_model_config: "configs/tuning/ProGen/progen_27.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_28"
       immuneml_model_config: "configs/tuning/ProGen/progen_28.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_29"
       immuneml_model_config: "configs/tuning/ProGen/progen_29.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_30"
       immuneml_model_config: "configs/tuning/ProGen/progen_30.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_31"
       immuneml_model_config: "configs/tuning/ProGen/progen_31.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_32"
       immuneml_model_config: "configs/tuning/ProGen/progen_32.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_33"
       immuneml_model_config: "configs/tuning/ProGen/progen_33.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_34"
       immuneml_model_config: "configs/tuning/ProGen/progen_34.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_35"
       immuneml_model_config: "configs/tuning/ProGen/progen_35.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
     - name: "progen_36"
       immuneml_model_config: "configs/tuning/ProGen/progen_36.yaml"
       train_dir: "train"
       test_dir: "test"
-      n_subset_samples: 17500
+      n_subset_samples: 10700
 
 
 analyses:
@@ -210,10 +210,23 @@ analyses:
                      "progen_33", "progen_34", "progen_35", "progen_36" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
-      n_subsets: 8
+      n_subsets: 13
       allowed_mismatches: 0
       indels: False
       subfolder_name: "all ProGen models dist 0"
+    - name: "memorization"
+      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 13
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: True
+      subfolder_name: "all ProGen models dist 0 deduplicated"
     - name: "diversity"
       model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
                      "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
@@ -222,7 +235,7 @@ analyses:
                      "progen_33", "progen_34", "progen_35", "progen_36" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
-      n_subsets: 8
+      n_subsets: 13
       subfolder_name: "all ProGen models"
     - name: "network"
       model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
@@ -232,7 +245,7 @@ analyses:
                      "progen_33", "progen_34", "progen_35", "progen_36" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
-      n_subsets: 8
+      n_subsets: 13
       subfolder_name: "all ProGen models"
     - name: "precision_recall"
       model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
@@ -242,11 +255,35 @@ analyses:
                      "progen_33", "progen_34", "progen_35", "progen_36" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
-      n_subsets: 8
+      n_subsets: 13
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all ProGen models dist 0"
+    - name: "precision_recall"
+      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 13
       allowed_mismatches: 0
       indels: False
       deduplicate: True
-      subfolder_name: "all ProGen models dist 0"
+      subfolder_name: "all ProGen models dist 0 deduplicated"
+    - name: "precision_recall"
+      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 13
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all ProGen models dist 1"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
@@ -267,4 +304,14 @@ tuning:
       reference_data: [ "train", "test" ]
       k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
       subfolder_name: "all ProGen models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",
+                     "progen_09", "progen_10", "progen_11", "progen_12", "progen_13", "progen_14", "progen_15", "progen_16",
+                     "progen_17", "progen_18", "progen_19", "progen_20", "progen_21", "progen_22", "progen_23", "progen_24",
+                     "progen_25", "progen_26", "progen_27", "progen_28", "progen_29", "progen_30", "progen_31", "progen_32",
+                     "progen_33", "progen_34", "progen_35", "progen_36" ]
+      reference_data: [ "train", "test" ]
+      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+      subfolder_name: "all ProGen models dist 0 deduplicated"
       hyperparameter_table_path: "data/hyperparameter_tables/ProGen2.tsv"
