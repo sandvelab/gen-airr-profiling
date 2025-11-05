@@ -1,0 +1,40 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    model:
+      ProGen:
+        locus: beta
+        tokenizer_path: 'progen2/tokenizer.json'
+        trained_model_path: 'progen2/progen2-oas'
+        device: cuda
+        num_frozen_layers: 22
+        num_epochs: 1
+        learning_rate: 0.00004
+        fp16: False
+        prefix_text: '<|bos|>1'
+        suffix_text: '2<|eos|>'
+        max_new_tokens: 1024
+        temperature: 0.8
+        top_p: 0.7
+        prompt: '1'
+        num_gen_batches: 1000
+        per_device_train_batch_size: 2
+        remove_affixes: True
+        seed: null
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: True
+    dataset: dataset
+    method: model
+    gen_examples_count: 130000
+    number_of_processes: 1
+    training_percentage: 1
