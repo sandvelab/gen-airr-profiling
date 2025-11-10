@@ -15,7 +15,7 @@ definitions:
         sequence_type: amino_acid
         num_epochs: 50
         batch_size: 64
-        device: cpu
+        device: cuda
         hidden_size: 1024
         learning_rate: 0.001
         embed_size: 256
