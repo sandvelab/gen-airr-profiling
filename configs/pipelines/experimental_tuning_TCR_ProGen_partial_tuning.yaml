@@ -9,7 +9,7 @@ seed: 42
 #  default_model_name: "humanTRB"
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
-models:
+#models:
 #    - name: "progen_01"
 #      immuneml_model_config: "configs/tuning/TCR/ProGen/progen_01.yaml"
 #      train_dir: "train"
