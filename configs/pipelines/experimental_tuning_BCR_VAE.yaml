@@ -131,35 +131,35 @@ seed: 42
 #      test_dir: "test"
 #      n_subset_samples: 10000
 
-analyses:
-    - name: "reduced_dimensionality"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      subfolder_name: "all VAE models"
-    - name: "memorization"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      subfolder_name: "all VAE models dist 0"
-    - name: "memorization"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: True
-      subfolder_name: "all VAE models dist 0 deduplicated"
+#analyses:
+#    - name: "reduced_dimensionality"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      subfolder_name: "all VAE models"
+#    - name: "memorization"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      subfolder_name: "all VAE models dist 0"
+#    - name: "memorization"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: True
+#      subfolder_name: "all VAE models dist 0 deduplicated"
 #    - name: "diversity"
 #      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
 #                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
@@ -168,45 +168,45 @@ analyses:
 #      reference_data: [ "train", "test" ]
 #      n_subsets: 6
 #      subfolder_name: "all VAE models"
-    - name: "network"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all VAE models"
-    - name: "precision_recall"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      subfolder_name: "all VAE models dist 0"
-    - name: "precision_recall"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: True
-      subfolder_name: "all VAE models dist 0 deduplicated"
-    - name: "precision_recall"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 1
-      indels: True
-      subfolder_name: "all VAE models dist 1"
+#    - name: "network"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      subfolder_name: "all VAE models"
+#    - name: "precision_recall"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      subfolder_name: "all VAE models dist 0"
+#    - name: "precision_recall"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: True
+#      subfolder_name: "all VAE models dist 0 deduplicated"
+#    - name: "precision_recall"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 1
+#      indels: True
+#      subfolder_name: "all VAE models dist 1"
 
 tuning:
     - tuning_method: "reduced_dimensionality"
@@ -216,19 +216,19 @@ tuning:
       reference_data: [ "train", "test" ]
       subfolder_name: "all VAE models"
       hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      reference_data: [ "train", "test" ]
-      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all VAE models dist 0"
-      hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
-                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
-                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
-      reference_data: [ "train", "test" ]
-      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-      subfolder_name: "all VAE models dist 0 deduplicated"
-      hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+#      subfolder_name: "all VAE models dist 0"
+#      hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+#                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+#                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+#      subfolder_name: "all VAE models dist 0 deduplicated"
+#      hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
