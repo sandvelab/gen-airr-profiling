@@ -9,167 +9,167 @@ seed: 42
 #  default_model_name: "humanIGH"
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
-models:
-    - name: "S_01"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_01.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_02"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_02.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_03"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_03.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_04"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_04.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_05"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_05.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_06"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_06.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_07"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_07.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_08"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_08.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_09"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_09.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_10"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_10.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_11"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_11.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_12"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_12.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_13"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_13.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_14"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_14.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_15"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_15.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_16"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_16.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_17"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_17.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_18"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_18.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_19"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_19.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_20"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_20.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_21"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_21.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_22"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_22.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_23"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_23.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_24"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_24.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_25"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_25.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_26"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_26.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_27"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_27.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_28"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_28.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_29"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_29.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_30"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_30.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_31"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_31.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "S_32"
-      immuneml_model_config: "configs/tuning/BCR/Saka/S_32.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
+#models:
+#    - name: "S_01"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_01.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_02"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_02.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_03"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_03.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_04"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_04.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_05"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_05.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_06"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_06.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_07"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_07.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_08"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_08.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_09"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_09.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_10"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_10.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_11"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_11.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_12"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_12.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_13"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_13.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_14"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_14.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_15"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_15.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_16"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_16.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_17"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_17.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_18"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_18.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_19"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_19.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_20"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_20.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_21"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_21.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_22"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_22.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_23"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_23.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_24"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_24.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_25"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_25.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_26"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_26.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_27"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_27.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_28"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_28.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_29"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_29.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_30"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_30.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_31"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_31.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "S_32"
+#      immuneml_model_config: "configs/tuning/BCR/Saka/S_32.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
 
 
 analyses:
@@ -204,15 +204,15 @@ analyses:
       indels: False
       deduplicate: True
       subfolder_name: "all Saka models dist 0 deduplicated"
-    - name: "diversity"
-      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
-                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
-                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
-                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all Saka models"
+#    - name: "diversity"
+#      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
+#                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
+#                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
+#                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      subfolder_name: "all Saka models"
     - name: "network"
       model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
                      "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
