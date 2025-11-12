@@ -1,4 +1,4 @@
-n_experiments: 1
+n_experiments: 11
 output_dir: "RESULTS_NOV12/TCR"
 input_dir: "data/experimental/collectionA"
 seed: 42
@@ -11,12 +11,12 @@ data_generation:
   input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
-    - name: "VAE04"
+    - name: "VAE_overlap"
       immuneml_model_config: "configs/generative_models/TCR/VAE/VAE04.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 21500
-    - name: "VAE24"
+    - name: "VAE_kmer"
       immuneml_model_config: "configs/generative_models/TCR/VAE/VAE24.yaml"
       train_dir: "train"
       test_dir: "test"
@@ -24,12 +24,12 @@ models:
 
 analyses:
     - name: "reduced_dimensionality"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       subfolder_name: "all VAE models"
     - name: "memorization"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -37,7 +37,7 @@ analyses:
       indels: False
       subfolder_name: "all VAE models dist 0"
     - name: "memorization"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -46,13 +46,13 @@ analyses:
       deduplicate: True
       subfolder_name: "all VAE models dist 0 deduplicated"
     - name: "network"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "all VAE models"
     - name: "precision_recall"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -60,7 +60,7 @@ analyses:
       indels: False
       subfolder_name: "all VAE models dist 0"
     - name: "precision_recall"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -69,7 +69,7 @@ analyses:
       deduplicate: True
       subfolder_name: "all VAE models dist 0 deduplicated"
     - name: "precision_recall"
-      model_names: [ "VAE04", "VAE24" ]
+      model_names: [ "VAE_overlap", "VAE_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
