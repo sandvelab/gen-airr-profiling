@@ -75,7 +75,6 @@ def compute_overlap_score(tuning_config: TuningConfig, memorization_df: pd.DataF
     for k in tuning_config.k_values:
         overlap_score_k_scaled = (precision_scores["Precision_mean"].values - k *
                                   memorization_scores["mean_overlap_score"].values)
-        # overlap_score = precision_scores["Precision_mean"].values
         overlap_score = recall_scores["Recall_mean"].values
         for model, score_k, score, prec, mem in zip(recall_scores["Model"].values,
                                                     overlap_score_k_scaled,

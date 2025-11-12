@@ -62,7 +62,8 @@ def test_compute_overlap_score(sample_tuning_config):
     # Prepare precision_recall_df including an upper_reference row
     prec_df = pd.DataFrame({
         "Model": ["model_1", "model_2", "upper_reference"],
-        "Precision_mean": [0.5, 0.6, 0.9]
+        "Precision_mean": [0.5, 0.6, 0.9],
+        "Recall_mean": [0.5, 0.6, 0.9]
     })
 
     mem_df = pd.DataFrame({"model": ["model_1", "model_2"], "mean_overlap_score": [0.1, 0.2]})
@@ -105,8 +106,8 @@ def test_run_overlap_tuning(sample_tuning_config, tmp_path, mocker):
 
     prec_dir = root / "analyses" / "precision_recall" / subfolder / "test"
     prec_dir.mkdir(parents=True, exist_ok=True)
-    prec_df = pd.DataFrame({"Model": ["model_1", "upper_reference"], "Precision_mean": [0.4, 0.45]})
-    _write_tsv(prec_dir / "precision_recall_data.tsv", prec_df)
+    prec_rec_df = pd.DataFrame({"Model": ["model_1", "upper_reference"], "Precision_mean": [0.5, 0.6], "Recall_mean": [0.4, 0.45]})
+    _write_tsv(prec_dir / "precision_recall_data.tsv", prec_rec_df)
 
     sample_tuning_config.root_output_dir = str(root)
     sample_tuning_config.tuning_output_dir = str(tmp_path / "tuning_out")

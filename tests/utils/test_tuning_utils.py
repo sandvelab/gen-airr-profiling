@@ -10,7 +10,7 @@ from gen_airr_bm.core.tuning_config import TuningConfig
 def test_format_value():
     assert tuning_utils.format_value(3) == "3"
     assert tuning_utils.format_value(np.int64(7)) == "7"
-    assert tuning_utils.format_value(3.14159) == "3.142"
+    assert tuning_utils.format_value(3.1415903) == "3.14159"
     assert tuning_utils.format_value(np.float64(2.5)) == "2.5"
     assert tuning_utils.format_value("abc") == "abc"
 
