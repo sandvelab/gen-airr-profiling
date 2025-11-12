@@ -2,174 +2,174 @@ n_experiments: 1
 output_dir: "RESULTS_TUNING_NOV6/BCR"
 input_dir: "data/tuning/BCR"
 seed: 42
-data_generation:
-  experimental: True
-  method: "experimental"
-  n_samples: 10000
-  default_model_name: "humanIGH"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
-
-models:
-    - name: "A_01"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_01.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_02"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_02.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_03"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_03.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_04"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_04.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_05"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_05.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_06"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_06.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_07"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_07.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_08"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_08.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_09"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_09.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_10"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_10.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_11"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_11.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_12"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_12.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_13"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_13.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_14"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_14.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_15"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_15.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_16"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_16.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_17"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_17.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_18"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_18.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_19"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_19.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_20"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_20.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_21"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_21.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_22"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_22.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_23"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_23.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_24"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_24.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_25"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_25.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_26"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_26.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_27"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_27.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_28"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_28.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_29"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_29.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_30"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_30.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_31"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_31.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "A_32"
-      immuneml_model_config: "configs/tuning/BCR/Akbar/A_32.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 10000
+#  default_model_name: "humanIGH"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+#
+#models:
+#    - name: "A_01"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_01.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_02"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_02.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_03"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_03.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_04"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_04.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_05"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_05.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_06"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_06.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_07"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_07.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_08"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_08.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_09"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_09.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_10"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_10.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_11"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_11.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_12"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_12.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_13"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_13.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_14"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_14.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_15"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_15.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_16"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_16.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_17"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_17.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_18"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_18.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_19"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_19.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_20"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_20.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_21"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_21.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_22"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_22.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_23"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_23.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_24"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_24.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_25"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_25.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_26"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_26.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_27"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_27.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_28"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_28.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_29"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_29.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_30"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_30.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_31"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_31.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "A_32"
+#      immuneml_model_config: "configs/tuning/BCR/Akbar/A_32.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
 
 
 analyses:

@@ -132,7 +132,7 @@ seed: 42
 #      test_dir: "test"
 #      n_subset_samples: 21500
 
-analyses:
+#analyses:
 #    - name: "reduced_dimensionality"
 #      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
 #                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
@@ -141,72 +141,72 @@ analyses:
 #      default_model_name: "humanTRB"
 #      reference_data: [ "train", "test" ]
 #      subfolder_name: "all soNNia models"
-    - name: "memorization"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      subfolder_name: "all soNNia models dist 0"
-    - name: "memorization"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: True
-      subfolder_name: "all soNNia models dist 0 deduplicated"
-    - name: "network"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      subfolder_name: "all soNNia models"
-    - name: "precision_recall"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      subfolder_name: "all soNNia models dist 0"
-    - name: "precision_recall"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: True
-      subfolder_name: "all soNNia models dist 0 deduplicated"
-    - name: "precision_recall"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 6
-      allowed_mismatches: 1
-      indels: True
-      subfolder_name: "all soNNia models dist 1"
+#    - name: "memorization"
+#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+#                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+#                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+#                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      subfolder_name: "all soNNia models dist 0"
+#    - name: "memorization"
+#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+#                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+#                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+#                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: True
+#      subfolder_name: "all soNNia models dist 0 deduplicated"
+#    - name: "network"
+#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+#                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+#                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+#                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      subfolder_name: "all soNNia models"
+#    - name: "precision_recall"
+#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+#                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+#                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+#                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      subfolder_name: "all soNNia models dist 0"
+#    - name: "precision_recall"
+#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+#                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+#                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+#                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: True
+#      subfolder_name: "all soNNia models dist 0 deduplicated"
+#    - name: "precision_recall"
+#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+#                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+#                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+#                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 6
+#      allowed_mismatches: 1
+#      indels: True
+#      subfolder_name: "all soNNia models dist 1"
 #    - name: "diversity"
 #      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
 #                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",

@@ -13,8 +13,8 @@ def format_value(x):
     if isinstance(x, (int, np.integer)):
         return str(int(x))
     if isinstance(x, (float, np.floating)):
-        # show 3 decimals max, drop trailing zeros
-        return f"{x:.3f}".rstrip("0").rstrip(".")
+        # show 5 decimals max, drop trailing zeros
+        return f"{x:.5f}".rstrip("0").rstrip(".")
     return str(x)
 
 

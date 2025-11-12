@@ -218,31 +218,31 @@ seed: 42
 #      subfolder_name: "all soNNia models"
 
 tuning:
-    - tuning_method: "reduced_dimensionality"
-      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-      reference_data: [ "train", "test" ]
-      subfolder_name: "all soNNia models"
-      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
-#    - tuning_method: "overlap"
+#    - tuning_method: "reduced_dimensionality"
 #      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
 #                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
 #                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
 #                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
 #      reference_data: [ "train", "test" ]
-#      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-#      subfolder_name: "all soNNia models dist 0"
+#      subfolder_name: "all soNNia models"
 #      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
-#    - tuning_method: "overlap"
-#      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
-#                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
-#                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
-#                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-#      reference_data: [ "train", "test" ]
-#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-#      subfolder_name: "all soNNia models dist 0 deduplicated"
-#      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                      "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+                      "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+                      "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "all soNNia models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06",
+                     "sonnia_07", "sonnia_08", "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12",
+                     "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16", "sonnia_17", "sonnia_18",
+                     "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      reference_data: [ "train", "test" ]
+      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+      subfolder_name: "all soNNia models dist 0 deduplicated"
+      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
 
 
