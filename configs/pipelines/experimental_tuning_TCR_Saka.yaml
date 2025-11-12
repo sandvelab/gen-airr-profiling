@@ -9,7 +9,7 @@ seed: 42
 #  default_model_name: "humanTRB"
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
-models:
+#models:
 #    - name: "S_01"
 #      immuneml_model_config: "configs/tuning/TCR/Saka/S_01.yaml"
 #      train_dir: "train"
@@ -90,11 +90,11 @@ models:
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 21500
-    - name: "S_17"
-      immuneml_model_config: "configs/tuning/TCR/Saka/S_17.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 21500
+#    - name: "S_17"
+#      immuneml_model_config: "configs/tuning/TCR/Saka/S_17.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 21500
 #    - name: "S_18"
 #      immuneml_model_config: "configs/tuning/TCR/Saka/S_18.yaml"
 #      train_dir: "train"
@@ -173,14 +173,14 @@ models:
 
 
 analyses:
-#    - name: "reduced_dimensionality"
-#      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
-#                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
-#                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
-#                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
-#      default_model_name: "humanTRB"
-#      reference_data: [ "train", "test" ]
-#      subfolder_name: "all Saka models"
+    - name: "reduced_dimensionality"
+      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
+                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
+                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
+                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all Saka models"
     - name: "memorization"
       model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
                      "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
@@ -204,15 +204,15 @@ analyses:
       indels: False
       deduplicate: True
       subfolder_name: "all Saka models dist 0 deduplicated"
-#    - name: "diversity"
-#      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
-#                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
-#                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
-#                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
-#      default_model_name: "humanTRB"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 6
-#      subfolder_name: "all Saka models"
+    - name: "diversity"
+      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
+                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
+                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
+                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all Saka models"
     - name: "network"
       model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
                      "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
@@ -258,14 +258,14 @@ analyses:
       subfolder_name: "all Saka models dist 1"
 
 tuning:
-#    - tuning_method: "reduced_dimensionality"
-#      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
-#                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
-#                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
-#                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
-#      reference_data: [ "train", "test" ]
-#      subfolder_name: "all Saka models"
-#      hyperparameter_table_path: "data/hyperparameter_tables/Saka.tsv"
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
+                     "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
+                     "S_17", "S_18", "S_19", "S_20", "S_21", "S_22", "S_23", "S_24",
+                     "S_25", "S_26", "S_27", "S_28", "S_29", "S_30", "S_31", "S_32" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all Saka models"
+      hyperparameter_table_path: "data/hyperparameter_tables/Saka.tsv"
     - tuning_method: "overlap"
       model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
                      "S_09", "S_10", "S_11", "S_12", "S_13", "S_14", "S_15", "S_16",
