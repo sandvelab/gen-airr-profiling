@@ -21,7 +21,7 @@ definitions:
         fp16: False
         prefix_text: '<|bos|>1'
         suffix_text: '2<|eos|>'
-        max_new_tokens: 128
+        max_new_tokens: 64
         temperature: 1.0
         top_p: 0.7
         prompt: '1'
