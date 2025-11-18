@@ -1,10 +1,13 @@
 import os
+import textwrap
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.colors as pc
+
+from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
@@ -57,16 +60,15 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     print(f"Plot saved as PNG at: {png_path}.png")
 
 
-def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, reference_data, file_name,
+def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref, std_scores_by_ref,  file_name,
                             distribution_type, scoring_method="JSD", reference_score=None) -> None:
     """
     Plots grouped bar chart for mean scores across models and reference types.
 
     Args:
+        analysis_config: AnalysisConfig object containing analysis settings
         mean_scores_by_ref: dict of {ref_label: {model: mean_score}}
         std_scores_by_ref: dict of {ref_label: {model: std_score}}
-        output_dir: output directory
-        reference_data: string or list, used for subfolder naming
         file_name: output file name without extension
         distribution_type: used for titles. e.g. "connectivity"
         scoring_method: used for titles. e.g. "JSD"
@@ -74,6 +76,9 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
     Returns:
         None
     """
+    reference_data = analysis_config.reference_data
+    output_dir = analysis_config.analysis_output_dir
+    receptor_type = analysis_config.receptor_type
     if isinstance(reference_data, (list, tuple)):
         ref_folder = "_".join(reference_data)
     else:
@@ -115,15 +120,17 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
     ]
 
     fig = go.Figure(data=data)
+    color_palette = px.colors.qualitative.Safe
+    title_text = f"{distribution_type.title()} Distribution Comparison: Generated vs. Train and Test {receptor_type} Sets"
     fig.update_layout(
         barmode='group',
-        title={'text': f"Comparison of Model and Reference {distribution_type.capitalize()} Distributions",
-               'font': {'size': 14}},
-        xaxis_title="Models",
-        yaxis_title=f"Mean {scoring_method} score",
+        title={'text': wrap_title(title_text),
+               'font': {'size': 18}},
+        xaxis_title="Model",
+        yaxis_title=f"Mean {scoring_method}",
         xaxis_tickangle=-45,
         template="plotly_white",
-        colorway=pc.qualitative.Set2,
+        colorway=color_palette,
         showlegend=True,
     )
 
@@ -131,12 +138,16 @@ def plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref, output_dir, r
         fig.add_hline(
             y=reference_score,
             line=dict(color="black", dash="dash"),
-            annotation_text=f"reference={reference_score:.3f}",
+            annotation_text=f"Train vs. Test = {reference_score:.3f}",
             annotation_position="top right"
         )
 
     fig.write_image(png_path)
     print(f"Plot saved as PNG at: {png_path}")
+
+
+def wrap_title(text, width=60):
+    return "<br>".join(textwrap.wrap(text, width=width))
 
 
 def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_degree_distributions, output_dir,

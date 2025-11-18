@@ -67,12 +67,11 @@ class AADistributionStrategy(BaseDistributionStrategy):
         for length in range(10, 21):
             mean_by_ref = {ref: mean_scores_by_ref[ref].get(length, {}) for ref in mean_scores_by_ref}
             std_by_ref = {ref: std_scores_by_ref[ref].get(length, {}) for ref in std_scores_by_ref}
-            file_name = f"{distribution_type}_{length}_grouped"
+            file_name = distribution_type.replace(" ", "") + f"_{length}_grouped"
             mean_reference_score = mean_reference_scores[length-10] if mean_reference_scores else None
-            plot_grouped_avg_scores(mean_by_ref, std_by_ref,
-                                    analysis_config.analysis_output_dir, analysis_config.reference_data,
+            plot_grouped_avg_scores(analysis_config, mean_by_ref, std_by_ref,
                                     file_name, f"{distribution_type} (sequence length: {length})",
-                                    "JSD", mean_reference_score)
+                                    "Jensen-Shannon Divergence", mean_reference_score)
 
 
 def compute_positional_aa_dist(sequences):

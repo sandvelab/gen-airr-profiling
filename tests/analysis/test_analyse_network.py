@@ -31,7 +31,8 @@ def sample_analysis_config():
         default_model_name="humanTRB",
         reference_data=["train", "test"],
         n_subsets=5,
-        subfolder_name="analysis_subfolder"
+        subfolder_name="analysis_subfolder",
+        receptor_type="TCR"
     )
 
 

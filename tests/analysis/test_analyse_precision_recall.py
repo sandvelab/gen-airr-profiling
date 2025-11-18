@@ -27,6 +27,7 @@ def sample_analysis_config():
         subfolder_name="analysis_subfolder",
         allowed_mismatches=0,
         indels=False,
+        receptor_type="TCR"
     )
 
 

@@ -73,7 +73,8 @@ class MainConfig:
                                n_subsets=analysis.get("n_subsets", None),
                                allowed_mismatches=analysis.get("allowed_mismatches", 0),
                                indels=analysis.get("indels", False),
-                               deduplicate=analysis.get("deduplicate", False))
+                               deduplicate=analysis.get("deduplicate", False),
+                               receptor_type=analysis["receptor_type"])
                 for analysis in data.get("analyses", [])
             ])
 

@@ -1,6 +1,6 @@
 class AnalysisConfig:
     def __init__(self, analysis: str, model_names: list, analysis_output_dir: str, root_output_dir: str,
-                 default_model_name: str, reference_data: str | list, subfolder_name: str, n_subsets: int = None,
+                 default_model_name: str, reference_data: str | list, subfolder_name: str, receptor_type: str, n_subsets: int = None,
                  allowed_mismatches: int = 0, indels: bool = False, deduplicate: bool = False):
         self.analysis = analysis
         self.model_names = model_names
@@ -13,9 +13,10 @@ class AnalysisConfig:
         self.allowed_mismatches = allowed_mismatches
         self.indels = indels
         self.deduplicate = deduplicate
+        self.receptor_type = receptor_type
 
     def __repr__(self):
         return (f"AnalysisConfig(analysis={self.analysis}, model_names={self.model_names}, "
                 f"analysis_output_dir={self.analysis_output_dir}, root_output_dir={self.root_output_dir}, "
                 f"default_model_name={self.default_model_name}, reference_data={self.reference_data}, "
-                f"subfolder_name={self.subfolder_name}, n_subsets={self.n_subsets})")
+                f"subfolder_name={self.subfolder_name}, n_subsets={self.n_subsets}, receptor_type={self.receptor_type})")
