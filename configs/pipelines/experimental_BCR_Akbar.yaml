@@ -7,7 +7,7 @@ data_generation:
   experimental: True
   method: "experimental"
   n_samples: 10000
-  default_model_name: "humanTRB"
+  default_model_name: "humanIGH"
   input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
