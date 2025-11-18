@@ -70,7 +70,7 @@ def calculate_similarities_matrix(sequences_dir, output_dir, model_name):
 
             compairr_output_dir = f"{output_dir}/compairr_output"
             run_compairr_existence(compairr_output_dir, unique_sequences_path, concat_sequences_path, file_name,
-                                   allowed_mismatches=1, indels=True)
+                                   allowed_mismatches=0, indels=False)
 
             overlap_df = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t')
             n_nonzero_rows = overlap_df[(overlap_df['dataset_1'] != 0) & (overlap_df['dataset_2'] != 0)].shape[0]
