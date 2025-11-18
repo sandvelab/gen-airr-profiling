@@ -1,0 +1,23 @@
+n_experiments: 7
+output_dir: "RESULTS_NOV12/BCR"
+input_dir: "data/experimental/collectionB"
+seed: 42
+
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 10000
+  default_model_name: "humanTRB"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+
+models:
+    - name: "Akbar_overlap"
+      immuneml_model_config: "configs/generative_models/BCR/Akbar/A_12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 10000
+    - name: "Akbar_kmer"
+      immuneml_model_config: "configs/generative_models/BCR/Akbar/A_24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 10000
