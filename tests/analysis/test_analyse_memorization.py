@@ -62,7 +62,8 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
         {"model1": [0.1, 0.2], "model2": [0.3]},
         0.123,
         "/tmp/test_output/analysis_mem",
-        "memorization"
+        "memorization",
+        "TCR"
     )
 
 
@@ -207,9 +208,10 @@ def test_plot_results(mocker):
     mean_reference_score = 0.42
     fig_dir = "/tmp/out/mem"
     file_name = "mem_plot"
+    receptor_type = "TCR"
 
     # Execute
-    plot_results(model_scores, mean_reference_score, fig_dir, file_name)
+    plot_results(model_scores, mean_reference_score, fig_dir, file_name, receptor_type)
 
     # Figure constructed
     mock_Figure.assert_called_once()
@@ -232,18 +234,11 @@ def test_plot_results(mocker):
     # Layout updated with expected labels and title
     assert mock_fig.update_layout.call_count == 1
     layout_kwargs = mock_fig.update_layout.call_args.kwargs
-    assert "Average Memorization Scores Across Models" in layout_kwargs["title"]
-    assert layout_kwargs["xaxis_title"] == "Models"
-    assert layout_kwargs["yaxis_title"] == "Mean Overlap Score"
+    assert f"Mean Memorization Score for Generated {receptor_type} Sets" in layout_kwargs["title"]
+    assert layout_kwargs["xaxis_title"] == "Model"
+    assert layout_kwargs["yaxis_title"] == "Mean Memorization Ratio"
     assert layout_kwargs["xaxis_tickangle"] == -45
     assert layout_kwargs["template"] == "plotly_white"
-
-    # Reference line added
-    assert mock_fig.add_hline.call_count == 1
-    hline_kwargs = mock_fig.add_hline.call_args.kwargs
-    assert hline_kwargs["y"] == mean_reference_score
-    assert "reference=" in hline_kwargs["annotation_text"]
-    assert f"{mean_reference_score:.3f}" in hline_kwargs["annotation_text"]
 
     # Saved to correct path
     mock_fig.write_image.assert_called_once_with(os.path.join(fig_dir, file_name + ".png"))

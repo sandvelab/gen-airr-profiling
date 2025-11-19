@@ -1,8 +1,10 @@
 import os
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
-from collections import defaultdict
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
@@ -29,7 +31,8 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
     model_memorization_scores = get_model_memorization_scores(analysis_config, output_dir, train_reference)
     mean_reference_memorization_score = get_mean_reference_memorization_score(analysis_config, output_dir)
 
-    plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization")
+    plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization",
+                 analysis_config.receptor_type)
 
 
 def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: str, train_reference: str) -> dict:
@@ -118,13 +121,15 @@ def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test
     return ratio
 
 
-def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str) -> None:
+def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str, receptor_type: str) \
+        -> None:
     """ Plot memorization scores for each model with std error bars and reference line.
     Args:
         model_scores (dict): Dictionary with model names as keys and lists of memorization scores as values.
         mean_reference_score (float): Mean memorization score for the reference data.
         fig_dir (str): Directory to save the plot.
         file_name (str): Name of the output plot and tsv files (without extension).
+        receptor_type (str): Type of receptor being analyzed ("BCR", "TCR").
     Returns:
         None
     """
@@ -154,18 +159,12 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
     ))
 
     fig.update_layout(
-        title=f"Average Memorization Scores Across Models",
-        xaxis_title="Models",
-        yaxis_title=f"Mean Overlap Score",
+        title=f"Mean Memorization Score for Generated {receptor_type} Sets",
+        xaxis_title="Model",
+        yaxis_title=f"Mean Memorization Ratio",
         xaxis_tickangle=-45,
-        template="plotly_white"
-    )
-
-    fig.add_hline(
-        y=mean_reference_score,
-        line=dict(color="black", dash="dash"),
-        annotation_text=f"reference={mean_reference_score:.3f}",
-        annotation_position="top right"
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,
     )
 
     fig.write_image(png_path)
