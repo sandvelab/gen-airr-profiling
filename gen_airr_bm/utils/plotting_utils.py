@@ -150,19 +150,20 @@ def wrap_title(text, width=60):
     return "<br>".join(textwrap.wrap(text, width=width))
 
 
-def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_degree_distributions, output_dir,
+def plot_degree_distribution(analysis_config: AnalysisConfig, ref1_node_degree_distribution, ref2_or_gen_node_degree_distributions,
                              ref2_or_model_name, ref1_name, dataset_name):
     """Plot histograms of the two node degree distributions in one plot (with error bars for generated).
     Args:
+        analysis_config: AnalysisConfig object containing analysis settings
         ref1_node_degree_distribution: pd.Series, index=node_degree, value=count
         ref2_or_gen_node_degree_distributions: list of pd.Series, each with index=node_degree, value=count
-        output_dir: output directory
         ref2_or_model_name: name of the generative model or the second reference set (test)
         ref1_name: string, used for subfolder naming (e.g. 'train')
         dataset_name: name of the dataset
     Returns:
         None
     """
+    output_dir = analysis_config.analysis_output_dir
     fig_dir = os.path.join(output_dir, ref1_name)
     os.makedirs(fig_dir, exist_ok=True)
     png_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.png"
@@ -195,7 +196,6 @@ def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_deg
         x=merged_df.index,
         y=merged_df[f"freq{suffixes[1]}"],
         name=ref2_or_model_name,
-        marker=dict(color='skyblue'),
         error_y=dict(type='data', array=merged_df[f"std{suffixes[1]}"], visible=True)
     ))
 
@@ -203,15 +203,22 @@ def plot_degree_distribution(ref1_node_degree_distribution, ref2_or_gen_node_deg
         x=merged_df.index,
         y=merged_df[f"freq{suffixes[0]}"],
         name=ref1_name,
-        marker=dict(color='orange')
     ))
 
+    fig.update_yaxes(
+        tickvals=[10 ** i for i in range(-6, 3)],
+        ticktext=[str(10 ** i) for i in range(-6, 3)],
+    )
+
+    dataset_name_clean = dataset_name.rsplit("_", 1)[0]
     fig.update_layout(
-        title=f"Comparison of Connectivity Distributions for {dataset_name}",
-        xaxis_title="Number of neighbors",
+        title=wrap_title(f"Connectivity Distribution: Generated vs. {ref1_name} {analysis_config.receptor_type} Sets (Dataset {dataset_name_clean})"),
+        xaxis_title=f"Neighbor Count (Hamming Distance: {analysis_config.allowed_mismatches})",
         yaxis_title="Frequency (log scale)",
         yaxis_type="log",
-        barmode="group"
+        barmode="group",
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,
     )
 
     fig.write_image(png_path)

@@ -55,9 +55,8 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
             for ref_file, gen_files in comparison_files.items():
                 dataset_name, ref_degree_dist, gen_degree_dists = (
-                    get_connectivity_distributions_by_dataset(ref_file, gen_files, compairr_helper_dir,
-                                                              compairr_output_dir, model_name, reference,
-                                                              analysis_config.analysis_output_dir))
+                    get_connectivity_distributions_by_dataset(analysis_config, ref_file, gen_files, compairr_helper_dir,
+                                                              compairr_output_dir, model_name, reference))
                 divergence_scores = calculate_divergence_scores(ref_degree_dist, gen_degree_dists, reference, model_name)
                 divergence_scores_all[reference][dataset_name][model_name].extend(divergence_scores)
 
@@ -67,25 +66,23 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
     mean_reference_divergence_score = get_mean_reference_divergence_score(analysis_config, compairr_helper_dir,
                                                                           compairr_output_dir)
-    summarize_and_plot_all(divergence_scores_all,
-                           analysis_config.analysis_output_dir,
-                           analysis_config.reference_data,
+    summarize_and_plot_all(analysis_config, divergence_scores_all,
                            mean_reference_divergence_score)
 
 
-def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files: list[str], helper_dir: str,
-                                              output_dir: str, name: str, reference: str, analysis_output_dir: str) -> (
+def get_connectivity_distributions_by_dataset(analysis_config: AnalysisConfig, ref1_file: str, ref2_or_gen_files: list[str], helper_dir: str,
+                                              output_dir: str, name: str, reference: str,) -> (
         tuple)[str, pd.Series, list[pd.Series]]:
     """ For a given dataset, this function computes connectivity distributions of reference set 1 (train or test) and
     either reference set 2 (test) or model generated sets. Connectivity distributions are then plotted as histograms.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         ref1_file (str): Path to the reference file 1. E.g. path to train or test file.
         ref2_or_gen_files (list[str]): List of one test file or list of generated sequence files.
         helper_dir (str): Directory for Compairr helper files.
         output_dir (str): Directory for Compairr output files.
         reference (str): Reference data identifier (train or test).
         name (str): Name of generative model or name of second reference set.
-        analysis_output_dir (str): Directory to save output plots.
     Returns:
         tuple: Dataset name, reference1 degree distribution, list of reference 2 or generated degree distributions.
     """
@@ -94,8 +91,7 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
     ref1_degree_dist, ref2_or_gen_degree_dists = get_node_degree_distributions(ref1_file, ref2_or_gen_files, helper_dir,
                                                                                output_dir, name, reference)
 
-    plot_degree_distribution(ref1_degree_dist, ref2_or_gen_degree_dists, analysis_output_dir, name, reference,
-                             dataset_name)
+    plot_degree_distribution(analysis_config, ref1_degree_dist, ref2_or_gen_degree_dists, name, reference, dataset_name)
 
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
 
@@ -164,9 +160,9 @@ def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compair
     reference_comparison_files = get_reference_files(analysis_config)
     for train_file, test_file in reference_comparison_files:
         dataset_name, train_node_degree, test_node_degree = (
-            get_connectivity_distributions_by_dataset(train_file, [test_file], compairr_output_helper_dir,
+            get_connectivity_distributions_by_dataset(analysis_config, train_file, [test_file], compairr_output_helper_dir,
                                                       compairr_output_dir, DatasetSplit.TEST.value,
-                                                      DatasetSplit.TRAIN.value, analysis_config.analysis_output_dir))
+                                                      DatasetSplit.TRAIN.value))
         divergence_scores = calculate_divergence_scores(train_node_degree, test_node_degree, DatasetSplit.TRAIN.value,
                                                         DatasetSplit.TEST.value)
         ref_scores.extend(divergence_scores)
@@ -270,14 +266,13 @@ def summarize_and_plot_dataset_connectivity(dataset_name: str, divergence_scores
     )
 
 
-def summarize_and_plot_all(divergence_scores_all: dict[str, dict[str, dict[str, list]]], output_dir: str,
-                           reference_datasets: list[str], mean_reference_score: float) -> None:
+def summarize_and_plot_all(analysis_config: AnalysisConfig, divergence_scores_all: dict[str, dict[str, dict[str, list]]],
+                           mean_reference_score: float) -> None:
     """ Aggregate scores across references and plot grouped averages.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         divergence_scores_all (dict(dict(dict[list]))): Double nested dictionary with divergence scores by reference,
         dataset and model.
-        output_dir (str): Directory to save the plot.
-        reference_datasets (list[str]): List of reference dataset identifiers.
         mean_reference_score (float): Mean divergence score for the reference data.
     Returns:
         None
@@ -290,13 +285,12 @@ def summarize_and_plot_all(divergence_scores_all: dict[str, dict[str, dict[str, 
         std_scores[reference] = {m: float(np.std(scores)) for m, scores in model_scores.items()}
 
     plot_grouped_avg_scores(
+        analysis_config=analysis_config,
         mean_scores_by_ref=mean_scores,
         std_scores_by_ref=std_scores,
-        output_dir=output_dir,
-        reference_data=reference_datasets,
         distribution_type="connectivity",
         file_name="all_datasets_connectivity",
-        scoring_method="JSD",
+        scoring_method="Jensen-Shannon Divergence",
         reference_score=mean_reference_score
     )
 

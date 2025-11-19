@@ -100,7 +100,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     gen_degree_dists = [pd.Series([2, 1], index=[0, 1], name="genA"),
                         pd.Series([0, 1], index=[1, 2], name="genB")]
 
-    def gcd_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference, analysis_output_dir):
+    def gcd_side_effect(sample_config, ref_file, gen_files, helper_dir, output_dir, model_name, reference):
         # Mimic dataset_name derivation in implementation: basename without extension
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
         # Return the proper 3-tuple
@@ -138,6 +138,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     called_refs = set()
     called_datasets = []
     for call in mock_plot_dataset.call_args_list:
+        # summarize_and_plot_dataset_connectivity(dataset_name, divergence_scores, analysis_config.analysis_output_dir, reference)
         ds_name, divergence_scores, out_dir, reference = call.args
         called_refs.add(reference)
         called_datasets.append(ds_name)
@@ -163,10 +164,8 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     assert mock_get_ref_score.call_count == 1
     mock_plot_all.assert_called_once()
     all_args = mock_plot_all.call_args[0]
-    divergence_scores_all, analysis_output_dir, references, mean_ref_score = all_args
+    sample_analysis_config, divergence_scores_all, mean_ref_score = all_args
 
-    assert analysis_output_dir == sample_analysis_config.analysis_output_dir
-    assert references == sample_analysis_config.reference_data
     assert mean_ref_score == 0.42
 
     # Light structure checks on divergence_scores_all
@@ -178,7 +177,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
                 assert divergence_scores_all[reference][ds][model] == [0.1, 0.2]
 
 
-def test_get_connectivity_distributions_by_dataset(mocker):
+def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_config):
     """Test get_connectivity_distributions_by_dataset computes distributions and plots them."""
     mock_get_dists = mocker.patch('gen_airr_bm.analysis.analyse_network.get_node_degree_distributions')
     mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
@@ -189,17 +188,40 @@ def test_get_connectivity_distributions_by_dataset(mocker):
     mock_get_dists.return_value = (ref_dist, gen_dists)
 
     dataset_name, ref1_degree_dist, gen_degree_dists = get_connectivity_distributions_by_dataset(
+        sample_analysis_config,
         "/path/to/dataset1.tsv",
         ["/path/to/gen1.tsv", "/path/to/gen2.tsv"],
         "/tmp/helper",
         "/tmp/output",
         "model1",
         "test",
-        "/tmp/analysis"
     )
 
     mock_get_dists.assert_called_once()
-    mock_plot.assert_called_once_with(ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1")
+    # Ensure the plotting function was called once and validate its arguments carefully
+    assert mock_plot.call_count == 1
+    plot_call = mock_plot.call_args
+    args, kwargs = plot_call
+
+    # Expected call signature in implementation:
+    # plot_degree_distribution(analysis_config, ref1_degree_dist, ref2_or_gen_degree_dists, name, reference, dataset_name)
+    # Verify the analysis_config object was passed through
+    assert args[0] is sample_analysis_config
+
+    # Verify the returned reference degree distribution matches
+    pd.testing.assert_series_equal(args[1], ref_dist)
+
+    # Verify the generated degree distributions list matches
+    assert isinstance(args[2], list)
+    assert len(args[2]) == len(gen_dists)
+    for actual_series, expected_series in zip(args[2], gen_dists):
+        pd.testing.assert_series_equal(actual_series, expected_series)
+
+    # Verify the remaining scalar arguments
+    assert args[3] == "model1"
+    assert args[4] == "test"
+    assert args[5] == "dataset1"
+
     assert dataset_name == "dataset1"
 
 
@@ -475,9 +497,8 @@ def test_summarize_and_plot_all(mocker):
     mean_reference_score = 0.21
 
     summarize_and_plot_all(
+        analysis_config=sample_analysis_config,
         divergence_scores_all=divergence_scores_all,
-        output_dir=output_dir,
-        reference_datasets=reference_datasets,
         mean_reference_score=mean_reference_score
     )
 
@@ -505,11 +526,9 @@ def test_summarize_and_plot_all(mocker):
             assert std_scores[ref][model] == pytest.approx(exp_val, rel=1e-12, abs=1e-12)
 
     # Non-float kwargs can be compared directly
-    assert kwargs["output_dir"] == output_dir
-    assert kwargs["reference_data"] == reference_datasets
     assert kwargs["distribution_type"] == "connectivity"
     assert kwargs["file_name"] == "all_datasets_connectivity"
-    assert kwargs["scoring_method"] == "JSD"
+    assert kwargs["scoring_method"] == "Jensen-Shannon Divergence"
     assert kwargs["reference_score"] == mean_reference_score
 
 
