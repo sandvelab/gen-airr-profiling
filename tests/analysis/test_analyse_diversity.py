@@ -114,7 +114,8 @@ def test_compute_and_plot_diversity_scores(mocker, sample_analysis_config):
         expected_reference_diversities,
         expected_models_diversities_grouped,
         output_path,
-        metric_name
+        metric_name,
+        sample_analysis_config.receptor_type
     )
 
 
@@ -235,19 +236,18 @@ def test_plot_diversity_scatter_plotly(mocker, tmp_path):
     mock_px_scatter = mocker.patch("gen_airr_bm.analysis.analyse_diversity.px.scatter", return_value=mock_fig)
 
     reference_diversities = {
-        "ref1": {"ds1": 0.1, "ds2": 0.2}
+        "train": {"ds1": 0.1, "ds2": 0.2}
     }
     models_diversities = {
         "modelA": {"ds1": 0.15, "ds2": 0.25}
     }
     output_path = str(tmp_path / "path")
     metric_name = "Gini Coefficient"
+    receptor_type = "TCR"
 
-    plot_diversity_scatter_plotly(reference_diversities, models_diversities, output_path, metric_name)
+    plot_diversity_scatter_plotly(reference_diversities, models_diversities, output_path, metric_name, receptor_type)
 
     expected_df = pd.DataFrame([
-        {"dataset": "ds1", "gini coefficient": 0.1, "source": "ref1"},
-        {"dataset": "ds2", "gini coefficient": 0.2, "source": "ref1"},
         {"dataset": "ds1", "gini coefficient": 0.15, "source": "modelA"},
         {"dataset": "ds2", "gini coefficient": 0.25, "source": "modelA"},
     ])
