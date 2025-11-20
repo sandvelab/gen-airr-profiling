@@ -189,10 +189,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
         None
     """
     data = []
-
-    for ref_name, div_dict in reference_diversities.items():
-        for dataset, value in div_dict.items():
-            data.append({"dataset": dataset.rsplit("_", 1)[0], metric_name.lower(): value, "source": ref_name})
+    unique_reference = list(reference_diversities['train'].values())[0]
 
     for model_name, div_dict in models_diversities.items():
         for dataset, value in div_dict.items():
@@ -208,7 +205,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
         y=metric_name.lower(),
         color="dataset",
         hover_data=["dataset", metric_name.lower()],
-        title=f"{metric_name} for Generated, Train, and Test {receptor_type} Sets",
+        title=f"{metric_name} for Generated {receptor_type} Sets",
         labels={"source": "Source", metric_name.lower(): f"{metric_name} Score"},
     )
 
@@ -219,5 +216,12 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
                       template="plotly_white",
                       colorway=px.colors.qualitative.Safe
                       )
+
+    fig.add_hline(
+        y=unique_reference,
+        line=dict(color="black", dash="dash"),
+        annotation_text=f"All Unique = {unique_reference:.3f}",
+        annotation_position="top right"
+    )
 
     fig.write_image(output_path + ".png")
