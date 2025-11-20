@@ -67,7 +67,8 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, reference
                 if dataset.startswith(datasets_group)
             ])
 
-    plot_diversity_scatter_plotly(reference_diversities, models_diversities_grouped, output_path, metric_name)
+    plot_diversity_scatter_plotly(reference_diversities, models_diversities_grouped, output_path, metric_name,
+                                  analysis_config.receptor_type)
 
 
 def compute_diversities_for_models(models: list, gen_dir, diversity_function: Callable) -> dict:
@@ -177,7 +178,7 @@ def gini_coefficient(sequences: list) -> float:
 
 
 def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversities: dict, output_path: str,
-                                  metric_name: str) -> None:
+                                  metric_name: str, receptor_type: str) -> None:
     """ Plot diversity scores using Plotly scatter plot.
     Args:
         reference_diversities (dict): Dictionary with reference dataset names and their diversity scores.
@@ -191,11 +192,11 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
 
     for ref_name, div_dict in reference_diversities.items():
         for dataset, value in div_dict.items():
-            data.append({"dataset": dataset, metric_name.lower(): value, "source": ref_name})
+            data.append({"dataset": dataset.rsplit("_", 1)[0], metric_name.lower(): value, "source": ref_name})
 
     for model_name, div_dict in models_diversities.items():
         for dataset, value in div_dict.items():
-            data.append({"dataset": dataset, metric_name.lower(): value, "source": model_name})
+            data.append({"dataset": dataset.rsplit("_", 1)[0], metric_name.lower(): value, "source": model_name})
 
     df = pd.DataFrame(data)
     if not os.path.exists(output_path + ".tsv"):
@@ -207,11 +208,16 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
         y=metric_name.lower(),
         color="dataset",
         hover_data=["dataset", metric_name.lower()],
-        title=f"{metric_name} by Source and Dataset",
+        title=f"{metric_name} for Generated, Train, and Test {receptor_type} Sets",
         labels={"source": "Source", metric_name.lower(): f"{metric_name} Score"},
     )
 
     fig.update_traces(marker=dict(size=10, opacity=0.8), selector=dict(mode='markers'))
-    fig.update_layout(legend_title_text="Dataset", xaxis_title="Source", yaxis_title=metric_name)
+    fig.update_layout(legend_title_text="Dataset",
+                      xaxis_title="Data Origin",
+                      yaxis_title=metric_name,
+                      template="plotly_white",
+                      colorway=px.colors.qualitative.Safe
+                      )
 
     fig.write_image(output_path + ".png")
