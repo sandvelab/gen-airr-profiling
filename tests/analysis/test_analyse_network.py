@@ -100,7 +100,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     gen_degree_dists = [pd.Series([2, 1], index=[0, 1], name="genA"),
                         pd.Series([0, 1], index=[1, 2], name="genB")]
 
-    def gcd_side_effect(sample_config, ref_file, gen_files, helper_dir, output_dir, model_name, reference):
+    def gcd_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference):
         # Mimic dataset_name derivation in implementation: basename without extension
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
         # Return the proper 3-tuple
@@ -180,7 +180,6 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
 def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_config):
     """Test get_connectivity_distributions_by_dataset computes distributions and plots them."""
     mock_get_dists = mocker.patch('gen_airr_bm.analysis.analyse_network.get_node_degree_distributions')
-    mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
 
     # Mock degree distributions
     ref_dist = pd.Series([2, 1], index=[0, 1])
@@ -188,7 +187,6 @@ def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_confi
     mock_get_dists.return_value = (ref_dist, gen_dists)
 
     dataset_name, ref1_degree_dist, gen_degree_dists = get_connectivity_distributions_by_dataset(
-        sample_analysis_config,
         "/path/to/dataset1.tsv",
         ["/path/to/gen1.tsv", "/path/to/gen2.tsv"],
         "/tmp/helper",
@@ -198,31 +196,26 @@ def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_confi
     )
 
     mock_get_dists.assert_called_once()
-    # Ensure the plotting function was called once and validate its arguments carefully
-    assert mock_plot.call_count == 1
-    plot_call = mock_plot.call_args
-    args, kwargs = plot_call
-
-    # Expected call signature in implementation:
-    # plot_degree_distribution(analysis_config, ref1_degree_dist, ref2_or_gen_degree_dists, name, reference, dataset_name)
-    # Verify the analysis_config object was passed through
-    assert args[0] is sample_analysis_config
-
-    # Verify the returned reference degree distribution matches
-    pd.testing.assert_series_equal(args[1], ref_dist)
-
-    # Verify the generated degree distributions list matches
-    assert isinstance(args[2], list)
-    assert len(args[2]) == len(gen_dists)
-    for actual_series, expected_series in zip(args[2], gen_dists):
-        pd.testing.assert_series_equal(actual_series, expected_series)
-
-    # Verify the remaining scalar arguments
-    assert args[3] == "model1"
-    assert args[4] == "test"
-    assert args[5] == "dataset1"
-
     assert dataset_name == "dataset1"
+
+    # get_node_degree_distributions should have been called with the exact positional args
+    mock_get_dists.assert_called_once_with(
+        "/path/to/dataset1.tsv",
+        ["/path/to/gen1.tsv", "/path/to/gen2.tsv"],
+        "/tmp/helper",
+        "/tmp/output",
+        "model1",
+        "test"
+    )
+
+    # The returned reference distribution should match the mocked one
+    pd.testing.assert_series_equal(ref1_degree_dist, ref_dist)
+
+    # The returned generated distributions should be a list of Series matching the mocked ones
+    assert isinstance(gen_degree_dists, list)
+    assert len(gen_degree_dists) == len(gen_dists)
+    for returned, expected in zip(gen_degree_dists, gen_dists):
+        pd.testing.assert_series_equal(returned, expected)
 
 
 def test_calculate_divergence_scores(mocker):
@@ -575,7 +568,7 @@ def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
         mocker.patch('gen_airr_bm.analysis.analyse_network.deduplicate_single_dataset')
         mocker.patch('gen_airr_bm.analysis.analyse_network.run_compairr_existence')
         mock_read_csv = mocker.patch('pandas.read_csv')
-        mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
+        mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution_by_dataset')
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_avg_scores')
         mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd', return_value=[0.1])
         mocker.patch('gen_airr_bm.analysis.analyse_network.get_mean_reference_divergence_score', return_value=0.25)

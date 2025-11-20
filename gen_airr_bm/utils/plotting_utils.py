@@ -150,81 +150,6 @@ def wrap_title(text, width=60):
     return "<br>".join(textwrap.wrap(text, width=width))
 
 
-def plot_degree_distribution(analysis_config: AnalysisConfig, ref1_node_degree_distribution, ref2_or_gen_node_degree_distributions,
-                             ref2_or_model_name, ref1_name, dataset_name):
-    """Plot histograms of the two node degree distributions in one plot (with error bars for generated).
-    Args:
-        analysis_config: AnalysisConfig object containing analysis settings
-        ref1_node_degree_distribution: pd.Series, index=node_degree, value=count
-        ref2_or_gen_node_degree_distributions: list of pd.Series, each with index=node_degree, value=count
-        ref2_or_model_name: name of the generative model or the second reference set (test)
-        ref1_name: string, used for subfolder naming (e.g. 'train')
-        dataset_name: name of the dataset
-    Returns:
-        None
-    """
-    output_dir = analysis_config.analysis_output_dir
-    fig_dir = os.path.join(output_dir, ref1_name)
-    os.makedirs(fig_dir, exist_ok=True)
-    png_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.png"
-    tsv_path = f"{fig_dir}/histogram_{dataset_name}_{ref2_or_model_name}_{ref1_name}.tsv"
-
-    # Normalize the reference distribution
-    suffixes = (f"_{ref1_name}", f"_{ref2_or_model_name}")
-    ref1_freq = ref1_node_degree_distribution / ref1_node_degree_distribution.sum()
-    ref1_freq = ref1_freq.rename(f"freq{suffixes[0]}").to_frame()
-
-    # Normalize and collect all generated distributions
-    freq_dfs = []
-    for i, dist in enumerate(ref2_or_gen_node_degree_distributions):
-        norm = dist / dist.sum()
-        freq_dfs.append(norm.rename(f"freq_{i}").to_frame())
-
-    ref2_or_gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
-    ref2_or_gen_merged[f"freq{suffixes[1]}"] = ref2_or_gen_merged.mean(axis=1)
-    ref2_or_gen_merged[f"std{suffixes[1]}"] = ref2_or_gen_merged.std(axis=1)
-
-    merged_df = pd.merge(ref1_freq, ref2_or_gen_merged[[f"freq{suffixes[1]}", f"std{suffixes[1]}"]], left_index=True,
-                         right_index=True, how='outer').fillna(0)
-    merged_df = merged_df.sort_index()
-    if not os.path.exists(tsv_path):
-        merged_df.to_csv(tsv_path, sep='\t')
-
-    fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=merged_df.index,
-        y=merged_df[f"freq{suffixes[1]}"],
-        name=ref2_or_model_name,
-        error_y=dict(type='data', array=merged_df[f"std{suffixes[1]}"], visible=True)
-    ))
-
-    fig.add_trace(go.Bar(
-        x=merged_df.index,
-        y=merged_df[f"freq{suffixes[0]}"],
-        name=ref1_name,
-    ))
-
-    fig.update_yaxes(
-        tickvals=[10 ** i for i in range(-6, 3)],
-        ticktext=[str(10 ** i) for i in range(-6, 3)],
-    )
-
-    dataset_name_clean = dataset_name.rsplit("_", 1)[0]
-    fig.update_layout(
-        title=wrap_title(f"Connectivity Distribution: Generated vs. {ref1_name} {analysis_config.receptor_type} Sets (Dataset {dataset_name_clean})"),
-        xaxis_title=f"Neighbor Count (Hamming Distance: {analysis_config.allowed_mismatches})",
-        yaxis_title="Frequency (log scale)",
-        yaxis_type="log",
-        barmode="group",
-        template="plotly_white",
-        colorway=px.colors.qualitative.Safe,
-    )
-
-    fig.write_image(png_path)
-    print(f"Plot saved as PNG at: {png_path}")
-
-
 def plot_diversity_bar_chart(mean_diversity, std_diversity, output_path):
     labels = list(mean_diversity.keys())
     means = [mean_diversity[label] for label in labels]
@@ -419,3 +344,101 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
         yaxis_title="Coverage",
         output_path=os.path.join(fig_dir, recall_file_name)
     )
+
+
+def plot_degree_distribution_by_dataset(analysis_config: AnalysisConfig, connectivity_distributions_all: dict):
+    """Plot histograms of the node degree distributions in one plot (with error bars for generated).
+    Args:
+        analysis_config: AnalysisConfig object containing analysis settings
+        connectivity_distributions_all:
+    Returns:
+        None
+    """
+    output_dir = analysis_config.analysis_output_dir
+    ref_folder = "_".join(analysis_config.reference_data) if isinstance(analysis_config.reference_data,
+                                                                        (list, tuple)) else str(analysis_config.reference_data)
+    fig_dir = os.path.join(output_dir, ref_folder)
+    os.makedirs(fig_dir, exist_ok=True)
+
+    for dataset_name, model_dict in connectivity_distributions_all.items():
+        for model_name, split_dict in model_dict.items():
+
+            ref_dfs = []
+            for data_split, dist_list in split_dict.items():
+                if data_split == model_name:
+                    freq_dfs = []
+                    for i, dist in enumerate(dist_list):
+                        norm = dist / dist.sum()
+                        freq_dfs.append(norm.rename(f"freq_{i}").to_frame())
+                    gen_merged = pd.concat(freq_dfs, axis=1).fillna(0)
+                    gen_merged[f"freq_{data_split}"] = gen_merged.mean(axis=1)
+                    gen_merged[f"std_{data_split}"] = gen_merged.std(axis=1)
+                else:
+                    assert len(dist_list) == 1, "Reference distributions should have only one entry."
+                    dist = dist_list[0]
+                    ref_freq = dist / dist.sum()
+                    ref_freq = ref_freq.rename(f"{data_split}").to_frame()
+                    ref_dfs.append(ref_freq)
+
+            ref1_df, ref2_df = ref_dfs
+            merged_df = (
+                ref1_df
+                .join(ref2_df, how="outer")
+                .join(gen_merged[[f"freq_{model_name}", f"std_{model_name}"]], how="outer")
+                .fillna(0)
+                .sort_index()
+            )
+
+            png_path = f"{fig_dir}/histogram_{dataset_name}_{model_name}.png"
+            tsv_path = f"{fig_dir}/histogram_{dataset_name}_{model_name}.tsv"
+            if not os.path.exists(tsv_path):
+                merged_df.to_csv(tsv_path, sep='\t')
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Bar(
+                x=merged_df.index,
+                y=merged_df[ref1_df.columns[0]],
+                name=ref1_df.columns[0],
+            ))
+
+            fig.add_trace(go.Bar(
+                x=merged_df.index,
+                y=merged_df[ref2_df.columns[0]],
+                name=ref2_df.columns[0],
+            ))
+
+            fig.add_trace(go.Bar(
+                x=merged_df.index,
+                y=merged_df[f"freq_{model_name}"],
+                name=model_name,
+                error_y=dict(
+                    type="data",
+                    array=merged_df[f"std_{model_name}"],
+                    visible=True
+                ),
+            ))
+
+            fig.update_yaxes(
+                tickvals=[10 ** i for i in range(-6, 3)],
+                ticktext=[str(10 ** i) for i in range(-6, 3)],
+            )
+
+            dataset_name_clean = dataset_name.rsplit("_", 1)[0]
+            fig.update_layout(
+                width=1800,
+                height=900,
+                title={"text": f"Connectivity Distribution: Generated vs. Train and Test "
+                      f"{analysis_config.receptor_type} Sets (Dataset {dataset_name_clean})",
+                      "font": {"size": 20}},
+                xaxis_title=f"Neighbor Count (Hamming Distance: {analysis_config.allowed_mismatches})",
+                yaxis_title="Frequency (log scale)",
+                yaxis_type="log",
+                barmode="group",
+                template="plotly_white",
+                colorway=px.colors.qualitative.Safe[:2] + px.colors.qualitative.Safe[7:],  # skip colors to avoid confusion
+                bargroupgap=0.15
+            )
+
+            fig.write_image(png_path)
+            print(f"Plot saved as PNG at: {png_path}")
