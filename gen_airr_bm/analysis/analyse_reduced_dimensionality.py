@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 
 from gen_airr_bm.analysis.distribution.distribution_factory import get_distribution_strategy
 from gen_airr_bm.constants.distribution_type import DistributionType
@@ -57,8 +56,7 @@ def process_model(analysis_config: AnalysisConfig, model: str, strategy) -> dict
     divergence_scores_by_ref = {}
 
     for gen_file, ref_file, ref_label in comparison_pairs:
-        scores = process_reference(gen_file, ref_file, ref_label, strategy, divergence_scores_by_ref)
-        strategy.update_divergence_scores(divergence_scores_by_ref[ref_label], scores)
+        process_reference(gen_file, ref_file, ref_label, strategy, divergence_scores_by_ref)
 
     return divergence_scores_by_ref
 
@@ -109,7 +107,7 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list
         list: A list of tuples, each containing (generated_file_path, reference_file_path, reference_label).
     """
     comparison_pairs = []
-    gen_dir = f"{analysis_config.root_output_dir}/generated_sequences/{model}"
+    gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
     gen_files = set(os.listdir(gen_dir))
 
     if isinstance(analysis_config.reference_data, str):
@@ -118,8 +116,12 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list
     for reference in analysis_config.reference_data:
         ref_dir = f"{analysis_config.root_output_dir}/{reference}_sequences"
         for file in gen_files:
+            file_name, file_ext = os.path.splitext(file)
+            file_base = file_name.rsplit("_", 1)[0]
+            ref_file = file_base + file_ext
+
             gen_file_path = os.path.join(gen_dir, file)
-            ref_file_path = os.path.join(ref_dir, file)
+            ref_file_path = os.path.join(ref_dir, ref_file)
             if os.path.exists(ref_file_path):
                 comparison_pairs.append((gen_file_path, ref_file_path, reference))
     return comparison_pairs
