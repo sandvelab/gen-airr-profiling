@@ -226,41 +226,52 @@ def plot_scatter_precision_recall(precision_scores_dict, recall_scores_dict, out
     print(f"Plot saved as PNG at: {png_path}")
 
 
-def _plot_grouped_bar(df, value_col_mean, value_col_std, all_models, all_datasets, color_palette, title, yaxis_title,
-                      output_path):
+def _plot_grouped_bar(df, all_models, title, output_path):
     """
-    Helper function to plot grouped bar chart from a DataFrame.
+    Plot grouped bar chart per model with two bars: Precision and Recall.
+    - df must contain columns: Model, Precision_mean, Precision_std, Recall_mean, Recall_std
+    - Uses Plotly qualitative Safe colorway
     """
-    bars = []
-    for i, dataset in enumerate(all_datasets):
-        means, stds = [], []
-        for model in all_models:
-            row = df[(df['Dataset'] == dataset) & (df['Model'] == model)]
-            if not row.empty:
-                means.append(row[f'{value_col_mean}'].values[0])
-                stds.append(row[f'{value_col_std}'].values[0] if not pd.isna(row[f'{value_col_std}'].values[0]) else 0)
-            else:
-                means.append(0)
-                stds.append(0)
-        bars.append(go.Bar(
-            name=dataset,
-            x=all_models,
-            y=means,
-            error_y=dict(type='data', array=stds, visible=True, thickness=1,),
-            marker_color=color_palette[i % len(color_palette)]
-        ))
+    precision_means, precision_stds = [], []
+    recall_means, recall_stds = [], []
 
-    fig = go.Figure(data=bars)
+    for model in all_models:
+        rows = df[df['Model'] == model]
+        # Precision
+        precision_means.append(rows['Precision_mean'].mean() if not rows.empty else 0)
+        precision_stds.append(rows['Precision_std'].mean() if not rows.empty else 0)
+        # Recall
+        recall_means.append(rows['Recall_mean'].mean() if not rows.empty else 0)
+        recall_stds.append(rows['Recall_std'].mean() if not rows.empty else 0)
+
+    # Two traces: Precision and Recall
+    trace_precision = go.Bar(
+        x=all_models,
+        y=precision_means,
+        name='Precision',
+        error_y=dict(type='data', array=precision_stds, visible=True, thickness=1)
+    )
+    trace_recall = go.Bar(
+        x=all_models,
+        y=recall_means,
+        name='Recall',
+        error_y=dict(type='data', array=recall_stds, visible=True, thickness=1)
+    )
+
+    fig = go.Figure(data=[trace_precision, trace_recall])
     fig.update_layout(
         barmode='group',
         title=title,
         xaxis_title="Model",
-        yaxis_title=yaxis_title,
+        yaxis_title="Score",
         xaxis_tickangle=-45,
-        template="plotly_white"
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,  # Safe palette for the bars
+        legend_title_text="Metric"
     )
+
     fig.write_image(output_path, scale=2)
-    print(f"{yaxis_title} bar chart saved as PNG at: {output_path}")
+    print(f"Grouped Precision/Recall bar chart saved as PNG at: {output_path}")
 
 
 def sort_names_ignore_prefix(names):
@@ -270,8 +281,7 @@ def sort_names_ignore_prefix(names):
 
 
 def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict, output_dir, reference_data,
-                                      precision_file_name="precision_grouped_bar.png",
-                                      recall_file_name="recall_grouped_bar.png"):
+                                      receptor_type, allowed_mismatches):
     """
     Plots two grouped bar charts: one for precision and one for recall.
     Each chart is grouped by model, with bars for each dataset.
@@ -296,10 +306,9 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
                 data.append({'Dataset': dataset, 'Model': model, 'Precision': precision, 'Recall': recall})
 
     df = pd.DataFrame(data)
-    df = df.sort_values(by=["Dataset", "Model"])
 
     # Compute mean and std for each (Dataset, Model) pair
-    grouped = df.groupby(['Dataset', 'Model']).agg(
+    grouped = df.groupby(['Model']).agg(
         Precision_mean=('Precision', 'mean'),
         Precision_std=('Precision', 'std'),
         Recall_mean=('Recall', 'mean'),
@@ -313,36 +322,13 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
     # Calculate average precision for each model across all datasets
     model_avg_precision = df.groupby('Model')['Precision'].mean().sort_values(ascending=False)
     all_models = list(model_avg_precision.index)
-    if "upper_reference" in all_models:
-        all_models = ["upper_reference"] + [m for m in all_models if m != "upper_reference"]
-
-    all_datasets = sort_names_ignore_prefix(df['Dataset'].unique())
-    color_palette = px.colors.sequential.Blues_r
 
     # Plot precision
     _plot_grouped_bar(
-        grouped,
-        value_col_mean='Precision_mean',
-        value_col_std='Precision_std',
+        df=grouped,
         all_models=all_models,
-        all_datasets=all_datasets,
-        color_palette=color_palette,
-        title=f"Realism score by Model and Dataset (Reference: {reference_data})",
-        yaxis_title="Realism",
-        output_path=os.path.join(fig_dir, precision_file_name)
-    )
-
-    # Plot recall
-    _plot_grouped_bar(
-        grouped,
-        value_col_mean='Recall_mean',
-        value_col_std='Recall_std',
-        all_models=all_models,
-        all_datasets=all_datasets,
-        color_palette=color_palette,
-        title=f"Coverage score by Model and Dataset (Reference: {reference_data})",
-        yaxis_title="Coverage",
-        output_path=os.path.join(fig_dir, recall_file_name)
+        title=f"Mean Precision and Recall for {receptor_type} Sets (Hamming Distance: {allowed_mismatches})",
+        output_path=os.path.join(fig_dir, "precision_recall.png")
     )
 
 

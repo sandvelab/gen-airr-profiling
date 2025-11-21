@@ -60,10 +60,6 @@ def compute_and_plot_precision_recall_scores(analysis_config: AnalysisConfig, co
     for model in analysis_config.model_names:
         collect_model_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
 
-    if train_reference:
-        print(f"Adding upper reference scores using {train_reference} data.")
-        add_upper_reference(analysis_config, train_reference, test_reference, scores, compairr_output_dir)
-
     plot_precision_recall_scores(analysis_config, scores, test_reference)
 
 
@@ -222,4 +218,5 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
                         scoring_method="recall")
 
     plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,
-                                      analysis_config.analysis_output_dir, test_reference)
+                                      analysis_config.analysis_output_dir, test_reference,
+                                      analysis_config.receptor_type, analysis_config.allowed_mismatches)
