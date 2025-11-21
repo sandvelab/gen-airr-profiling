@@ -61,3 +61,6 @@ analyses:
       model_names: [ "PWM" ]
       default_model_name: "humanTRB"
       subfolder_name: "PWM"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "TCR"
