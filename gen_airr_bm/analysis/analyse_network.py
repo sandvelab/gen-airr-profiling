@@ -60,7 +60,9 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
             for ref_file, gen_files in comparison_files.items():
                 dataset_name, ref_degree_dist, gen_degree_dists = (
                     get_connectivity_distributions_by_dataset(ref_file, gen_files, compairr_helper_dir,
-                                                              compairr_output_dir, model_name, reference))
+                                                              compairr_output_dir, model_name, reference,
+                                                              analysis_config.allowed_mismatches,
+                                                              analysis_config.indels))
                 divergence_scores = calculate_divergence_scores(ref_degree_dist, gen_degree_dists, reference,
                                                                 model_name)
                 divergence_scores_all[reference][dataset_name][model_name].extend(divergence_scores)
@@ -83,7 +85,8 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
 
 def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files: list[str], helper_dir: str,
-                                              output_dir: str, name: str, reference: str,) -> (
+                                              output_dir: str, name: str, reference: str, allowed_mismatches: int,
+                                              indels: bool) -> (
         tuple)[str, pd.Series, list[pd.Series]]:
     """ For a given dataset, this function computes connectivity distributions of reference set 1 (train or test) and
     either reference set 2 (test) or model generated sets. Connectivity distributions are then plotted as histograms.
@@ -94,13 +97,16 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
         output_dir (str): Directory for Compairr output files.
         reference (str): Reference data identifier (train or test).
         name (str): Name of generative model or name of second reference set.
+        allowed_mismatches (int): Number of allowed mismatches for Compairr.
+        indels (bool): Whether to allow indels in Compairr.
     Returns:
         tuple: Dataset name, reference1 degree distribution, list of reference 2 or generated degree distributions.
     """
     dataset_name = os.path.splitext(os.path.basename(ref1_file))[0]
 
     ref1_degree_dist, ref2_or_gen_degree_dists = get_node_degree_distributions(ref1_file, ref2_or_gen_files, helper_dir,
-                                                                               output_dir, name, reference)
+                                                                               output_dir, name, reference,
+                                                                               allowed_mismatches, indels)
 
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
 
@@ -127,7 +133,8 @@ def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_
 
 
 def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compairr_output_helper_dir: str,
-                                  compairr_output_dir: str, name: str, dataset_split: str) -> tuple:
+                                  compairr_output_dir: str, name: str, dataset_split: str, allowed_mismatches: int,
+                                  indels: bool) -> tuple:
     """
     Compute node degree distributions for reference set 1 (train or test) and the corresponding generated files or
     reference set 2 (test).
@@ -138,18 +145,21 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
         compairr_output_dir (str): Directory for Compairr output files.
         name (str): Name of generative model or name of second reference set.
         dataset_split (str): Reference data identifier (train or test).
+        allowed_mismatches (int): Number of allowed mismatches for Compairr.
+        indels (bool): Whether to allow indels in Compairr.
     Returns:
         tuple: Reference1 node degree distribution and list of generated node degree distributions or list of one
         reference 2 node degree distribution.
     """
     ref2_or_gen_degree_dists = []
     for file in ref2_or_gen_files:
-        connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, name)
+        connectivity = compute_connectivity_with_compairr(file, compairr_output_helper_dir, compairr_output_dir, name,
+                                                          allowed_mismatches, indels)
         degree_dist = get_node_degree_from_compairr_output(connectivity)
         ref2_or_gen_degree_dists.append(degree_dist)
 
     ref1_connectivity = compute_connectivity_with_compairr(ref1_file, compairr_output_helper_dir, compairr_output_dir,
-                                                           dataset_split)
+                                                           dataset_split, allowed_mismatches, indels)
     ref1_degree_dist = get_node_degree_from_compairr_output(ref1_connectivity)
 
     return ref1_degree_dist, ref2_or_gen_degree_dists
@@ -171,7 +181,8 @@ def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compair
         dataset_name, train_node_degree, test_node_degree = (
             get_connectivity_distributions_by_dataset(train_file, [test_file], compairr_output_helper_dir,
                                                       compairr_output_dir, DatasetSplit.TEST.value,
-                                                      DatasetSplit.TRAIN.value))
+                                                      DatasetSplit.TRAIN.value, analysis_config.allowed_mismatches,
+                                                      analysis_config.indels))
         divergence_scores = calculate_divergence_scores(train_node_degree, test_node_degree, DatasetSplit.TRAIN.value,
                                                         DatasetSplit.TEST.value)
         ref_scores.extend(divergence_scores)
@@ -181,7 +192,8 @@ def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compair
 
 
 def compute_connectivity_with_compairr(input_sequences_path: str, compairr_output_helper_dir: str,
-                                       compairr_output_dir: str, dataset_type: str) -> pd.DataFrame:
+                                       compairr_output_dir: str, dataset_type: str, allowed_mismatches: int,
+                                       indels: bool) -> pd.DataFrame:
     """
     Compute connectivity using Compairr for a single dataset (either train, test, or generated).
 
@@ -190,6 +202,8 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
         compairr_output_helper_dir (str): Directory for Compairr helper files.
         compairr_output_dir (str): Directory for Compairr output files.
         dataset_type (str): Type of dataset (train or test or generated with a specific model).
+        allowed_mismatches (int): Number of allowed mismatches for Compairr.
+        indels (bool): Whether to allow indels in Compairr.
 
     Returns:
         pd.DataFrame: DataFrame containing sequence IDs and their overlap counts.
@@ -203,7 +217,7 @@ def compute_connectivity_with_compairr(input_sequences_path: str, compairr_outpu
     else:
         deduplicate_single_dataset(input_sequences_path, unique_sequences_path)
     run_compairr_existence(compairr_output_dir, unique_sequences_path, unique_sequences_path, file_name,
-                           allowed_mismatches=1, indels=True)
+                           allowed_mismatches=allowed_mismatches, indels=indels)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     return compairr_result

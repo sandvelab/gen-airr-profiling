@@ -32,7 +32,9 @@ def sample_analysis_config():
         reference_data=["train", "test"],
         n_subsets=5,
         subfolder_name="analysis_subfolder",
-        receptor_type="TCR"
+        receptor_type="TCR",
+        indels=True,
+        allowed_mismatches=1
     )
 
 
@@ -100,7 +102,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     gen_degree_dists = [pd.Series([2, 1], index=[0, 1], name="genA"),
                         pd.Series([0, 1], index=[1, 2], name="genB")]
 
-    def gcd_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference):
+    def gcd_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference, allowed_mismatches, indels):
         # Mimic dataset_name derivation in implementation: basename without extension
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
         # Return the proper 3-tuple
@@ -130,7 +132,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     expected_calc_div_calls = 2 * len(sample_analysis_config.reference_data) * len(sample_analysis_config.model_names)
     assert mock_calc_div.call_count == expected_calc_div_calls
 
-    # summarize_and_plot_dataset_connectivity called once per dataset per reference (after aggregating across models)
+    # # summarize_and_plot_dataset_connectivity called once per dataset per reference (after aggregating across models)
     expected_plot_dataset_calls = 2 * len(sample_analysis_config.reference_data)  # two datasets: ref1, ref2
     assert mock_plot_dataset.call_count == expected_plot_dataset_calls
 
@@ -193,6 +195,8 @@ def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_confi
         "/tmp/output",
         "model1",
         "test",
+        sample_analysis_config.allowed_mismatches,
+        sample_analysis_config.indels
     )
 
     mock_get_dists.assert_called_once()
@@ -205,7 +209,9 @@ def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_confi
         "/tmp/helper",
         "/tmp/output",
         "model1",
-        "test"
+        "test",
+        sample_analysis_config.allowed_mismatches,
+        sample_analysis_config.indels
     )
 
     # The returned reference distribution should match the mocked one
@@ -262,7 +268,9 @@ def test_get_node_degree_distributions(mocker):
         "/tmp/helper",
         "/tmp/output",
         "model1",
-        "test"
+        "test",
+        1,
+        True
     )
 
     # Check that compute_connectivity_with_compairr was called 3 times
@@ -298,6 +306,8 @@ def test_compute_connectivity_with_compairr_valid_new_file(mocker):
         "/tmp/helper",
         "/tmp/output",
         "test",
+        1,
+        True
     )
 
     # Check that deduplicate_single_dataset was called
@@ -332,6 +342,8 @@ def test_compute_connectivity_with_compairr_invalid_file_not_found(mocker):
             "/tmp/helper",
             "/tmp/output",
             "test",
+            1,
+            True
         )
 
 
@@ -358,6 +370,8 @@ def test_compute_connectivity_with_compairr_valid_existing_file(mocker):
         "/tmp/helper",
         "/tmp/output",
         "test",
+        1,
+        True
     )
 
     # Check that deduplicate_single_dataset was NOT called
