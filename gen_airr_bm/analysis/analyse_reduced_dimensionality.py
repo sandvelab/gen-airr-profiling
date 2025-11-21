@@ -98,6 +98,7 @@ def update_mean_std_scores_by_reference(divergence_scores_by_ref, mean_dict, std
         strategy.update_mean_std_scores(scores, model, mean_dict[ref_label], std_dict[ref_label])
 
 
+#TODO: Refactor to use get_sequence_files from file_utils.py
 def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list:
     """ Gets pairs of generated and reference sequence files for comparison.
     Args:
@@ -108,7 +109,8 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list
     """
     comparison_pairs = []
     gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
-    gen_files = set(os.listdir(gen_dir))
+    gen_files = os.listdir(gen_dir)
+    gen_files = [file for file in gen_files if int(os.path.splitext(file)[0].split('_')[-1]) < analysis_config.n_subsets]
 
     if isinstance(analysis_config.reference_data, str):
         analysis_config.reference_data = [analysis_config.reference_data]
@@ -125,6 +127,3 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list
             if os.path.exists(ref_file_path):
                 comparison_pairs.append((gen_file_path, ref_file_path, reference))
     return comparison_pairs
-
-
-

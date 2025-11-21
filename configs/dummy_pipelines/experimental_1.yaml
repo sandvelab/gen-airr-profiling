@@ -43,6 +43,7 @@ analyses:
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
+      n_subsets: 10
       subfolder_name: "dummy models"
       receptor_type: "TCR"
     - name: "diversity"
@@ -62,7 +63,6 @@ analyses:
     - name: "phenotype"
       model_names: ["sonnia"]
       default_model_name: "humanTRB"
-
       subfolder_name: "sonnia"
       receptor_type: "TCR"
       allowed_mismatches: 0
