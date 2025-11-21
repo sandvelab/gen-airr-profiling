@@ -177,55 +177,6 @@ def plot_diversity_bar_chart(mean_diversity, std_diversity, output_path):
     fig.write_image(output_path)
 
 
-def plot_scatter_precision_recall(precision_scores_dict, recall_scores_dict, output_dir, reference_data, file_name,
-                                  plot_mean=False):
-    """ Plot scatter plot of precision vs recall, colored by dataset and shaped by model. """
-
-    data = []
-    for dataset in precision_scores_dict:
-        for model in precision_scores_dict[dataset]:
-
-            if plot_mean:
-                precision_scores_dict[dataset][model] = [precision_scores_dict[dataset][model]]
-                recall_scores_dict[dataset][model] = [recall_scores_dict[dataset][model]]
-
-            for precision, recall in zip(precision_scores_dict[dataset][model], recall_scores_dict[dataset][model]):
-                data.append({
-                    'Dataset': dataset,
-                    'Model': model,
-                    'Precision': precision,
-                    'Recall': recall
-                })
-
-    df = pd.DataFrame(data)
-    df = df.sort_values(by=["Dataset", "Model"])
-
-    fig = px.scatter(
-        df,
-        x="Recall",
-        y="Precision",
-        color="Dataset",
-        symbol="Model",
-        title=f"Mean Precision vs Recall: Colored by Dataset, Shaped by Model (Reference: {reference_data})" if
-        plot_mean else f"Precision vs Recall: Colored by Dataset, Shaped by Model (Reference: {reference_data})"
-    )
-
-    fig.update_traces(marker=dict(size=6, line=dict(width=0.5, color='dark gray')))
-    fig.update_layout(
-        width=1000,
-        height=700,
-        legend_title_text='Dataset, model'
-    )
-
-    fig.update_xaxes(range=[-0.02, 1.02], title_text="Recall")
-    fig.update_yaxes(range=[-0.02, 1.02], title_text="Precision")
-
-    png_path = os.path.join(output_dir, file_name)
-    fig.write_image(png_path, scale=2)
-
-    print(f"Plot saved as PNG at: {png_path}")
-
-
 def _plot_grouped_bar(df, all_models, title, output_path):
     """
     Plot grouped bar chart per model with two bars: Precision and Recall.
