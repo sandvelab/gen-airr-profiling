@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -75,7 +76,7 @@ def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str
     )
     summary_df = summary_df.merge(hyperparams_long, on="Model", how="left")
     summary_sorted = summary_df.sort_values("Score", ascending=plot_ascending_scores)
-
+    summary_sorted["Model"] = summary_sorted["Model"].apply(normalize_model_name)
     models = summary_sorted["Model"].tolist()
     parameter_values = summary_sorted[parameter_names].T.values
     parameter_text = summary_sorted[parameter_names].applymap(format_value).T.values
@@ -129,3 +130,13 @@ def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str
     plot_path = Path(output_dir) / f"{analysis_name}_summary.png"
     fig.write_image(plot_path)
     print(f"Saved tuning plot for tuning method {tuning_config.tuning_method} to {plot_path}")
+
+
+def normalize_model_name(name: str) -> str:
+    if name.startswith("VAE") and len(name) == 5 and name[3:].isdigit():
+        return f"VAE_{name[3:]}"
+    if name.startswith("progen_"):
+        return "ProGen_" + name.split("_", 1)[1]
+    if name.startswith("sonnia_"):
+        return "SoNNia_" + name.split("_", 1)[1]
+    return name
