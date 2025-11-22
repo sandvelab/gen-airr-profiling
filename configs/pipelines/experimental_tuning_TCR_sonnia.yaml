@@ -163,7 +163,7 @@ analyses:
     n_subsets: 6
     allowed_mismatches: 0
     indels: False
-    deduplicate: True
+    deduplicate: False
     subfolder_name: "all SoNNia models"
     receptor_type: "TCR"
   - name: "network"
@@ -175,6 +175,8 @@ analyses:
     n_subsets: 6
     subfolder_name: "all SoNNia models"
     receptor_type: "TCR"
+    allowed_mismatches: 1
+    indels: True
 tuning:
   - tuning_method: "reduced_dimensionality"
     model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",

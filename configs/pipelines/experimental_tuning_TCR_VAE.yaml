@@ -163,7 +163,7 @@ analyses:
     n_subsets: 6
     allowed_mismatches: 0
     indels: False
-    deduplicate: True
+    deduplicate: False
     subfolder_name: "all VAE models"
     receptor_type: "TCR"
   - name: "network"
@@ -175,6 +175,8 @@ analyses:
     n_subsets: 6
     subfolder_name: "all VAE models"
     receptor_type: "TCR"
+    allowed_mismatches: 1
+    indels: True
 tuning:
   - tuning_method: "reduced_dimensionality"
     model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",

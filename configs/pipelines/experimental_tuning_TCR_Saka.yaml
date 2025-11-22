@@ -206,7 +206,7 @@ analyses:
     n_subsets: 6
     allowed_mismatches: 0
     indels: False
-    deduplicate: True
+    deduplicate: False
     subfolder_name: "all Saka models"
     receptor_type: "TCR"
   - name: "network"
@@ -219,6 +219,8 @@ analyses:
     n_subsets: 6
     subfolder_name: "all Saka models"
     receptor_type: "TCR"
+    allowed_mismatches: 1
+    indels: True
 tuning:
   - tuning_method: "reduced_dimensionality"
     model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
