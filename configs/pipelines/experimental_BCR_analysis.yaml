@@ -1,4 +1,4 @@
-n_experiments: 11
+n_experiments: 7
 output_dir: "RESULTS_NOV12/BCR"
 input_dir: "data/experimental/collectionB"
 seed: 42
