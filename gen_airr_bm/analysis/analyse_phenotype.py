@@ -117,15 +117,25 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     clustered.index = [name.rsplit('_', 1)[0] for name in clustered.index]
     clustered.columns = [name.rsplit('_', 1)[0] for name in clustered.columns]
 
-    blues = px.colors.sequential.Blues_r
-    blues_cut = blues[2:-2]
+    # blues = px.colors.sequential.Blues_r
+    # blues_cut = blues[2:-2]
+    thermal = px.colors.sequential.thermal_r[:-2]
+
+    # Build thermal colors but compressed into 0–0.1
+    custom_colorscale = []
+    for i, c in enumerate(thermal):
+        position = i / (len(thermal) - 1)
+        custom_colorscale.append((position * 0.1, c))
+
+    # Add fixed color at value 1.0
+    custom_colorscale.append((1.0, "white"))  # or any other color
 
     fig = go.Figure(
         data=go.Heatmap(
             z=clustered.values,
             x=clustered.columns,
             y=clustered.index,
-            colorscale=blues_cut,
+            colorscale=custom_colorscale,
             zmin=0.0,
             zmax=1.0,
             colorbar=dict(title="Similarity"),
@@ -143,6 +153,12 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         height=900,
         xaxis=dict(tickangle=45),
         template="plotly_white",
+        coloraxis_colorbar=dict(
+            tickvals=[0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 1.0],
+            ticktext=["0", "0.01", "0.02", "0.03", "0.05", "0.07", "0.1", "1.0"],
+            lenmode="fraction",
+            len=1.0
+        )
     )
 
     png_path = f"{output_dir}/cluster_heatmap.png"
