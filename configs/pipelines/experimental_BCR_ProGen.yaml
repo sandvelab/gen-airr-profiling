@@ -11,13 +11,13 @@ seed: 42
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
-#    - name: "ProGen_overlap"
+    - name: "ProGen_overlap"
+      immuneml_model_config: "configs/generative_models/BCR/ProGen/progen_05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 10000
+#    - name: "ProGen_kmer"
 #      immuneml_model_config: "configs/generative_models/BCR/ProGen/progen_28.yaml"
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 10000
-    - name: "ProGen_kmer"
-      immuneml_model_config: "configs/generative_models/BCR/ProGen/progen_28.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
