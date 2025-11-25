@@ -125,7 +125,7 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     custom_colorscale = []
     for i, c in enumerate(thermal):
         position = i / (len(thermal) - 1)
-        custom_colorscale.append((position * 0.1, c))
+        custom_colorscale.append((position * 0.2, c))
 
     # Add fixed color at value 1.0
     custom_colorscale.append((1.0, "white"))  # or any other color
