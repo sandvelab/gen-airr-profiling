@@ -1,0 +1,187 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_NOV6/UMI"
+input_dir: "data/tuning/UMI"
+seed: 42
+
+data_generation:
+  experimental: True
+  method: "experimental_umi"
+  n_samples: 150000
+  default_model_name: "humanIGH"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
+
+models:
+    - name: "VAE01"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE02"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE03"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE04"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE05"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE06"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE07"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE08"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE09"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE10"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE11"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE12"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE13"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE14"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE15"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE16"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE17"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE18"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE19"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE20"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE21"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE22"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE23"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "VAE24"
+      immuneml_model_config: "configs/tuning/UMI/VAE/VAE24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all VAE models"
+    - name: "memorization"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all VAE models dist 0"
+    - name: "network"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all VAE models"
+    - name: "precision_recall"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all VAE models dist 0"
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all VAE models"
+      hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "VAE01", "VAE02", "VAE03", "VAE04", "VAE05", "VAE06", "VAE07", "VAE08",
+                     "VAE09", "VAE10", "VAE11", "VAE12", "VAE13", "VAE14", "VAE15", "VAE16",
+                     "VAE17", "VAE18", "VAE19", "VAE20", "VAE21", "VAE22", "VAE23", "VAE24" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "all VAE models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/VAE.tsv"
