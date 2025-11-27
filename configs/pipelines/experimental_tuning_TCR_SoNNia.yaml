@@ -140,7 +140,7 @@ analyses:
     default_model_name: "humanTRB"
     reference_data: [ "train", "test" ]
     subfolder_name: "all SoNNia models"
-    n_subset: 6
+    n_subsets: 6
     receptor_type: "TCR"
   - name: "precision_recall"
     model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",

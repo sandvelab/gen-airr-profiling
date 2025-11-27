@@ -202,7 +202,7 @@ analyses:
     default_model_name: "humanTRB"
     reference_data: [ "train", "test" ]
     subfolder_name: "all ProGen models"
-    n_subset: 6
+    n_subsets: 6
     receptor_type: "TCR"
   - name: "precision_recall"
     model_names: [ "progen_01", "progen_02", "progen_03", "progen_04", "progen_05", "progen_06", "progen_07", "progen_08",

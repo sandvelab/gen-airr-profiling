@@ -181,7 +181,7 @@ analyses:
     default_model_name: "humanTRB"
     reference_data: [ "train", "test" ]
     subfolder_name: "all Akbar models"
-    n_subset: 6
+    n_subsets: 6
     receptor_type: "TCR"
   - name: "precision_recall"
     model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",

@@ -181,7 +181,7 @@ analyses:
     default_model_name: "humanTRB"
     reference_data: [ "train", "test" ]
     subfolder_name: "all Saka models"
-    n_subset: 6
+    n_subsets: 6
     receptor_type: "TCR"
   - name: "precision_recall"
     model_names: [ "S_01", "S_02", "S_03", "S_04", "S_05", "S_06", "S_07", "S_08",
