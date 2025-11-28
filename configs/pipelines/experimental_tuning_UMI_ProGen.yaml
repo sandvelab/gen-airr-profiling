@@ -1,0 +1,192 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_NOV6/UMI"
+input_dir: "data/tuning/UMI"
+seed: 42
+
+data_generation:
+  experimental: True
+  method: "experimental_umi"
+  n_samples: 150000
+  default_model_name: "humanIGH"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
+
+models:
+    - name: "ProGen_01"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_02"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_03"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_04"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_05"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_06"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_07"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_08"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_09"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_10"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_11"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_12"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_13"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_14"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_15"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_16"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_17"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_18"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_19"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_20"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_21"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_22"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_23"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "ProGen_24"
+      immuneml_model_config: "configs/tuning/UMI/ProGen/ProGen_24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "ProGen_01", "ProGen_02", "ProGen_03", "ProGen_04", "ProGen_05", "ProGen_06", "ProGen_07", "ProGen_08",
+                     "ProGen_09", "ProGen_10", "ProGen_11", "ProGen_12", "ProGen_13", "ProGen_14", "ProGen_15", "ProGen_16",
+                     "ProGen_17", "ProGen_18", "ProGen_19", "ProGen_20", "ProGen_21", "ProGen_22", "ProGen_23", "ProGen_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all ProGen models"
+      receptor_type: "BCR UMI"
+    - name: "memorization"
+      model_names: [ "ProGen_01", "ProGen_02", "ProGen_03", "ProGen_04", "ProGen_05", "ProGen_06", "ProGen_07", "ProGen_08",
+                     "ProGen_09", "ProGen_10", "ProGen_11", "ProGen_12", "ProGen_13", "ProGen_14", "ProGen_15", "ProGen_16",
+                     "ProGen_17", "ProGen_18", "ProGen_19", "ProGen_20", "ProGen_21", "ProGen_22", "ProGen_23", "ProGen_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all ProGen models dist 0"
+      receptor_type: "BCR UMI"
+    - name: "network"
+      model_names: [ "ProGen_01", "ProGen_02", "ProGen_03", "ProGen_04", "ProGen_05", "ProGen_06", "ProGen_07", "ProGen_08",
+                     "ProGen_09", "ProGen_10", "ProGen_11", "ProGen_12", "ProGen_13", "ProGen_14", "ProGen_15", "ProGen_16",
+                     "ProGen_17", "ProGen_18", "ProGen_19", "ProGen_20", "ProGen_21", "ProGen_22", "ProGen_23", "ProGen_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all ProGen models"
+      receptor_type: "BCR UMI"
+    - name: "precision_recall"
+      model_names: [ "ProGen_01", "ProGen_02", "ProGen_03", "ProGen_04", "ProGen_05", "ProGen_06", "ProGen_07", "ProGen_08",
+                     "ProGen_09", "ProGen_10", "ProGen_11", "ProGen_12", "ProGen_13", "ProGen_14", "ProGen_15", "ProGen_16",
+                     "ProGen_17", "ProGen_18", "ProGen_19", "ProGen_20", "ProGen_21", "ProGen_22", "ProGen_23", "ProGen_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all ProGen models dist 0"
+      receptor_type: "BCR UMI"
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "ProGen_01", "ProGen_02", "ProGen_03", "ProGen_04", "ProGen_05", "ProGen_06", "ProGen_07", "ProGen_08",
+                     "ProGen_09", "ProGen_10", "ProGen_11", "ProGen_12", "ProGen_13", "ProGen_14", "ProGen_15", "ProGen_16",
+                     "ProGen_17", "ProGen_18", "ProGen_19", "ProGen_20", "ProGen_21", "ProGen_22", "ProGen_23", "ProGen_24" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all ProGen models"
+      hyperparameter_table_path: "data/hyperparameter_tables/ProGen.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "ProGen_01", "ProGen_02", "ProGen_03", "ProGen_04", "ProGen_05", "ProGen_06", "ProGen_07", "ProGen_08",
+                     "ProGen_09", "ProGen_10", "ProGen_11", "ProGen_12", "ProGen_13", "ProGen_14", "ProGen_15", "ProGen_16",
+                     "ProGen_17", "ProGen_18", "ProGen_19", "ProGen_20", "ProGen_21", "ProGen_22", "ProGen_23", "ProGen_24" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "all ProGen models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/ProGen.tsv"

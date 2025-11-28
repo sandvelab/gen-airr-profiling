@@ -139,6 +139,7 @@ analyses:
                      "VAE_17", "VAE_18", "VAE_19", "VAE_20", "VAE_21", "VAE_22", "VAE_23", "VAE_24" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
+      n_subsets: 3
       subfolder_name: "all VAE models"
       receptor_type: "BCR UMI"
     - name: "memorization"
