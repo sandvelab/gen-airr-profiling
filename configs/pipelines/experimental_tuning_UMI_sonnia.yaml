@@ -1,0 +1,192 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_NOV6/UMI"
+input_dir: "data/tuning/UMI"
+seed: 42
+
+#data_generation:
+#  experimental: True
+#  method: "experimental_umi"
+#  n_samples: 150000
+#  default_model_name: "humanIGH"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
+#
+models:
+    - name: "sonnia_01"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_02"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_03"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_04"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_05"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_06"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_07"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_08"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_09"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_10"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_11"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_12"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_13"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_14"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_15"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_16"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_17"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_18"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_19"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_20"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_21"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_22"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_23"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "sonnia_24"
+      immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                     "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                     "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all SoNNia models"
+      receptor_type: "BCR UMI"
+    - name: "memorization"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                     "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                     "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all SoNNia models dist 0"
+      receptor_type: "BCR UMI"
+    - name: "network"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                     "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                     "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all SoNNia models"
+      receptor_type: "BCR UMI"
+    - name: "precision_recall"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                     "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                     "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all SoNNia models dist 0"
+      receptor_type: "BCR UMI"
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                     "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                     "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all SoNNia models"
+      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                     "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                     "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+      reference_data: [ "train", "test" ]
+      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+      subfolder_name: "all SoNNia models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
