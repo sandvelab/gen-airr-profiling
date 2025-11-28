@@ -10,187 +10,187 @@ seed: 42
 #  default_model_name: "humanIGH"
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 #
-models:
-    - name: "progenbase_01"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_01.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_02"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_02.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_03"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_03.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_04"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_04.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_05"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_05.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_06"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_06.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_07"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_07.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_08"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_08.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_09"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_09.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_10"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_10.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_11"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_11.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_12"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_12.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_13"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_13.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_14"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_14.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_15"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_15.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_16"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_16.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_17"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_17.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_18"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_18.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_19"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_19.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_20"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_20.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_21"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_21.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_22"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_22.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_23"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_23.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_24"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_24.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_25"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_25.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_26"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_26.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_27"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_27.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_28"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_28.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_29"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_29.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_30"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_30.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_31"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_31.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_32"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_32.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_33"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_33.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_34"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_34.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_35"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_35.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
-    - name: "progenbase_36"
-      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_36.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 10000
+#models:
+#    - name: "progenbase_01"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_01.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_02"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_02.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_03"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_03.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_04"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_04.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_05"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_05.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_06"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_06.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_07"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_07.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_08"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_08.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_09"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_09.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_10"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_10.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_11"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_11.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_12"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_12.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_13"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_13.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_14"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_14.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_15"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_15.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_16"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_16.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_17"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_17.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_18"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_18.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_19"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_19.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_20"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_20.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_21"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_21.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_22"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_22.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_23"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_23.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_24"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_24.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_25"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_25.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_26"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_26.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_27"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_27.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_28"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_28.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_29"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_29.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_30"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_30.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_31"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_31.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_32"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_32.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_33"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_33.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_34"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_34.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_35"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_35.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
+#    - name: "progenbase_36"
+#      immuneml_model_config: "configs/tuning/BCR/ProGenBase/progenbase_36.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 10000
 
 analyses:
   - name: "reduced_dimensionality"
@@ -202,7 +202,7 @@ analyses:
     default_model_name: "humanIGH"
     reference_data: [ "train", "test" ]
     subfolder_name: "all ProGenBase models"
-    n_subset: 6
+    n_subsets: 6
     receptor_type: "TCR"
   - name: "precision_recall"
     model_names: [ "progenbase_01", "progenbase_02", "progenbase_03", "progenbase_04", "progenbase_05", "progenbase_06", "progenbase_07", "progenbase_08",
