@@ -74,9 +74,13 @@ def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str
         .reset_index()
         .rename(columns={"index": "Model"})
     )
+    if summary_df["Model"].str.contains(r"^VAE_", na=False).any():
+        summary_df = summary_df.copy()
+        summary_df["Model"] = summary_df["Model"].apply(normalize_model_names_for_merging)
+
     summary_df = summary_df.merge(hyperparams_long, on="Model", how="left")
     summary_sorted = summary_df.sort_values("Score", ascending=plot_ascending_scores)
-    summary_sorted["Model"] = summary_sorted["Model"].apply(normalize_model_name)
+    summary_sorted["Model"] = summary_sorted["Model"].apply(normalize_model_name_for_plotting)
     models = summary_sorted["Model"].tolist()
     parameter_values = summary_sorted[parameter_names].T.values
     parameter_text = summary_sorted[parameter_names].applymap(format_value).T.values
@@ -132,11 +136,21 @@ def save_and_plot_tuning_results(tuning_config: TuningConfig, analysis_name: str
     print(f"Saved tuning plot for tuning method {tuning_config.tuning_method} to {plot_path}")
 
 
-def normalize_model_name(name: str) -> str:
+def normalize_model_name_for_plotting(name: str) -> str:
     if name.startswith("VAE") and len(name) == 5 and name[3:].isdigit():
         return f"VAE_{name[3:]}"
     if name.startswith("progen_"):
-        return "ProGen_" + name.split("_", 1)[1]
+        return "ProGen_" + name.spli
+        t("_", 1)[1]
     if name.startswith("sonnia_"):
         return "SoNNia_" + name.split("_", 1)[1]
+    return name
+
+
+def normalize_model_names_for_merging(name: str) -> str:
+    name = str(name)
+    m = re.fullmatch(r"(VAE)_?(\d+)", name)
+    if m:
+        prefix, num = m.groups()
+        return f"{prefix}{num}"
     return name
