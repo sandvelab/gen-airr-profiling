@@ -3,13 +3,13 @@ output_dir: "RESULTS_TUNING_NOV6/UMI"
 input_dir: "data/tuning/UMI"
 seed: 42
 
-data_generation:
-  experimental: True
-  method: "experimental_umi"
-  n_samples: 150000
-  default_model_name: "humanIGH"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
-
+#data_generation:
+#  experimental: True
+#  method: "experimental_umi"
+#  n_samples: 150000
+#  default_model_name: "humanIGH"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
+#
 models:
     - name: "progen_01"
       immuneml_model_config: "configs/tuning/UMI/ProGen/progen_01.yaml"
