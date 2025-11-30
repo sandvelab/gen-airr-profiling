@@ -11,11 +11,11 @@ seed: 42
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
 #
 models:
-    - name: "progen_01"
-      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_01.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
+#    - name: "progen_01"
+#      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_01.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
     - name: "progen_02"
       immuneml_model_config: "configs/tuning/UMI/ProGen/progen_02.yaml"
       train_dir: "train"
