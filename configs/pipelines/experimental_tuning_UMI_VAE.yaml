@@ -131,7 +131,7 @@ seed: 42
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 150000
-#analyses:
+analyses:
 #    - name: "reduced_dimensionality"
 #      model_names: [ "VAE_01", "VAE_02", "VAE_03", "VAE_04", "VAE_05", "VAE_06", "VAE_07", "VAE_08",
 #                     "VAE_09", "VAE_10", "VAE_11", "VAE_12", "VAE_13", "VAE_14", "VAE_15", "VAE_16",
@@ -161,17 +161,17 @@ seed: 42
 #      n_subsets: 3
 #      subfolder_name: "all VAE models"
 #      receptor_type: "BCR UMI"
-#    - name: "precision_recall"
-#      model_names: [ "VAE_01", "VAE_02", "VAE_03", "VAE_04", "VAE_05", "VAE_06", "VAE_07", "VAE_08",
-#                     "VAE_09", "VAE_10", "VAE_11", "VAE_12", "VAE_13", "VAE_14", "VAE_15", "VAE_16",
-#                     "VAE_17", "VAE_18", "VAE_19", "VAE_20", "VAE_21", "VAE_22", "VAE_23", "VAE_24" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      allowed_mismatches: 0
-#      indels: False
-#      subfolder_name: "all VAE models dist 0"
-#      receptor_type: "BCR UMI"
+    - name: "precision_recall"
+      model_names: [ "VAE_01", "VAE_02", "VAE_03", "VAE_04", "VAE_05", "VAE_06", "VAE_07", "VAE_08",
+                     "VAE_09", "VAE_10", "VAE_11", "VAE_12", "VAE_13", "VAE_14", "VAE_15", "VAE_16",
+                     "VAE_17", "VAE_18", "VAE_19", "VAE_20", "VAE_21", "VAE_22", "VAE_23", "VAE_24" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all VAE models dist 0"
+      receptor_type: "BCR UMI"
 tuning:
 #    - tuning_method: "reduced_dimensionality"
 #      model_names: [ "VAE_01", "VAE_02", "VAE_03", "VAE_04", "VAE_05", "VAE_06", "VAE_07", "VAE_08",
