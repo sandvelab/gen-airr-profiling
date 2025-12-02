@@ -15,6 +15,10 @@ class BaseDistributionStrategy(ABC):
     def compute_divergence(self, gen_seqs: list[str], ref_seqs: list[str]) -> Any:
         pass
 
+    def plot_distributions_per_dataset(self, analysis_config: AnalysisConfig, dataset_label: str, gen_seqs: list,
+                                       ref_seqs: list, gen_label, ref_label) -> None:
+        pass
+
     def init_mean_std_scores(self) -> tuple[dict, dict]:
         return {}, {}
 
