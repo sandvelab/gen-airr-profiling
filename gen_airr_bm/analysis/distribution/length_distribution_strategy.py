@@ -77,7 +77,7 @@ class LengthDistributionStrategy(BaseDistributionStrategy):
             )
         )
 
-        plot_path = Path(analysis_config.analysis_output_dir) / f"length_dist_{dataset_label}_{ref_label}.png"
+        plot_path = Path(analysis_config.analysis_output_dir) / f"length_dist_{dataset_label}_{gen_label}_{ref_label}.png"
         fig.write_image(plot_path)
         print(f"Plot saved as PNG at: {plot_path}")
 
