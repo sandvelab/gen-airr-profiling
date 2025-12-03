@@ -60,6 +60,59 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
     print(f"Plot saved as PNG at: {png_path}.png")
 
 
+#TODO: Refactor this function (Dirty coding)
+def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
+                    distribution_type, scoring_method="JSD"):
+    """ Plots a bar chart for mean scores across models.
+    Args:
+        mean_scores_dict: dict of {model: mean_score}
+        std_scores_dict: dict of {model: std_score}
+        output_dir: output directory
+        reference_data: string or list, used for subfolder naming
+        file_name: output file name without extension
+        distribution_type: used for titles. e.g. "connectivity"
+        scoring_method: used for titles. e.g. "JSD"
+    Returns:
+        None
+    """
+    fig_dir = os.path.join(output_dir, reference_data)
+    os.makedirs(fig_dir, exist_ok=True)
+    png_path = os.path.join(fig_dir, file_name) + ".png"
+    plotting_data_file = os.path.join(fig_dir, file_name) + ".tsv"
+
+    plotting_df = pd.DataFrame({
+        "Model": list(mean_scores_dict.keys()),
+        "Mean_Score": list(mean_scores_dict.values()),
+        "Std_Dev": [std_scores_dict.get(m, 0) for m in mean_scores_dict]
+    })
+    plotting_df = plotting_df.sort_values("Mean_Score", ascending=False)
+
+    if not os.path.exists(plotting_data_file):
+        plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
+    color_palette = px.colors.qualitative.Safe
+
+    fig = go.Figure(
+        go.Bar(
+            x=plotting_df["Model"],
+            y=plotting_df["Mean_Score"],
+            error_y=dict(type="data", array=plotting_df["Std_Dev"], visible=True),
+            marker=dict(color="skyblue"),
+        )
+    )
+
+    fig.update_layout(
+        title=wrap_title(f"Mean Unique Innovation Score for Generated {analysis_config.receptor_type} Sets"),
+        xaxis_title="Models",
+        yaxis_title=f"Mean Unique Innovation Score",
+        xaxis_tickangle=-45,
+        template="plotly_white",
+        colorway=color_palette
+    )
+
+    fig.write_image(png_path)
+    print(f"Plot saved as PNG at: {png_path}.png")
+
+
 def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref, std_scores_by_ref,  file_name,
                             distribution_type, scoring_method="JSD", reference_score=None) -> None:
     """

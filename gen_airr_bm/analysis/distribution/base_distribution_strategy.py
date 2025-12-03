@@ -51,6 +51,7 @@ class BaseDistributionStrategy(ABC):
         data_df = pd.read_csv(file_path, sep='\t', usecols=["junction_aa"])
         return data_df["junction_aa"].tolist()
 
+    #TODO: this can be removed. It is not used anywhere.
     def plot_scores(self, mean_scores: dict, std_scores: dict,
                     analysis_config: AnalysisConfig, distribution_type: str) -> None:
         file_name = f"{distribution_type}"

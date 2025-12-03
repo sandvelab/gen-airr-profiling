@@ -7,7 +7,8 @@ from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall, \
+    plot_avg_innovation_scores
 
 
 @dataclass
@@ -207,12 +208,12 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
         None
     """
     for dataset in scores.mean_precision:
-        plot_avg_scores(scores.mean_precision[dataset], scores.std_precision[dataset],
+        plot_avg_innovation_scores(analysis_config, scores.mean_precision[dataset], scores.std_precision[dataset],
                         analysis_config.analysis_output_dir, "precision",
                         f"{dataset}_precision", "precision",
                         scoring_method="precision")
 
-        plot_avg_scores(scores.mean_recall[dataset], scores.std_recall[dataset],
+        plot_avg_innovation_scores(analysis_config, scores.mean_recall[dataset], scores.std_recall[dataset],
                         analysis_config.analysis_output_dir, "recall",
                         f"{dataset}_recall", "recall",
                         scoring_method="recall")
