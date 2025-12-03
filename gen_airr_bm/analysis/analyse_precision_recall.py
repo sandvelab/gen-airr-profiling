@@ -197,6 +197,7 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
     return ratio
 
 
+#TODO: Refactor recall plotting hack
 def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: PrecisionRecallScores,
                                  test_reference: str) -> None:
     """ Plot precision and recall scores for each dataset and model.
@@ -221,3 +222,36 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
     plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,
                                       analysis_config.analysis_output_dir, test_reference,
                                       analysis_config.receptor_type, analysis_config.allowed_mismatches)
+
+    mean_recall, std_recall =collapse_mean_std_across_datasets(scores.mean_recall, scores.std_recall)
+
+    plot_avg_innovation_scores(analysis_config, mean_recall, std_recall,
+                               analysis_config.analysis_output_dir, "recall",
+                               f"recall_{analysis_config.receptor_type}", "recall",
+                               scoring_method="recall")
+
+
+def collapse_mean_std_across_datasets(mean_dict, std_dict):
+    """
+    mean_dict: {dataset: {model: mean_value}}
+    std_dict:  {dataset: {model: std_value}}
+
+    Returns:
+        final_mean: {model: float}
+        final_std:  {model: float}
+    """
+
+    # Collect values across datasets
+    mean_values = defaultdict(list)
+    std_values = defaultdict(list)
+
+    for dataset in mean_dict:
+        for model in mean_dict[dataset]:
+            mean_values[model].append(mean_dict[dataset][model])
+            std_values[model].append(std_dict[dataset][model])
+
+    # Compute final aggregated mean + std
+    final_mean = {model: float(np.mean(vals)) for model, vals in mean_values.items()}
+    final_std  = {model: float(np.mean(vals)) for model, vals in std_values.items()}
+
+    return final_mean, final_std
