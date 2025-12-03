@@ -38,7 +38,7 @@ analyses:
       allowed_mismatches: 0
       indels: False
       deduplicate: False
-      subfolder_name: "all models"
+      subfolder_name: "all models with distance 1"
       receptor_type: "TCR"
     - name: "precision_recall"
       model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
