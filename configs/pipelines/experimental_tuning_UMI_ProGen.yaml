@@ -131,31 +131,31 @@ models:
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 150000
-    - name: "progen_25"
-      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_25.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
-    - name: "progen_26"
-      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_26.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
-    - name: "progen_27"
-      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_27.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
-    - name: "progen_28"
-      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_28.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
-    - name: "progen_29"
-      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_29.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
+#    - name: "progen_25"
+#      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_25.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
+#    - name: "progen_26"
+#      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_26.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
+#    - name: "progen_27"
+#      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_27.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
+#    - name: "progen_28"
+#      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_28.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
+#    - name: "progen_29"
+#      immuneml_model_config: "configs/tuning/UMI/ProGen/progen_29.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
     - name: "progen_30"
       immuneml_model_config: "configs/tuning/UMI/ProGen/progen_30.yaml"
       train_dir: "train"
