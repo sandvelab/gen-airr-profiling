@@ -3,12 +3,12 @@ output_dir: "RESULTS_NOV12/UMI"
 input_dir: "data/experimental/collectionC"
 seed: 42
 
-data_generation:
-  experimental: True
-  method: "experimental_umi"
-  n_samples: 150000
-  default_model_name: "humanIGH"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
+#data_generation:
+#  experimental: True
+#  method: "experimental_umi"
+#  n_samples: 150000
+#  default_model_name: "humanIGH"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
 
 models:
     - name: "ProGen_overlap"
