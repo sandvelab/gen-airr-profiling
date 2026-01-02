@@ -1,0 +1,26 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    model:
+      PWM:
+        locus: beta
+        sequence_type: amino_acid
+        region_type: IMGT_JUNCTION
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: model
+    gen_examples_count: 450000
+    number_of_processes: 1
+    training_percentage: 1
