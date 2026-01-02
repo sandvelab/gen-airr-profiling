@@ -11,8 +11,8 @@ seed: 42
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
 
 models:
-    - name: "SoNNia_kmer"
-      immuneml_model_config: "configs/generative_models/UMI/SoNNia/sonnia_09.yaml"
+    - name: "PWM_kmer"
+      immuneml_model_config: "configs/generative_models/UMI/PWM/PWM.yaml"
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 150000
