@@ -4,34 +4,34 @@ input_dir: "data/experimental/collectionC"
 seed: 42
 
 analyses:
-#    - name: "reduced_dimensionality"
-#      model_names: [ "VAE_overlap", "VAE_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "memorization"
-#      model_names: [ "VAE_overlap", "VAE_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      allowed_mismatches: 0
-#      indels: False
-#      deduplicate: False
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "network"
-#      model_names: [ "VAE_overlap", "VAE_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      allowed_mismatches: 1
-#      indels: True
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
+    - name: "reduced_dimensionality"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "memorization"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: False
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "network"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
     - name: "precision_recall"
-      model_names: [ "VAE_overlap", "VAE_kmer" ]
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 3
@@ -41,7 +41,7 @@ analyses:
       subfolder_name: "all models with distance 0"
       receptor_type: "BCR UMI"
     - name: "precision_recall"
-      model_names: [ "VAE_overlap", "VAE_kmer" ]
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 3
@@ -50,24 +50,52 @@ analyses:
       deduplicate: False
       subfolder_name: "all models with distance 1"
       receptor_type: "BCR UMI"
-#    - name: "diversity"
-#      model_names: [ "VAE_overlap", "VAE_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "phenotype"
-#      model_names: [ "VAE_overlap" ]
-#      default_model_name: "humanIGH"
-#      subfolder_name: "VAE_overlap"
-#      allowed_mismatches: 0
-#      indels: False
-#      receptor_type: "BCR UMI"
-#    - name: "phenotype"
-#      model_names: [ "VAE_kmer" ]
-#      default_model_name: "humanIGH"
-#      subfolder_name: "VAE_kmer"
-#      allowed_mismatches: 0
-#      indels: False
-#      receptor_type: "BCR UMI"
+    - name: "diversity"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "VAE_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "VAE_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "Saka_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "Saka_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "PWM" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "PWM"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "Akbar_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "Akbar_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "ProGen_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "SoNNia_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "SoNNia_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR UMI"
