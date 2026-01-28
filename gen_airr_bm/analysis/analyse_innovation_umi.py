@@ -167,7 +167,7 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
 
     plot_avg_innovation_scores(analysis_config, mean_innovation, std_innovation,
                                analysis_config.analysis_output_dir, "innovation",
-                               f"innovation_{analysis_config.receptor_type}", "innovation",
+                               f"innovation_{analysis_config.receptor_type.replace(' ', '_')}", "innovation",
                                scoring_method="innovation")
 
 
