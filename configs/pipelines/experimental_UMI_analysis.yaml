@@ -106,3 +106,11 @@ analyses:
 #      allowed_mismatches: 0
 #      indels: False
 #      receptor_type: "BCR UMI"
+    - name: "innovation_umi"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"

@@ -25,7 +25,7 @@ def run_innovation_umi_analysis(analysis_config: AnalysisConfig) -> None:
     Returns:
         None
     """
-    print("Running innovtion umi analysis")
+    print("Running innovation umi analysis")
 
     output_dir = analysis_config.analysis_output_dir
     compairr_output_dir = f"{output_dir}/compairr_output"
