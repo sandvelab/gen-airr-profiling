@@ -11,16 +11,16 @@ analyses:
 #      n_subsets: 3
 #      subfolder_name: "all models"
 #      receptor_type: "BCR UMI"
-#    - name: "memorization"
-#      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      allowed_mismatches: 0
-#      indels: False
-#      deduplicate: False
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
+    - name: "memorization"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: False
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
 #    - name: "network"
 #      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
 #      default_model_name: "humanIGH"

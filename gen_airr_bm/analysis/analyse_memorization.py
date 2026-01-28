@@ -25,11 +25,15 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
 
     train_reference = "train" if "train" in analysis_config.reference_data else None
     test_reference = "test" if "test" in analysis_config.reference_data else None
-    if train_reference is None or test_reference is None:
-        raise ValueError("Train and test data must be included in reference_data for memorization analysis.")
+    if train_reference is None:
+        raise ValueError("Train data must be included in reference_data for memorization analysis.")
 
     model_memorization_scores = get_model_memorization_scores(analysis_config, output_dir, train_reference)
-    mean_reference_memorization_score = get_mean_reference_memorization_score(analysis_config, output_dir)
+
+    if test_reference is not None and "UMI" in analysis_config.receptor_type:
+        mean_reference_memorization_score = get_mean_reference_memorization_score(analysis_config, output_dir)
+    else:
+        mean_reference_memorization_score = None
 
     plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization",
                  analysis_config.receptor_type)
@@ -166,6 +170,14 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
     )
+
+    if mean_reference_score:
+        fig.add_hline(
+            y=mean_reference_score,
+            line=dict(color="black", dash="dash"),
+            annotation_text=f"Train vs. Test = {mean_reference_score:.3f}",
+            annotation_position="top right"
+        )
 
     fig.write_image(png_path)
 

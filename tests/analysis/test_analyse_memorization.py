@@ -53,14 +53,11 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
     mock_get_model_scores.assert_called_once_with(
         sample_analysis_config, "/tmp/test_output/analysis_mem", "train"
     )
-    mock_get_reference_score.assert_called_once_with(
-        sample_analysis_config, "/tmp/test_output/analysis_mem"
-    )
 
     # Plot called with expected data
     mock_plot_results.assert_called_once_with(
         {"model1": [0.1, 0.2], "model2": [0.3]},
-        0.123,
+        None,  # get_mean_reference_memorization_score not called for non-UMI TCR
         "/tmp/test_output/analysis_mem",
         "memorization",
         "TCR"
@@ -70,12 +67,7 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
 def test_run_memorization_analysis_empty_reference(mocker, sample_analysis_config):
     mocker.patch("os.makedirs")
 
-    # Case 1: Missing 'test'
-    sample_analysis_config.reference_data = ["train"]
-    with pytest.raises(ValueError):
-        run_memorization_analysis(sample_analysis_config)
-
-    # Case 2: Missing 'train'
+    # Case 1: Missing 'train'
     sample_analysis_config.reference_data = ["test"]
     with pytest.raises(ValueError):
         run_memorization_analysis(sample_analysis_config)
