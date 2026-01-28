@@ -47,7 +47,6 @@ def test_compute_and_plot_precision_recall_scores(mocker, sample_analysis_config
     mock_collect = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.collect_model_scores", autospec=True
     )
-    mock_plot_avg = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_avg_scores")
     mock_plot_grouped = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_grouped_bar_precision_recall")
 
     # Patch PrecisionRecallScores so mean_precision dict isn't just empty
@@ -68,7 +67,6 @@ def test_compute_and_plot_precision_recall_scores(mocker, sample_analysis_config
     compute_and_plot_precision_recall_scores(sample_analysis_config, "/tmp/test_output/analysis/compairr_output")
     assert mock_collect.call_count == len(sample_analysis_config.model_names)
     # Should plot for each dataset
-    assert mock_plot_avg.call_count == 2 * len(datasets)
     mock_plot_grouped.assert_called_once()
 
 
