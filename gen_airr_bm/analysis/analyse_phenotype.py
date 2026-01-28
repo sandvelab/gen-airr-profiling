@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 import pandas as pd
 #TODO: We need to find more elegant solution for setting the backend
@@ -10,11 +9,12 @@ import plotly.express as px
 from scipy.cluster.hierarchy import linkage, leaves_list
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets, run_compairr_existence
 
 
 def run_phenotype_analysis(analysis_config: AnalysisConfig):
-    """ Run phenotype clustering analysis on the generated sequences of two different phenotypes.
+    """ Run phenotype clustering analysis on the generated or train sequences of two different phenotypes.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
@@ -24,7 +24,11 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
     if len(analysis_config.model_names) != 1:
         raise ValueError("Phenotype analysis only supports one model")
     model_name = analysis_config.model_names[0]
-    compairr_sequences_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model_name}"
+
+    if model_name == DatasetSplit.TRAIN.value:
+        compairr_sequences_dir = f"{analysis_config.root_output_dir}/{model_name}_compairr_sequences"
+    else:
+        compairr_sequences_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model_name}"
 
     similarities_matrix, dataset_names = calculate_similarities_matrix(analysis_config, compairr_sequences_dir,)
 
@@ -37,20 +41,20 @@ def calculate_similarities_matrix(analysis_config, sequences_dir):
     """ Calculate the Jaccard similarities matrix between all pairs of datasets in the given directory.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
-        sequences_dir (str): Directory containing the generated sequence datasets.
+        sequences_dir (str): Directory containing the sequence datasets.
     Returns:
         tuple: A tuple containing the similarities matrix (list of lists) and the list of dataset names.
     """
     output_dir = analysis_config.analysis_output_dir
     os.makedirs(output_dir, exist_ok=True)
 
-    generated_datasets = sorted([f for f in os.listdir(sequences_dir) if f.endswith('.tsv')])
-    generated_datasets_names = [dataset.removesuffix('.tsv') for dataset in generated_datasets]
-    if len(generated_datasets) < 2:
+    sequence_datasets = sorted([f for f in os.listdir(sequences_dir) if f.endswith('.tsv')])
+    sequence_datasets_names = [dataset.removesuffix('.tsv') for dataset in sequence_datasets]
+    if len(sequence_datasets) < 2:
         raise ValueError(f"At least two datasets are required for phenotype analysis, but found "
-                         f"{len(generated_datasets)} in {sequences_dir}.")
+                         f"{len(sequence_datasets)} in {sequences_dir}.")
 
-    n = len(generated_datasets)
+    n = len(sequence_datasets)
     similarities_matrix = [[0.0 for _ in range(n)] for _ in range(n)]
 
     helper_dir = f"{output_dir}/compairr_helper_files"
@@ -59,12 +63,12 @@ def calculate_similarities_matrix(analysis_config, sequences_dir):
     os.makedirs(compairr_output_dir, exist_ok=True)
 
     for i in range(n):
-        dataset1 = generated_datasets[i]
+        dataset1 = sequence_datasets[i]
         dataset1_path = f"{sequences_dir}/{dataset1}"
         dataset1_name = dataset1.removesuffix('.tsv')
 
         for j in range(i, n):
-            dataset2 = generated_datasets[j]
+            dataset2 = sequence_datasets[j]
             dataset2_path = f"{sequences_dir}/{dataset2}"
             dataset2_name = dataset2.removesuffix('.tsv')
 
@@ -92,7 +96,7 @@ def calculate_similarities_matrix(analysis_config, sequences_dir):
             similarities_matrix[i][j] = jaccard_similarity
             similarities_matrix[j][i] = jaccard_similarity
 
-    return similarities_matrix, generated_datasets_names
+    return similarities_matrix, sequence_datasets_names
 
 
 def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, model_name):
