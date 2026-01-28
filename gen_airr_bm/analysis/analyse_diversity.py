@@ -188,12 +188,18 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     Returns:
         None
     """
-    data = []
-    unique_reference = list(reference_diversities['train'].values())[0]
+    unique_set_ref_value = None
+    if "UMI" in receptor_type.upper():
+        assert not (reference_diversities.keys() & models_diversities.keys()), "Overlapping keys!"
+        plotting_diversities = {**reference_diversities, **models_diversities}
+    else:
+        plotting_diversities = models_diversities
+        unique_set_ref_value = list(reference_diversities['train'].values())[0]
 
-    for model_name, div_dict in models_diversities.items():
+    data = []
+    for name, div_dict in plotting_diversities.items():
         for dataset, value in div_dict.items():
-            data.append({"dataset": dataset.rsplit("_", 1)[0], metric_name.lower(): value, "source": model_name})
+            data.append({"dataset": dataset.rsplit("_", 1)[0], metric_name.lower(): value, "source": name})
 
     df = pd.DataFrame(data)
     if not os.path.exists(output_path + ".tsv"):
@@ -217,11 +223,12 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
                       colorway=px.colors.qualitative.Safe
                       )
 
-    fig.add_hline(
-        y=unique_reference,
-        line=dict(color="black", dash="dash"),
-        annotation_text=f"All Unique = {unique_reference:.3f}",
-        annotation_position="top right"
-    )
+    if unique_set_ref_value:
+        fig.add_hline(
+            y=unique_set_ref_value,
+            line=dict(color="black", dash="dash"),
+            annotation_text=f"All Unique = {unique_set_ref_value:.3f}",
+            annotation_position="top right"
+        )
 
     fig.write_image(output_path + ".png")
