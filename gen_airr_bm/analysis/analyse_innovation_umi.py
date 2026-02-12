@@ -1,11 +1,13 @@
 import os
+import re
+
 import numpy as np
 import pandas as pd
 
 from collections import defaultdict
 from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files
+from gen_airr_bm.utils.file_utils import get_sequence_files_for_no_train_overlap
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
 from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores
 
@@ -16,6 +18,9 @@ class InnovationScores:
     mean_innovation: dict = field(default_factory=lambda: defaultdict(dict))
     std_innovation: dict = field(default_factory=lambda: defaultdict(dict))
     innovation_all: dict = field(default_factory=lambda: defaultdict(dict))
+    mean_innovation_normalized: dict = field(default_factory=lambda: defaultdict(dict))
+    std_innovation_normalized: dict = field(default_factory=lambda: defaultdict(dict))
+    innovation_normalized_all: dict = field(default_factory=lambda: defaultdict(dict))
 
 
 def run_innovation_umi_analysis(analysis_config: AnalysisConfig) -> None:
@@ -46,6 +51,7 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     """
     scores = InnovationScores()
     preprocess_test_for_innovation(analysis_config)
+    preprocess_gen_for_normalized_innovation(analysis_config)
 
     for model in analysis_config.model_names:
         collect_model_scores(analysis_config, model, "test_only", compairr_output_dir, scores)
@@ -65,19 +71,24 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     Returns:
         None
     """
-    comparison_files_dir = get_sequence_files(analysis_config, model, test_reference)
+    comparison_files_dir = get_sequence_files_for_no_train_overlap(analysis_config, model, test_reference)
 
     for ref_file, gen_files in comparison_files_dir.items():
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-        innovation_scores = get_innovation_scores(analysis_config, ref_file, gen_files, compairr_output_dir, model)
+        innovation_scores, innovation_scores_normalized = get_innovation_scores(analysis_config, ref_file, gen_files, compairr_output_dir, model)
 
-        mean_r, std_r = np.mean(innovation_scores), np.std(innovation_scores)
+        mean_ratio, std_ratio = np.mean(innovation_scores), np.std(innovation_scores)
+        mean_ratio_normalized, std_ratio_normalized = np.mean(innovation_scores_normalized), np.std(innovation_scores_normalized)
 
-        scores.mean_innovation[dataset_name][model] = mean_r
-        scores.std_innovation[dataset_name][model] = std_r
+        scores.mean_innovation[dataset_name][model] = mean_ratio
+        scores.std_innovation[dataset_name][model] = std_ratio
+
+        scores.mean_innovation_normalized[dataset_name][model] = mean_ratio_normalized
+        scores.std_innovation_normalized[dataset_name][model] = std_ratio_normalized
 
         scores.innovation_all[dataset_name][model] = innovation_scores
+        scores.innovation_normalized_all[dataset_name][model] = innovation_scores_normalized
 
 
 def preprocess_test_for_innovation(analysis_config: AnalysisConfig) -> str:
@@ -98,6 +109,29 @@ def preprocess_test_for_innovation(analysis_config: AnalysisConfig) -> str:
         test_only_df.to_csv(f"{helper_dir}/{file_name}", sep='\t', index=False)
 
 
+def preprocess_gen_for_normalized_innovation(analysis_config: AnalysisConfig) -> str:
+    gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split"
+    train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
+
+    helper_dir = f"{analysis_config.root_output_dir}/test_only_compairr_sequences"
+    helper_dir_gen = f"{analysis_config.root_output_dir}/generated_only_compairr_sequences_split"
+    os.makedirs(helper_dir, exist_ok=True)
+    os.makedirs(helper_dir_gen, exist_ok=True)
+
+    for model in os.listdir(gen_dir):
+        os.makedirs(f"{helper_dir_gen}/{model}", exist_ok=True)
+        for file_name in os.listdir(f"{gen_dir}/{model}"):
+            gen_df = pd.read_csv(f"{gen_dir}/{model}/{file_name}", sep='\t')
+            train_file_name = re.sub(r'_\d+\.tsv$', '.tsv', file_name)
+            train_df = pd.read_csv(f"{train_dir}/{train_file_name}", sep='\t')
+
+            gen_unique_df = gen_df.drop_duplicates(subset=["junction_aa"])
+            train_unique_df = train_df.drop_duplicates(subset=["junction_aa"])
+
+            gen_only_df = gen_unique_df[~gen_unique_df["junction_aa"].isin(train_unique_df["junction_aa"])]
+            gen_only_df.to_csv(f"{helper_dir_gen}/{model}/{file_name}", sep='\t', index=False)
+
+
 def get_innovation_scores(analysis_config: AnalysisConfig, ref_file: str, gen_files: list,
                           compairr_output_dir: str, model: str) -> list:
     """ Get innovation scores for the generated files compared to the reference file.
@@ -111,13 +145,15 @@ def get_innovation_scores(analysis_config: AnalysisConfig, ref_file: str, gen_fi
         tuple: Lists of innovation scores for the generated files.
     """
     innovation_scores = []
+    innovation_scores_normalized = []
     for gen_file in gen_files:
-        innovation = compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir,
+        innovation, innovation_normalized = compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir,
                                                 model, "innovation")
 
         innovation_scores.append(innovation)
+        innovation_scores_normalized.append(innovation_normalized)
 
-    return innovation_scores
+    return innovation_scores, innovation_scores_normalized
 
 
 def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_file: str, search_in_file: str,
@@ -144,8 +180,10 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
     ratio = n_nonzero_rows / len(compairr_result)
+    gen_only_df = pd.read_csv(search_in_file, sep='\t')
+    ratio_normalized = n_nonzero_rows / len(gen_only_df)
 
-    return ratio
+    return ratio, ratio_normalized
 
 
 # TODO: Refactor innovation plotting hack
@@ -163,11 +201,22 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
                                    f"{dataset}_innovation", "innovation",
                                    scoring_method="innovation")
 
+        plot_avg_innovation_scores(analysis_config, scores.mean_innovation_normalized[dataset], scores.std_innovation_normalized[dataset],
+                                   analysis_config.analysis_output_dir, "innovation",
+                                   f"{dataset}_innovation_normalized", "innovation",
+                                   scoring_method="innovation")
+
     mean_innovation, std_innovation = collapse_mean_std_across_datasets(scores.mean_innovation, scores.std_innovation)
+    mean_innovation_normalized, std_innovation_normalized = collapse_mean_std_across_datasets(scores.mean_innovation_normalized, scores.std_innovation_normalized)
 
     plot_avg_innovation_scores(analysis_config, mean_innovation, std_innovation,
                                analysis_config.analysis_output_dir, "innovation",
                                f"innovation_{analysis_config.receptor_type.replace(' ', '_')}", "innovation",
+                               scoring_method="innovation")
+
+    plot_avg_innovation_scores(analysis_config, mean_innovation_normalized, std_innovation_normalized,
+                               analysis_config.analysis_output_dir, "innovation",
+                               f"innovation_{analysis_config.receptor_type.replace(' ', '_')}_normalized", "innovation",
                                scoring_method="innovation")
 
 

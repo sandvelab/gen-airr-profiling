@@ -11,16 +11,16 @@ analyses:
 #      n_subsets: 3
 #      subfolder_name: "all models"
 #      receptor_type: "BCR UMI"
-    - name: "memorization"
-      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 3
-      allowed_mismatches: 0
-      indels: False
-      deduplicate: False
-      subfolder_name: "all models"
-      receptor_type: "BCR UMI"
+#    - name: "memorization"
+#      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 3
+#      allowed_mismatches: 0
+#      indels: False
+#      deduplicate: False
+#      subfolder_name: "all models"
+#      receptor_type: "BCR UMI"
 #    - name: "network"
 #      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
 #      default_model_name: "humanIGH"
@@ -50,20 +50,20 @@ analyses:
 #      deduplicate: False
 #      subfolder_name: "all models with distance 1"
 #      receptor_type: "BCR UMI"
-    - name: "diversity"
-      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
-      default_model_name: "humanIGH"
-      reference_data: [ "train", "test" ]
-      n_subsets: 3
-      subfolder_name: "all models"
-      receptor_type: "BCR UMI"
-    - name: "phenotype"
-      model_names: [ "train" ]
-      default_model_name: "humanIGH"
-      subfolder_name: "train"
-      allowed_mismatches: 0
-      indels: False
-      receptor_type: "BCR UMI"
+#    - name: "diversity"
+#      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
+#      default_model_name: "humanIGH"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 3
+#      subfolder_name: "all models"
+#      receptor_type: "BCR UMI"
+#    - name: "phenotype"
+#      model_names: [ "train" ]
+#      default_model_name: "humanIGH"
+#      subfolder_name: "train"
+#      allowed_mismatches: 0
+#      indels: False
+#      receptor_type: "BCR UMI"
 #    - name: "phenotype"
 #      model_names: [ "VAE_kmer" ]
 #      default_model_name: "humanIGH"
@@ -112,5 +112,5 @@ analyses:
       n_subsets: 3
       allowed_mismatches: 0
       indels: False
-      subfolder_name: "all models"
+      subfolder_name: "all models excluding train"
       receptor_type: "BCR UMI"
