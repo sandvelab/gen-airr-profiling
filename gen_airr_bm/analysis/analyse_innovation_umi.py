@@ -3,6 +3,7 @@ import re
 
 import numpy as np
 import pandas as pd
+import plotly.express as px
 
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -15,12 +16,15 @@ from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores
 @dataclass
 class InnovationScores:
     """ Class to store innovation scores for different models and datasets. """
-    mean_innovation: dict = field(default_factory=lambda: defaultdict(dict))
-    std_innovation: dict = field(default_factory=lambda: defaultdict(dict))
-    innovation_all: dict = field(default_factory=lambda: defaultdict(dict))
-    mean_innovation_normalized: dict = field(default_factory=lambda: defaultdict(dict))
-    std_innovation_normalized: dict = field(default_factory=lambda: defaultdict(dict))
-    innovation_normalized_all: dict = field(default_factory=lambda: defaultdict(dict))
+    mean_innovation_recall: dict = field(default_factory=lambda: defaultdict(dict))
+    std_innovation_recall: dict = field(default_factory=lambda: defaultdict(dict))
+    innovation_recall_all: dict = field(default_factory=lambda: defaultdict(dict))
+    mean_innovation_precision: dict = field(default_factory=lambda: defaultdict(dict))
+    std_innovation_precision: dict = field(default_factory=lambda: defaultdict(dict))
+    innovation_precision_all: dict = field(default_factory=lambda: defaultdict(dict))
+    innovation_df: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(
+        columns=["dataset", "model", "precision_innovation", "recall_innovation", "n_gen_novel", "n_test_only"]
+    ))
 
 
 def run_innovation_umi_analysis(analysis_config: AnalysisConfig) -> None:
@@ -50,8 +54,8 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
         None
     """
     scores = InnovationScores()
-    preprocess_test_for_innovation(analysis_config)
-    preprocess_gen_for_normalized_innovation(analysis_config)
+    preprocess_test_for_innovation_recall(analysis_config)
+    preprocess_gen_for_innovation_precision(analysis_config)
 
     for model in analysis_config.model_names:
         collect_model_scores(analysis_config, model, "test_only", compairr_output_dir, scores)
@@ -76,22 +80,26 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     for ref_file, gen_files in comparison_files_dir.items():
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-        innovation_scores, innovation_scores_normalized = get_innovation_scores(analysis_config, ref_file, gen_files, compairr_output_dir, model)
+        innovation_recall_scores, innovation_precision_scores = get_innovation_scores(analysis_config, ref_file,
+                                                                                      gen_files, compairr_output_dir,
+                                                                                      model, scores)
 
-        mean_ratio, std_ratio = np.mean(innovation_scores), np.std(innovation_scores)
-        mean_ratio_normalized, std_ratio_normalized = np.mean(innovation_scores_normalized), np.std(innovation_scores_normalized)
+        mean_innovation_recall_ratio, std_innovation_recall_ratio = np.mean(innovation_recall_scores), np.std(
+            innovation_recall_scores)
+        mean_innovation_precision_ratio, std_innovation_precision_ratio = np.mean(innovation_precision_scores), np.std(
+            innovation_precision_scores)
 
-        scores.mean_innovation[dataset_name][model] = mean_ratio
-        scores.std_innovation[dataset_name][model] = std_ratio
+        scores.mean_innovation_recall[dataset_name][model] = mean_innovation_recall_ratio
+        scores.std_innovation_recall[dataset_name][model] = std_innovation_recall_ratio
 
-        scores.mean_innovation_normalized[dataset_name][model] = mean_ratio_normalized
-        scores.std_innovation_normalized[dataset_name][model] = std_ratio_normalized
+        scores.mean_innovation_precision[dataset_name][model] = mean_innovation_precision_ratio
+        scores.std_innovation_precision[dataset_name][model] = std_innovation_precision_ratio
 
-        scores.innovation_all[dataset_name][model] = innovation_scores
-        scores.innovation_normalized_all[dataset_name][model] = innovation_scores_normalized
+        scores.innovation_recall_all[dataset_name][model] = innovation_recall_scores
+        scores.innovation_precision_all[dataset_name][model] = innovation_precision_scores
 
 
-def preprocess_test_for_innovation(analysis_config: AnalysisConfig) -> str:
+def preprocess_test_for_innovation_recall(analysis_config: AnalysisConfig) -> str:
     test_dir = f"{analysis_config.root_output_dir}/test_compairr_sequences"
     train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
 
@@ -109,7 +117,7 @@ def preprocess_test_for_innovation(analysis_config: AnalysisConfig) -> str:
         test_only_df.to_csv(f"{helper_dir}/{file_name}", sep='\t', index=False)
 
 
-def preprocess_gen_for_normalized_innovation(analysis_config: AnalysisConfig) -> str:
+def preprocess_gen_for_innovation_precision(analysis_config: AnalysisConfig) -> str:
     gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split"
     train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
 
@@ -133,7 +141,7 @@ def preprocess_gen_for_normalized_innovation(analysis_config: AnalysisConfig) ->
 
 
 def get_innovation_scores(analysis_config: AnalysisConfig, ref_file: str, gen_files: list,
-                          compairr_output_dir: str, model: str) -> list:
+                          compairr_output_dir: str, model: str, scores: InnovationScores) -> tuple[list, list]:
     """ Get innovation scores for the generated files compared to the reference file.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -144,20 +152,21 @@ def get_innovation_scores(analysis_config: AnalysisConfig, ref_file: str, gen_fi
     Returns:
         tuple: Lists of innovation scores for the generated files.
     """
-    innovation_scores = []
-    innovation_scores_normalized = []
+    innovation_recall_scores = []
+    innovation_precision_scores = []
     for gen_file in gen_files:
-        innovation, innovation_normalized = compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir,
-                                                model, "innovation")
+        innovation, innovation_normalized = compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file,
+                                                                           compairr_output_dir,
+                                                                           model, "innovation", scores)
 
-        innovation_scores.append(innovation)
-        innovation_scores_normalized.append(innovation_normalized)
+        innovation_recall_scores.append(innovation)
+        innovation_precision_scores.append(innovation_normalized)
 
-    return innovation_scores, innovation_scores_normalized
+    return innovation_recall_scores, innovation_precision_scores
 
 
 def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_file: str, search_in_file: str,
-                                   compairr_output_dir: str, name: str, metric: str) -> float:
+                                   compairr_output_dir: str, name: str, metric: str, scores: InnovationScores) -> tuple[float, float]:
     """ Compute the overlap ratio between two sequence sets using CompAIRR for innovation.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -169,6 +178,7 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
     Returns:
         float: Ratio of non-zero overlap counts to total counts.
     """
+    dataset_name = os.path.splitext(os.path.basename(search_in_file))[0]
     file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{name}_{metric}"
 
     if analysis_config.deduplicate:
@@ -179,11 +189,15 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
-    ratio = n_nonzero_rows / len(compairr_result)
+    innovation_recall_ratio = n_nonzero_rows / len(compairr_result)
     gen_only_df = pd.read_csv(search_in_file, sep='\t')
-    ratio_normalized = n_nonzero_rows / len(gen_only_df)
+    innovation_precision_ratio = n_nonzero_rows / len(gen_only_df)
 
-    return ratio, ratio_normalized
+    scores.innovation_df.loc[len(scores.innovation_df)] = [
+        dataset_name, name, innovation_precision_ratio, innovation_recall_ratio, len(gen_only_df), len(compairr_result)
+    ]
+
+    return innovation_recall_ratio, innovation_precision_ratio
 
 
 # TODO: Refactor innovation plotting hack
@@ -195,29 +209,121 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
     Returns:
         None
     """
-    for dataset in scores.mean_innovation:
-        plot_avg_innovation_scores(analysis_config, scores.mean_innovation[dataset], scores.std_innovation[dataset],
+    for dataset in scores.mean_innovation_recall:
+        plot_avg_innovation_scores(analysis_config, scores.mean_innovation_recall[dataset],
+                                   scores.std_innovation_recall[dataset],
                                    analysis_config.analysis_output_dir, "innovation",
                                    f"{dataset}_innovation", "innovation",
                                    scoring_method="innovation")
 
-        plot_avg_innovation_scores(analysis_config, scores.mean_innovation_normalized[dataset], scores.std_innovation_normalized[dataset],
+        plot_avg_innovation_scores(analysis_config, scores.mean_innovation_precision[dataset],
+                                   scores.std_innovation_precision[dataset],
                                    analysis_config.analysis_output_dir, "innovation",
                                    f"{dataset}_innovation_normalized", "innovation",
                                    scoring_method="innovation")
 
-    mean_innovation, std_innovation = collapse_mean_std_across_datasets(scores.mean_innovation, scores.std_innovation)
-    mean_innovation_normalized, std_innovation_normalized = collapse_mean_std_across_datasets(scores.mean_innovation_normalized, scores.std_innovation_normalized)
+    mean_innovation_recall, std_innovation_recall = collapse_mean_std_across_datasets(scores.mean_innovation_recall,
+                                                                                      scores.std_innovation_recall)
+    mean_innovation_precision, std_innovation_precision = collapse_mean_std_across_datasets(
+        scores.mean_innovation_precision, scores.std_innovation_precision)
 
-    plot_avg_innovation_scores(analysis_config, mean_innovation, std_innovation,
+    plot_avg_innovation_scores(analysis_config, mean_innovation_recall, std_innovation_recall,
                                analysis_config.analysis_output_dir, "innovation",
                                f"innovation_{analysis_config.receptor_type.replace(' ', '_')}", "innovation",
                                scoring_method="innovation")
 
-    plot_avg_innovation_scores(analysis_config, mean_innovation_normalized, std_innovation_normalized,
+    plot_avg_innovation_scores(analysis_config, mean_innovation_precision, std_innovation_precision,
                                analysis_config.analysis_output_dir, "innovation",
                                f"innovation_{analysis_config.receptor_type.replace(' ', '_')}_normalized", "innovation",
                                scoring_method="innovation")
+
+    plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
+    plot_innovation_precision_recall(analysis_config, scores)
+
+
+def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
+    """ Plot innovation precision vs recall for each dataset and model.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores (InnovationScores): Storage class for innovation scores.
+    Returns:
+        None
+    """
+    fig = px.scatter(
+        scores.innovation_df,
+        x="precision_innovation",
+        y="recall_innovation",
+        color="model",
+        hover_data=["dataset"],
+        labels={
+            "precision_innovation": "Innovation precision",
+            "recall_innovation": "Innovation recall",
+        },
+        title=f"Innovation precision vs recall for {analysis_config.receptor_type}"
+    )
+
+    output_path = (
+        f"{analysis_config.analysis_output_dir}/"
+        "innovation_precision_vs_recall.png"
+    )
+
+    fig.write_image(output_path, width=900, height=600, scale=2)
+
+    mean_scores_df = (
+        scores.innovation_df
+        .groupby("model", as_index=False)[
+            ["precision_innovation", "recall_innovation"]
+        ]
+        .mean()
+    )
+
+    fig_mean = px.scatter(
+        mean_scores_df,
+        x="precision_innovation",
+        y="recall_innovation",
+        color="model",
+        labels={
+            "precision_innovation": "Mean innovation precision",
+            "recall_innovation": "Mean innovation recall",
+        },
+        title=f"Mean innovation precision vs recall for {analysis_config.receptor_type}"
+    )
+
+    output_path_mean = (
+        f"{analysis_config.analysis_output_dir}/"
+        "mean_innovation_precision_vs_recall.png"
+    )
+
+    fig_mean.write_image(output_path_mean, width=900, height=600, scale=2)
+
+
+def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
+    """ Plot innovation scores by number of generated novel sequences for each dataset and model.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores (InnovationScores): Storage class for innovation scores.
+    Returns:
+        None
+    """
+    fig = px.scatter(
+        scores.innovation_df,
+        x="precision_innovation",
+        y="n_gen_novel",
+        color="model",
+        hover_data=["dataset"],
+        labels={
+            "precision_innov": "Innovation precision",
+            "n_gen_novel": "Unique valid generated sequences not in train",
+        },
+        title=f"Innovation precision by number of generated novel sequences for {analysis_config.receptor_type}"
+    )
+
+    output_path = (
+        f"{analysis_config.analysis_output_dir}/"
+        "innovation_precision_by_n_gen_novel.png"
+    )
+
+    fig.write_image(output_path, width=900, height=600, scale=2)
 
 
 def collapse_mean_std_across_datasets(mean_dict, std_dict):
