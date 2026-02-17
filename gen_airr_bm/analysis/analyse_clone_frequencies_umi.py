@@ -1,4 +1,5 @@
 import os
+import textwrap
 from collections import Counter
 
 import numpy as np
@@ -131,6 +132,10 @@ def plot_frequencies(frequencies: dict, output_dir: str, name1: str, name2: str)
         freq_df[f"pseudo_freq_{name2}"] = pseudo_log_transform(freq_df[f"freq_{name2}"])
         freq_df[f"pseudo_freq_{name1}"] = pseudo_log_transform(freq_df[f"freq_{name1}"])
 
+        # calculate jensen shannon divergence
+        from scipy.spatial import distance
+        jsd = distance.jensenshannon(freq_df[f"freq_{name1}"], freq_df[f"freq_{name2}"])
+
         fig = px.scatter(
             freq_df,
             x=f"pseudo_freq_{name2}",
@@ -142,11 +147,13 @@ def plot_frequencies(frequencies: dict, output_dir: str, name1: str, name2: str)
             }
         )
 
+        title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), JSD={jsd:.4f}"
         fig.update_layout(
             template="simple_white",
-            width=700,
+            width=600,
             height=600,
-            title=f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name})",
+            title={'text': wrap_title(title_text),
+                      'font': {'size': 20}},
             xaxis_title=f"{name1} frequency (pseudo-log scale)",
             yaxis_title=f"{name2} frequency (pseudo-log scale)",
         )
@@ -154,3 +161,7 @@ def plot_frequencies(frequencies: dict, output_dir: str, name1: str, name2: str)
         png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}.png")
         fig.write_image(png_path)
         print(f"Plot saved as PNG at: {png_path}.")
+
+def wrap_title(text, width=60):
+    return "<br>".join(textwrap.wrap(text, width=width))
+
