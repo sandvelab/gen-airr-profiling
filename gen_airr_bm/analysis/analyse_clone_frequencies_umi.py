@@ -5,6 +5,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from scipy.spatial import distance
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
@@ -132,8 +133,6 @@ def plot_frequencies(frequencies: dict, output_dir: str, name1: str, name2: str)
         freq_df[f"pseudo_freq_{name2}"] = pseudo_log_transform(freq_df[f"freq_{name2}"])
         freq_df[f"pseudo_freq_{name1}"] = pseudo_log_transform(freq_df[f"freq_{name1}"])
 
-        # calculate jensen shannon divergence
-        from scipy.spatial import distance
         jsd = distance.jensenshannon(freq_df[f"freq_{name1}"], freq_df[f"freq_{name2}"])
 
         fig = px.scatter(
