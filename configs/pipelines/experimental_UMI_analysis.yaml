@@ -5,10 +5,10 @@ seed: 42
 
 analyses:
     - name: "clone_frequencies"
-      model_names: [ "vae" ]
+      model_names: [ "VAE_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
-      n_subsets: 1
+      n_subsets: 3
       subfolder_name: "all models"
       receptor_type: "BCR UMI"
 #    - name: "reduced_dimensionality"
