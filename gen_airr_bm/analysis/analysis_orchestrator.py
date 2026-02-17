@@ -1,3 +1,4 @@
+from gen_airr_bm.analysis.analyse_clone_frequencies_umi import run_clone_frequencies_analysis
 from gen_airr_bm.analysis.analyse_diversity import run_diversity_analysis
 from gen_airr_bm.analysis.analyse_innovation_umi import run_innovation_umi_analysis
 from gen_airr_bm.analysis.analyse_network import run_network_analysis
@@ -17,7 +18,8 @@ class AnalysisOrchestrator:
         "precision_recall": run_precision_recall_analysis,
         "diversity": run_diversity_analysis,
         "memorization": run_memorization_analysis,
-        "innovation_umi": run_innovation_umi_analysis
+        "innovation_umi": run_innovation_umi_analysis,
+        "clone_frequencies": run_clone_frequencies_analysis
     }
 
     def run_analysis(self, analysis_config: AnalysisConfig):

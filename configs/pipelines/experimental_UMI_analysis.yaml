@@ -4,6 +4,13 @@ input_dir: "data/experimental/collectionC"
 seed: 42
 
 analyses:
+    - name: "clone_frequencies"
+      model_names: [ "vae" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 1
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
 #    - name: "reduced_dimensionality"
 #      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
 #      default_model_name: "humanIGH"
