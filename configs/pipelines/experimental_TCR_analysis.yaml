@@ -134,10 +134,17 @@ analyses:
 #      allowed_mismatches: 0
 #      indels: False
 #      receptor_type: "TCR"
-    - name: "phenotype"
-      model_names: [ "train" ]
+#    - name: "phenotype"
+#      model_names: [ "train" ]
+#      default_model_name: "humanTRB"
+#      subfolder_name: "train"
+#      allowed_mismatches: 0
+#      indels: False
+#      receptor_type: "TCR"
+    - name: "innovation"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
       default_model_name: "humanTRB"
-      subfolder_name: "train"
       allowed_mismatches: 0
       indels: False
+      subfolder_name: "all models"
       receptor_type: "TCR"

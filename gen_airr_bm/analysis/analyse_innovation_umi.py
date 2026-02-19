@@ -121,9 +121,7 @@ def preprocess_gen_for_innovation_precision(analysis_config: AnalysisConfig) -> 
     gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split"
     train_dir = f"{analysis_config.root_output_dir}/train_compairr_sequences"
 
-    helper_dir = f"{analysis_config.root_output_dir}/test_only_compairr_sequences"
     helper_dir_gen = f"{analysis_config.root_output_dir}/generated_only_compairr_sequences_split"
-    os.makedirs(helper_dir, exist_ok=True)
     os.makedirs(helper_dir_gen, exist_ok=True)
 
     for model in os.listdir(gen_dir):
@@ -251,8 +249,8 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
     """
     fig = px.scatter(
         scores.innovation_df,
-        x="precision_innovation",
-        y="recall_innovation",
+        x="recall_innovation",
+        y="precision_innovation",
         color="model",
         hover_data=["dataset"],
         labels={
@@ -279,8 +277,8 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
 
     fig_mean = px.scatter(
         mean_scores_df,
-        x="precision_innovation",
-        y="recall_innovation",
+        x="recall_innovation",
+        y="precision_innovation",
         color="model",
         labels={
             "precision_innovation": "Mean innovation precision",
@@ -307,13 +305,13 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
     """
     fig = px.scatter(
         scores.innovation_df,
-        x="precision_innovation",
-        y="n_gen_novel",
+        x="n_gen_novel",
+        y="precision_innovation",
         color="model",
         hover_data=["dataset"],
         labels={
-            "precision_innov": "Innovation precision",
-            "n_gen_novel": "Unique valid generated sequences not in train",
+            "precision_innovation": "Innovation precision",
+            "n_gen_novel": "Unique generated sequences not in train",
         },
         title=f"Innovation precision by number of generated novel sequences for {analysis_config.receptor_type}"
     )
