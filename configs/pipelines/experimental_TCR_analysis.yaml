@@ -148,3 +148,4 @@ analyses:
       indels: False
       subfolder_name: "all models"
       receptor_type: "TCR"
+      n_subsets: 6
