@@ -4,48 +4,48 @@ input_dir: "data/experimental/collectionC"
 seed: 42
 
 analyses:
-#    - name: "clone_frequencies"
-#      model_names: [ "VAE_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "clone_frequencies"
-#      model_names: [ "PWM" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "clone_frequencies"
-#      model_names: [ "SoNNia_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "clone_frequencies"
-#      model_names: [ "Akbar_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "clone_frequencies"
-#      model_names: [ "Saka_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
-#    - name: "clone_frequencies"
-#      model_names: [ "ProGen_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 3
-#      subfolder_name: "all models"
-#      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "VAE_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "PWM" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "SoNNia_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "Akbar_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "Saka_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
 #    - name: "reduced_dimensionality"
 #      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer" ]
 #      default_model_name: "humanIGH"
