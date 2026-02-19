@@ -1,6 +1,6 @@
 import os
 import textwrap
-from collections import Counter
+from collections import Counter, defaultdict
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ from scipy.spatial import distance
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
+from gen_airr_bm.utils.plotting_utils import plot_grouped_avg_scores
 
 
 def run_clone_frequencies_analysis(analysis_config: AnalysisConfig) -> None:
@@ -34,6 +35,8 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
     Returns:
         None
     """
+    jsd_scores_by_ref = defaultdict(lambda: defaultdict(list))
+
     for model_name in analysis_config.model_names:
         for reference in analysis_config.reference_data:
             frequencies_dfs = collect_clone_frequencies_models(analysis_config, model_name, reference)
@@ -41,14 +44,36 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
             model_output_dir = os.path.join(output_dir, model_name)
             os.makedirs(model_output_dir, exist_ok=True)
 
-            plot_frequencies_by_dataset(frequencies_dfs, model_output_dir, reference, model_name)
+            jsd_scores = plot_frequencies_by_dataset(frequencies_dfs, model_output_dir, reference, model_name)
+            jsd_scores_by_ref[reference][model_name].extend(jsd_scores)
+
             plot_frequencies_combined(frequencies_dfs, model_output_dir, reference, model_name)
 
     ref_frequencies = collect_clone_frequencies_reference(analysis_config)
     ref_output_dir = os.path.join(output_dir, "reference_comparison")
     os.makedirs(ref_output_dir, exist_ok=True)
-    plot_frequencies_by_dataset(ref_frequencies, ref_output_dir, "train", "test")
+    ref_jsd_scores = plot_frequencies_by_dataset(ref_frequencies, ref_output_dir, "train", "test")
     plot_frequencies_combined(ref_frequencies, ref_output_dir, "train", "test", filter_combined_rep=False)
+
+    reference_score = np.mean(ref_jsd_scores) if ref_jsd_scores else None
+
+    mean_scores_by_ref = {}
+    std_scores_by_ref = {}
+
+    for ref_type, model_scores in jsd_scores_by_ref.items():
+        mean_scores_by_ref[ref_type] = {model: np.mean(scores) for model, scores in model_scores.items()}
+        std_scores_by_ref[ref_type] = {model: np.std(scores) for model, scores in model_scores.items()}
+
+    if mean_scores_by_ref:
+        plot_grouped_avg_scores(
+            analysis_config=analysis_config,
+            mean_scores_by_ref=mean_scores_by_ref,
+            std_scores_by_ref=std_scores_by_ref,
+            file_name="clone_frequency_jsd_comparison",
+            distribution_type="clone frequency",
+            scoring_method="JSD",
+            reference_score=reference_score
+        )
 
 
 def collect_clone_frequencies_models(analysis_config: AnalysisConfig, model_name: str, reference: str) -> dict:
@@ -193,7 +218,7 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
     return fig
 
 
-def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, name2: str) -> None:
+def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, name2: str) -> list:
     """ Plots the clone frequencies for the generated and reference sequences.
     Args:
         frequencies (dict): Dictionary of DataFrames containing clone frequencies.
@@ -201,8 +226,10 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
         name1 (str): The reference dataset label.
         name2 (str): The generative model label.
     Returns:
-        None
+        list: List of JSD scores for all datasets (excluding _all)
     """
+    jsd_scores = []
+
     for dataset_name, freq_df in frequencies.items():
         df_copy = freq_df.copy()
         df_copy[f"pseudo_freq_{name2}"] = pseudo_log_transform(df_copy[f"freq_{name2}"])
@@ -211,11 +238,16 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
 
         jsd = distance.jensenshannon(freq_df[f"freq_{name1}"], freq_df[f"freq_{name2}"])
 
+        if '_all' not in dataset_name:
+            jsd_scores.append(jsd)
+
         title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), JSD={jsd:.4f}"
         fig = create_scatter_plot(df_copy, name1, name2, title_text)
         png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}.png")
         fig.write_image(png_path)
         print(f"Plot saved as PNG at: {png_path}.")
+
+    return jsd_scores
 
 
 def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, name2: str, filter_combined_rep: bool = True) -> None:
