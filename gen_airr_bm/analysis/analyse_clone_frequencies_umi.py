@@ -36,17 +36,19 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
     """
     for model_name in analysis_config.model_names:
         for reference in analysis_config.reference_data:
-            print(f"Collecting clone frequency data for model: {model_name} and reference: {reference}")
             frequencies_dfs = collect_clone_frequencies_models(analysis_config, model_name, reference)
 
             model_output_dir = os.path.join(output_dir, model_name)
             os.makedirs(model_output_dir, exist_ok=True)
-            plot_frequencies(frequencies_dfs, model_output_dir, reference, model_name)
+
+            plot_frequencies_by_dataset(frequencies_dfs, model_output_dir, reference, model_name)
+            plot_frequencies_combined(frequencies_dfs, model_output_dir, reference, model_name)
 
     ref_frequencies = collect_clone_frequencies_reference(analysis_config)
     ref_output_dir = os.path.join(output_dir, "reference_comparison")
     os.makedirs(ref_output_dir, exist_ok=True)
-    plot_frequencies(ref_frequencies, ref_output_dir, "train", "test")
+    plot_frequencies_by_dataset(ref_frequencies, ref_output_dir, "train", "test")
+    plot_frequencies_combined(ref_frequencies, ref_output_dir, "train", "test", filter_combined_rep=False)
 
 
 def collect_clone_frequencies_models(analysis_config: AnalysisConfig, model_name: str, reference: str) -> dict:
@@ -57,13 +59,22 @@ def collect_clone_frequencies_models(analysis_config: AnalysisConfig, model_name
     model_comparison_files_dir = get_sequence_files(analysis_config, model_name, reference)
     dfs = {}
     for ref_file, gen_files in model_comparison_files_dir.items():
+        data_name = os.path.basename(ref_file).split('.')[0]
         ref_seqs = get_sequences_from_file(ref_file)
+
+        all_gen_seqs = []
         for gen_file_split in gen_files:
             data_split_name = os.path.splitext(os.path.basename(gen_file_split))[0]
             gen_seqs = get_sequences_from_file(gen_file_split)
 
+            all_gen_seqs.extend(gen_seqs)
+
             df = get_frequencies_df(ref_seqs, gen_seqs, reference, model_name)
             dfs[data_split_name] = df
+
+        if all_gen_seqs:
+            df_pooled = get_frequencies_df(ref_seqs, all_gen_seqs, reference, model_name)
+            dfs[f"{data_name}_all"] = df_pooled
 
     return dfs
 
@@ -119,10 +130,73 @@ def pseudo_log_transform(x, threshold=1e-3):
     return np.sign(x) * np.log1p(np.abs(x / threshold))
 
 
-def plot_frequencies(frequencies: dict, output_dir: str, name1: str, name2: str) -> None:
+def wrap_title(text, width=60):
+    return "<br>".join(textwrap.wrap(text, width=width))
+
+
+def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title_text: str,
+                        color_by: str = None, width: int = 600, height: int = 600) -> px.scatter:
+    """ Creates a scatter plot for clone frequencies.
+
+    Args:
+        combined_df (pd.DataFrame): DataFrame with pseudo_freq columns and optional dataset column.
+        name1 (str): The reference dataset label.
+        name2 (str): The generative model label.
+        title_text (str): Title for the plot.
+        color_by (str, optional): Column name to color by (e.g., 'dataset'). None for single color.
+        width (int): Plot width in pixels.
+        height (int): Plot height in pixels.
+    Returns:
+        plotly.graph_objs.Figure: The scatter plot figure.
+    """
+    hover_data = {'sequence': True}
+    if color_by:
+        hover_data[color_by] = True
+
+    fig = px.scatter(
+        combined_df,
+        x=f"pseudo_freq_{name2}",
+        y=f"pseudo_freq_{name1}",
+        color=color_by,
+        opacity=0.6,
+        hover_name='sequence',
+        hover_data=hover_data,
+        labels={
+            f"pseudo_freq_{name2}": f"{name2.upper()} frequency",
+            f"pseudo_freq_{name1}": f"{name1.upper()} frequency",
+            color_by: 'Repertoire' if color_by else None
+        }
+    )
+
+    min_val = min(combined_df[f"pseudo_freq_{name2}"].min(), combined_df[f"pseudo_freq_{name1}"].min())
+    max_val = max(combined_df[f"pseudo_freq_{name2}"].max(), combined_df[f"pseudo_freq_{name1}"].max())
+
+    color_palette = px.colors.qualitative.Safe
+    fig.update_layout(
+        template="simple_white",
+        width=width,
+        height=height,
+        title={'text': wrap_title(title_text), 'font': {'size': 20}},
+        xaxis_title=f"{name2} frequency (pseudo-log scale)",
+        yaxis_title=f"{name1} frequency (pseudo-log scale)",
+        legend_title="Repertoire" if color_by else None,
+        colorway=color_palette,
+    )
+
+    fig.add_shape(
+        type="line",
+        x0=min_val, y0=min_val,
+        x1=max_val, y1=max_val,
+        line=dict(color="red", dash="dash", width=2)
+    )
+
+    return fig
+
+
+def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, name2: str) -> None:
     """ Plots the clone frequencies for the generated and reference sequences.
     Args:
-        frequencies (list): A list of DataFrames, each containing the clone frequencies for a specific dataset.
+        frequencies (dict): Dictionary of DataFrames containing clone frequencies.
         output_dir (str): Directory to save the generated plots.
         name1 (str): The reference dataset label.
         name2 (str): The generative model label.
@@ -130,37 +204,60 @@ def plot_frequencies(frequencies: dict, output_dir: str, name1: str, name2: str)
         None
     """
     for dataset_name, freq_df in frequencies.items():
-        freq_df[f"pseudo_freq_{name2}"] = pseudo_log_transform(freq_df[f"freq_{name2}"])
-        freq_df[f"pseudo_freq_{name1}"] = pseudo_log_transform(freq_df[f"freq_{name1}"])
+        df_copy = freq_df.copy()
+        df_copy[f"pseudo_freq_{name2}"] = pseudo_log_transform(df_copy[f"freq_{name2}"])
+        df_copy[f"pseudo_freq_{name1}"] = pseudo_log_transform(df_copy[f"freq_{name1}"])
+        df_copy['sequence'] = df_copy.index
 
         jsd = distance.jensenshannon(freq_df[f"freq_{name1}"], freq_df[f"freq_{name2}"])
 
-        fig = px.scatter(
-            freq_df,
-            x=f"pseudo_freq_{name2}",
-            y=f"pseudo_freq_{name1}",
-            hover_name=freq_df.index,
-            labels={
-                f"pseudo_freq_{name2}": f"{name2.upper()} frequency",
-                f"pseudo_freq_{name1}": f"{name1.upper()} frequency"
-            }
-        )
-
         title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), JSD={jsd:.4f}"
-        fig.update_layout(
-            template="simple_white",
-            width=600,
-            height=600,
-            title={'text': wrap_title(title_text),
-                      'font': {'size': 20}},
-            xaxis_title=f"{name1} frequency (pseudo-log scale)",
-            yaxis_title=f"{name2} frequency (pseudo-log scale)",
-        )
-
+        fig = create_scatter_plot(df_copy, name1, name2, title_text)
         png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}.png")
         fig.write_image(png_path)
         print(f"Plot saved as PNG at: {png_path}.")
 
-def wrap_title(text, width=60):
-    return "<br>".join(textwrap.wrap(text, width=width))
+
+def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, name2: str, filter_combined_rep: bool = True) -> None:
+    """ Plots combined clone frequencies for multiple datasets on a single plot.
+
+    Each dataset is shown with a different color.
+
+    Args:
+        frequencies (dict): Dictionary of DataFrames containing clone frequencies.
+        output_dir (str): Directory to save the generated plots.
+        name1 (str): The reference dataset label.
+        name2 (str): The generative model label.
+        filter_combined_rep (bool): If True, only include datasets with '_all' suffix (full repertoire). If False, include all datasets.
+    Returns:
+        None
+    """
+    if filter_combined_rep:
+        selected_datasets = {k: v for k, v in frequencies.items() if '_all' in k}
+    else:
+        selected_datasets = frequencies
+
+    if not selected_datasets:
+        print(f"No datasets found for combined plot (filter_all={filter_combined_rep}).")
+        return
+
+    combined_data = []
+    for dataset_name, freq_df in selected_datasets.items():
+        clean_name = dataset_name.replace('_all', '').replace('reference_', '')
+
+        df_copy = freq_df.copy()
+        df_copy[f"pseudo_freq_{name2}"] = pseudo_log_transform(df_copy[f"freq_{name2}"])
+        df_copy[f"pseudo_freq_{name1}"] = pseudo_log_transform(df_copy[f"freq_{name1}"])
+        df_copy['repertoire'] = clean_name
+        df_copy['sequence'] = df_copy.index
+
+        combined_data.append(df_copy)
+
+    combined_df = pd.concat(combined_data, ignore_index=False)
+    title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()}"
+    fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire', width=800, height=600)
+    png_path = os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}.png")
+    fig.write_image(png_path)
+    print(f"Combined plot saved as PNG at: {png_path}")
+
 
