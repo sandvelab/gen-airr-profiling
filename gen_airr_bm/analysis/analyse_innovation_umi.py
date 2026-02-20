@@ -236,6 +236,7 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
                                scoring_method="innovation")
 
     plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
+    plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config, scores)
     plot_innovation_precision_recall(analysis_config, scores)
 
 
@@ -252,12 +253,17 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         x="recall_innovation",
         y="precision_innovation",
         color="model",
-        hover_data=["dataset"],
-        labels={
-            "precision_innovation": "Innovation precision",
-            "recall_innovation": "Innovation recall",
-        },
-        title=f"Innovation precision vs recall for {analysis_config.receptor_type}"
+        hover_data=["dataset"]
+    )
+
+    fig.update_layout(
+        title={'text': f"Innovation precision vs recall for {analysis_config.receptor_type}",
+               'font': {'size': 22}},
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,
+        xaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
+        yaxis_title={'text': "Innovation recall", 'font': {'size': 18}},
+        opacity=0.6
     )
 
     output_path = (
@@ -279,12 +285,17 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         mean_scores_df,
         x="recall_innovation",
         y="precision_innovation",
-        color="model",
-        labels={
-            "precision_innovation": "Mean innovation precision",
-            "recall_innovation": "Mean innovation recall",
-        },
-        title=f"Mean innovation precision vs recall for {analysis_config.receptor_type}"
+        color="model"
+    )
+
+    fig_mean.update_layout(
+        title={'text': f"Mean innovation precision vs recall for {analysis_config.receptor_type}",
+               'font': {'size': 22}},
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,
+        xaxis_title={'text': "Mean innovation precision", 'font': {'size': 18}},
+        yaxis_title={'text': "Mean innovation recall", 'font': {'size': 18}},
+        opacity=0.6
     )
 
     output_path_mean = (
@@ -308,12 +319,17 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
         x="n_gen_novel",
         y="precision_innovation",
         color="model",
-        hover_data=["dataset"],
-        labels={
-            "precision_innovation": "Innovation precision",
-            "n_gen_novel": "Unique generated sequences not in train",
-        },
-        title=f"Innovation precision by number of generated novel sequences for {analysis_config.receptor_type}"
+        hover_data=["dataset"]
+    )
+
+    fig.update_layout(
+        title={'text': f"Innovation precision by number of generated novel sequences for "
+                       f"{analysis_config.receptor_type}", 'font': {'size': 22}},
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,
+        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
+        yaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
+        opacity=0.6
     )
 
     output_path = (
@@ -322,6 +338,44 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
     )
 
     fig.write_image(output_path, width=900, height=600, scale=2)
+
+
+def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
+    """ Plot innovation scores by number of generated novel sequences for each dataset and model, with pseudo-log scale on precision.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores (InnovationScores): Storage class for innovation scores.
+    Returns:
+        None
+    """
+    df = scores.innovation_df.copy()
+    df["precision_innovation_pseudolog"] = np.log10(1 + df["precision_innovation"])
+
+    fig_pseudo = px.scatter(
+        df,
+        x="n_gen_novel",
+        y="precision_innovation_pseudolog",
+        color="model",
+        hover_data=["dataset"]
+    )
+
+    fig_pseudo.update_layout(
+        title={'text': f"Innovation precision (pseudo-log) by number of generated novel sequences for "
+                       f"{analysis_config.receptor_type}",
+               'font': {'size': 22}},
+        template="plotly_white",
+        colorway=px.colors.qualitative.Safe,
+        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
+        yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 18}},
+        opacity=0.6
+    )
+
+    fig_pseudo.write_image(
+        f"{analysis_config.analysis_output_dir}/innovation_precision_by_n_gen_novel_pseudolog.png",
+        width=900,
+        height=600,
+        scale=2
+    )
 
 
 def collapse_mean_std_across_datasets(mean_dict, std_dict):
