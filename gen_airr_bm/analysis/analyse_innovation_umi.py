@@ -253,7 +253,8 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         x="recall_innovation",
         y="precision_innovation",
         color="model",
-        hover_data=["dataset"]
+        hover_data=["dataset"],
+        opacity=0.6
     )
 
     fig.update_layout(
@@ -262,8 +263,7 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
         xaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation recall", 'font': {'size': 18}},
-        opacity=0.6
+        yaxis_title={'text': "Innovation recall", 'font': {'size': 18}}
     )
 
     output_path = (
@@ -285,7 +285,8 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         mean_scores_df,
         x="recall_innovation",
         y="precision_innovation",
-        color="model"
+        color="model",
+        opacity=0.6
     )
 
     fig_mean.update_layout(
@@ -294,8 +295,7 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
         xaxis_title={'text': "Mean innovation precision", 'font': {'size': 18}},
-        yaxis_title={'text': "Mean innovation recall", 'font': {'size': 18}},
-        opacity=0.6
+        yaxis_title={'text': "Mean innovation recall", 'font': {'size': 18}}
     )
 
     output_path_mean = (
@@ -319,7 +319,8 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
         x="n_gen_novel",
         y="precision_innovation",
         color="model",
-        hover_data=["dataset"]
+        hover_data=["dataset"],
+        opacity=0.6
     )
 
     fig.update_layout(
@@ -328,8 +329,7 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
         xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
-        opacity=0.6
+        yaxis_title={'text': "Innovation precision", 'font': {'size': 18}}
     )
 
     output_path = (
@@ -356,7 +356,8 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         x="n_gen_novel",
         y="precision_innovation_pseudolog",
         color="model",
-        hover_data=["dataset"]
+        hover_data=["dataset"],
+        opacity=0.6
     )
 
     fig_pseudo.update_layout(
@@ -366,8 +367,7 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
         xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 18}},
-        opacity=0.6
+        yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 18}}
     )
 
     fig_pseudo.write_image(
