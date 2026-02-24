@@ -61,6 +61,7 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
         collect_model_scores(analysis_config, model, "test_only", compairr_output_dir, scores)
 
     plot_innovation_scores(analysis_config, scores)
+    scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
 
 
 def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_reference: str, compairr_output_dir: str,
@@ -340,6 +341,21 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
     fig.write_image(output_path, width=900, height=600, scale=2)
 
 
+def symlog_transform(x, linthresh=1e-6, base=10.0):
+    x = np.asarray(x, dtype=float)
+    ax = np.abs(x)
+    s = np.sign(x)
+    out = np.empty_like(x)
+
+    # linear region
+    m = ax <= linthresh
+    out[m] = s[m] * (ax[m] / linthresh)
+
+    # log region
+    out[~m] = s[~m] * (1.0 + np.log(ax[~m] / linthresh) / np.log(base))
+    return out
+
+
 def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
     """ Plot innovation scores by number of generated novel sequences for each dataset and model, with pseudo-log scale on precision.
     Args:
@@ -349,7 +365,8 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         None
     """
     df = scores.innovation_df.copy()
-    df["precision_innovation_pseudolog"] = np.log10(1 + df["precision_innovation"])
+    threshold = 1e-6
+    df["precision_innovation_pseudolog"] = symlog_transform(df["precision_innovation"], linthresh=threshold, base=10)
 
     fig_pseudo = px.scatter(
         df,
@@ -368,6 +385,17 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         colorway=px.colors.qualitative.Safe,
         xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
         yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 18}}
+    )
+
+    threshold = 1e-6
+    max_val = int(np.ceil(df["precision_innovation_pseudolog"].max()))
+    tickvals = np.arange(0, max_val + 1)
+    ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
+
+    fig_pseudo.update_yaxes(
+        tickmode="array",
+        tickvals=tickvals,
+        ticktext=ticktext
     )
 
     fig_pseudo.write_image(
