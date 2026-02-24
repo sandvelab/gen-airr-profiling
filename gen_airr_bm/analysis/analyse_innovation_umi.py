@@ -263,8 +263,8 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
                'font': {'size': 22}},
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
-        xaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation recall", 'font': {'size': 18}}
+        xaxis_title={'text': "Innovation recall", 'font': {'size': 18}},
+        yaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
     )
 
     output_path = (
