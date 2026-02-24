@@ -54,6 +54,7 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
 
     plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
     plot_innovation_precision_recall(analysis_config, scores)
+    scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
 
 
 def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_reference: str, compairr_output_dir: str,
