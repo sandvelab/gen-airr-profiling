@@ -341,7 +341,7 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
     fig.write_image(output_path, width=900, height=600, scale=2)
 
 
-def symlog_transform(x, linthresh=1e-3, base=10.0):
+def symlog_transform(x, linthresh=1e-4, base=10.0):
     x = np.asarray(x, dtype=float)
     ax = np.abs(x)
     s = np.sign(x)
