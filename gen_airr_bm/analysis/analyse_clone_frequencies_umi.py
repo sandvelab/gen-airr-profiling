@@ -154,8 +154,8 @@ def get_frequencies_df(sample_1: list, sample_2: list, label_1: str, label_2: st
 
 #def pseudo_log_transform(x, threshold=1e-3):
 #     return np.sign(x) * np.log1p(np.abs(x / threshold))
-def pseudo_log_transform(x, linthresh=1e-3, base=10):
-    return symlog_transform(x)
+def pseudo_log_transform(x, linthresh=1e-5, base=10):
+    return symlog_transform(x, linthresh)
 
 
 def wrap_title(text, width=60):
@@ -218,7 +218,7 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
         line=dict(color="red", dash="dash", width=2)
     )
 
-    threshold = 1e-6
+    threshold = 1e-5
     tickvals = np.arange(0, max_val + 1)
     ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
 
