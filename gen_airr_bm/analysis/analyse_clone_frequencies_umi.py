@@ -218,7 +218,7 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
         line=dict(color="red", dash="dash", width=2)
     )
 
-    threshold = 1e-4
+    threshold = 1/450000
     tickvals = np.arange(0, max_val + 1)
     ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
 
