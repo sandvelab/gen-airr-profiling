@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.express as px
 from scipy.spatial import distance
 
+from gen_airr_bm.analysis.analyse_innovation_umi import symlog_transform
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
 from gen_airr_bm.utils.plotting_utils import plot_grouped_avg_scores
@@ -151,8 +152,10 @@ def get_frequencies_df(sample_1: list, sample_2: list, label_1: str, label_2: st
     return df
 
 
-def pseudo_log_transform(x, threshold=1e-3):
-    return np.sign(x) * np.log1p(np.abs(x / threshold))
+#def pseudo_log_transform(x, threshold=1e-3):
+#     return np.sign(x) * np.log1p(np.abs(x / threshold))
+def pseudo_log_transform(x, linthresh=1e-3, base=10):
+    return symlog_transform(x)
 
 
 def wrap_title(text, width=60):
@@ -215,6 +218,22 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
         line=dict(color="red", dash="dash", width=2)
     )
 
+    threshold = 1e-6
+    tickvals = np.arange(0, max_val + 1)
+    ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
+
+    fig.update_yaxes(
+        tickmode="array",
+        tickvals=tickvals,
+        ticktext=ticktext
+    )
+
+    fig.update_xaxes(
+        tickmode="array",
+        tickvals=tickvals,
+        ticktext=ticktext
+    )
+
     return fig
 
 
@@ -243,7 +262,7 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
 
         title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), JSD={jsd:.4f}"
         fig = create_scatter_plot(df_copy, name1, name2, title_text)
-        png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}.png")
+        png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}_symlog.png")
         fig.write_image(png_path)
         print(f"Plot saved as PNG at: {png_path}.")
 
@@ -288,7 +307,7 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
     combined_df = pd.concat(combined_data, ignore_index=False)
     title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()}"
     fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire', width=800, height=600)
-    png_path = os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}.png")
+    png_path = os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog.png")
     fig.write_image(png_path)
     print(f"Combined plot saved as PNG at: {png_path}")
 
