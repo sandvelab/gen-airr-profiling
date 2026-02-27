@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files_for_no_train_overlap
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
-from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores
+from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores, wrap_title
 
 
 @dataclass
@@ -249,22 +249,50 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
     Returns:
         None
     """
+    if "UMI" in analysis_config.receptor_type:
+        pseudolog = True
+    else:
+        pseudolog = False
+
+    df = scores.innovation_df.copy()
+    threshold = 1e-5
+    df["precision_innovation_pseudolog"] = symlog_transform(df["precision_innovation"], linthresh=threshold, base=10)
+
     fig = px.scatter(
-        scores.innovation_df,
+        df,
         x="recall_innovation",
-        y="precision_innovation",
+        y="precision_innovation_pseudolog" if pseudolog else "precision_innovation",
         color="model",
         hover_data=["dataset"],
-        opacity=0.6
+        opacity=0.6,
+        color_discrete_sequence=px.colors.qualitative.Dark24
     )
 
+    fig.update_traces(marker=dict(size=11))
+
+    if pseudolog:
+        threshold = 1e-5
+        max_val = int(np.ceil(df["precision_innovation_pseudolog"].max()))
+        tickvals = np.arange(0, max_val + 1)
+        ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
+
+        fig.update_yaxes(
+            tickmode="array",
+            tickvals=tickvals,
+            ticktext=ticktext
+        )
+
+    y_axis_text = "Innovation precision (pseudo-log)" if pseudolog else "Innovation precision"
     fig.update_layout(
         title={'text': f"Innovation precision vs recall for {analysis_config.receptor_type}",
-               'font': {'size': 22}},
+               'font': {'size': 28}},
         template="plotly_white",
-        colorway=px.colors.qualitative.Safe,
-        xaxis_title={'text': "Innovation recall", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation precision", 'font': {'size': 18}},
+        colorway=px.colors.qualitative.Dark24,
+        xaxis_title={'text': "Innovation recall", 'font': {'size': 24}},
+        yaxis_title={'text': y_axis_text, 'font': {'size': 24}},
+        xaxis=dict(tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
+        legend=dict(font=dict(size=18))
     )
 
     output_path = (
@@ -294,7 +322,6 @@ def plot_innovation_precision_recall(analysis_config: AnalysisConfig, scores: In
         title={'text': f"Mean innovation precision vs recall for {analysis_config.receptor_type}",
                'font': {'size': 22}},
         template="plotly_white",
-        colorway=px.colors.qualitative.Safe,
         xaxis_title={'text': "Mean innovation precision", 'font': {'size': 18}},
         yaxis_title={'text': "Mean innovation recall", 'font': {'size': 18}}
     )
@@ -321,16 +348,21 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
         y="precision_innovation",
         color="model",
         hover_data=["dataset"],
-        opacity=0.6
+        opacity=0.6,
+        color_discrete_sequence=px.colors.qualitative.Dark24
     )
 
+    fig.update_traces(marker=dict(size=11))
+
     fig.update_layout(
-        title={'text': f"Innovation precision by number of generated novel sequences for "
-                       f"{analysis_config.receptor_type}", 'font': {'size': 22}},
+        title={'text': wrap_title(f"Innovation precision by number of generated novel sequences for "
+                       f"{analysis_config.receptor_type}", width=50), 'font': {'size': 28}},
         template="plotly_white",
-        colorway=px.colors.qualitative.Safe,
-        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation precision", 'font': {'size': 18}}
+        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 24}},
+        yaxis_title={'text': "Innovation precision", 'font': {'size': 24}},
+        xaxis=dict(tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
+        legend=dict(font=dict(size=18))
     )
 
     output_path = (
@@ -365,7 +397,7 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         None
     """
     df = scores.innovation_df.copy()
-    threshold = 1e-6
+    threshold = 1e-5
     df["precision_innovation_pseudolog"] = symlog_transform(df["precision_innovation"], linthresh=threshold, base=10)
 
     fig_pseudo = px.scatter(
@@ -374,20 +406,25 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         y="precision_innovation_pseudolog",
         color="model",
         hover_data=["dataset"],
-        opacity=0.6
+        opacity=0.6,
+        color_discrete_sequence=px.colors.qualitative.Dark24
     )
+
+    fig_pseudo.update_traces(marker=dict(size=12))
 
     fig_pseudo.update_layout(
-        title={'text': f"Innovation precision (pseudo-log) by number of generated novel sequences for "
-                       f"{analysis_config.receptor_type}",
-               'font': {'size': 22}},
+        title={'text': wrap_title(f"Innovation precision (pseudo-log) by number of generated novel sequences for "
+                       f"{analysis_config.receptor_type}", width=50),
+               'font': {'size': 28}},
         template="plotly_white",
-        colorway=px.colors.qualitative.Safe,
-        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 18}},
-        yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 18}}
+        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 24}},
+        yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 24}},
+        xaxis=dict(tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
+        legend=dict(font=dict(size=18))
     )
 
-    threshold = 1e-6
+    threshold = 1e-5
     max_val = int(np.ceil(df["precision_innovation_pseudolog"].max()))
     tickvals = np.arange(0, max_val + 1)
     ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
