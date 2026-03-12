@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from scipy.spatial import distance
+from scipy.stats import spearmanr
 
 from gen_airr_bm.analysis.analyse_innovation_umi import symlog_transform
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -255,12 +256,13 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
         df_copy[f"pseudo_freq_{name1}"] = pseudo_log_transform(df_copy[f"freq_{name1}"])
         df_copy['sequence'] = df_copy.index
 
-        jsd = distance.jensenshannon(freq_df[f"freq_{name1}"], freq_df[f"freq_{name2}"])
+        jsd = distance.jensenshannon(df_copy[f"freq_{name1}"], df_copy[f"freq_{name2}"])
 
         if '_all' not in dataset_name:
             jsd_scores.append(jsd)
 
-        title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), JSD={jsd:.4f}"
+        rho, p = spearmanr(df_copy[f"pseudo_freq_{name1}"], df_copy[f"pseudo_freq_{name2}"])
+        title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), ρ = {rho:.3f}"
         fig = create_scatter_plot(df_copy, name1, name2, title_text)
         png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}_symlog.png")
         fig.write_image(png_path)
@@ -305,7 +307,8 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
         combined_data.append(df_copy)
 
     combined_df = pd.concat(combined_data, ignore_index=False)
-    title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()}"
+    rho, p = spearmanr(combined_df[f"pseudo_freq_{name1}"], combined_df[f"pseudo_freq_{name2}"])
+    title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (ρ = {rho:.3f})"
     fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire', width=800, height=600)
     png_path = os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog.png")
     fig.write_image(png_path)
