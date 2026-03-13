@@ -4,7 +4,7 @@ import pytest
 
 from gen_airr_bm.analysis.analyse_memorization import (
     run_memorization_analysis,
-    get_model_memorization_scores,
+    get_mean_model_memorization_scores,
     get_mean_reference_memorization_score,
     get_memorization_scores,
     plot_results,
@@ -33,7 +33,7 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
     # Mocks
     mock_makedirs = mocker.patch("os.makedirs")
     mock_get_model_scores = mocker.patch(
-        "gen_airr_bm.analysis.analyse_memorization.get_model_memorization_scores",
+        "gen_airr_bm.analysis.analyse_memorization.get_mean_model_memorization_scores",
         return_value={"model1": [0.1, 0.2], "model2": [0.3]}
     )
     mock_get_reference_score = mocker.patch(
@@ -73,7 +73,7 @@ def test_run_memorization_analysis_empty_reference(mocker, sample_analysis_confi
         run_memorization_analysis(sample_analysis_config)
 
 
-def test_get_model_memorization_scores(mocker, sample_analysis_config):
+def test_get_mean_model_memorization_scores(mocker, sample_analysis_config):
     # Prepare a deterministic mapping of reference->generated files
     comparison_mapping = {
         "/ref/ref1.tsv": ["/gen/g1.tsv", "/gen/g2.tsv"],
@@ -87,14 +87,16 @@ def test_get_model_memorization_scores(mocker, sample_analysis_config):
 
     # Side effect returns one value per generated file to match lengths
     def mem_scores_side_effect(analysis_config, ref_file, gen_files, output_dir, model_name):
-        return [0.0] * len(gen_files)
+        return [0.0] * len(gen_files), [10] * len(gen_files)  # scores, n sequences
 
     mock_get_mem_scores = mocker.patch(
         "gen_airr_bm.analysis.analyse_memorization.get_memorization_scores",
         side_effect=mem_scores_side_effect
     )
 
-    result = get_model_memorization_scores(
+    mock_to_csv = mocker.patch("pandas.DataFrame.to_csv")
+
+    result = get_mean_model_memorization_scores(
         analysis_config=sample_analysis_config,
         output_dir="/tmp/test_output/analysis_mem",
         train_reference="train"
@@ -131,7 +133,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     )
 
     # get_memorization_scores returns a list, we'll return one score to match usage
-    seq = [[0.1], [0.3], [0.5]]
+    seq = [([0.1], [100]), ([0.3], [100]), ([0.5], [100])]
     mock_get_mem_scores = mocker.patch(
         "gen_airr_bm.analysis.analyse_memorization.get_memorization_scores",
         side_effect=seq
@@ -164,10 +166,10 @@ def test_get_memorization_scores_calls_compute(mocker, sample_analysis_config):
     # Return increasing scores per call
     mock_compute = mocker.patch(
         "gen_airr_bm.analysis.analyse_memorization.compute_overlap_score",
-        side_effect=[0.11, 0.22, 0.33]
+        side_effect=[(0.11, 100), (0.22, 200), (0.33, 300)]
     )
 
-    out = get_memorization_scores(
+    scores, ns = get_memorization_scores(
         analysis_config=sample_analysis_config,
         train_file=ref_file,
         test_or_gen_files=gen_files,
@@ -183,7 +185,8 @@ def test_get_memorization_scores_calls_compute(mocker, sample_analysis_config):
         )
 
     # Expected output
-    assert out == [0.11, 0.22, 0.33]
+    assert scores == [0.11, 0.22, 0.33]
+    assert ns == [100, 200, 300]
 
 
 def test_plot_results(mocker):
@@ -194,7 +197,7 @@ def test_plot_results(mocker):
 
     # Inputs
     model_scores = {
-        "model2": [0.5, 0.7],    # mean=0.6, std=something
+        "model2": [0.5, 0.7],  # mean=0.6, std=something
         "model1": [0.1, 0.2, 0.3]  # mean=0.2
     }
     mean_reference_score = 0.42

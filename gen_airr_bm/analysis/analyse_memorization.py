@@ -28,7 +28,7 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
     if train_reference is None:
         raise ValueError("Train data must be included in reference_data for memorization analysis.")
 
-    model_memorization_scores = get_model_memorization_scores(analysis_config, output_dir, train_reference)
+    model_memorization_scores = get_mean_model_memorization_scores(analysis_config, output_dir, train_reference)
 
     if test_reference is not None and "UMI" in analysis_config.receptor_type:
         mean_reference_memorization_score = get_mean_reference_memorization_score(analysis_config, output_dir)
@@ -39,7 +39,7 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
                  analysis_config.receptor_type)
 
 
-def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: str, train_reference: str) -> dict:
+def get_mean_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: str, train_reference: str) -> dict:
     """ Get memorization scores (sequence overlap) for each model.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -48,14 +48,24 @@ def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: s
     Returns:
         dict: A dictionary with model names as keys and lists of memorization scores as values.
     """
-    model_memorization_scores = defaultdict(list)
+    mean_model_memorization_scores = defaultdict(list)
+    model_memorization_scores = []
     for model_name in analysis_config.model_names:
         comparison_files_dir = get_sequence_files(analysis_config, model_name, train_reference)
-        model_memorization_scores[model_name] = []
+        mean_model_memorization_scores[model_name] = []
         for ref_file, gen_files in comparison_files_dir.items():
-            model_memorization_scores[model_name].extend(get_memorization_scores(analysis_config, ref_file, gen_files,
-                                                                                 output_dir, model_name))
-    return model_memorization_scores
+            memorization_scores, memorization_n = get_memorization_scores(analysis_config, ref_file, gen_files, output_dir, model_name)
+            mean_model_memorization_scores[model_name].extend(memorization_scores)
+            file_name = os.path.splitext(os.path.basename(ref_file))[0]
+            model_memorization_scores.extend(
+                (model_name, file_name, score, n)
+                for score, n in zip(memorization_scores, memorization_n)
+            )
+
+    model_memorization_scores_df = pd.DataFrame(model_memorization_scores, columns=["model", "file", "memorization_score", "novel_sequences"])
+    model_memorization_scores_df.to_csv(f"{output_dir}/memorization_scores.tsv", sep="\t", index=False, header=True)
+
+    return mean_model_memorization_scores
 
 
 def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, output_dir: str) -> float:
@@ -69,14 +79,14 @@ def get_mean_reference_memorization_score(analysis_config: AnalysisConfig, outpu
     ref_scores = []
     reference_comparison_files = get_reference_files(analysis_config)
     for train_file, test_file in reference_comparison_files:
-        ref_score = get_memorization_scores(analysis_config, train_file, [test_file], output_dir, "reference")
+        ref_score, _ = get_memorization_scores(analysis_config, train_file, [test_file], output_dir, "reference")
         ref_scores.append(ref_score[0])
     mean_ref_memorization_score = np.mean(ref_scores)
 
     return mean_ref_memorization_score
 
 
-def get_memorization_scores(analysis_config: AnalysisConfig, train_file: str, test_or_gen_files: list[str], output_dir: str, name: str) -> list:
+def get_memorization_scores(analysis_config: AnalysisConfig, train_file: str, test_or_gen_files: list[str], output_dir: str, name: str) -> tuple:
     """ Compute memorization scores (sequence overlap) between a train reference file and generated files or between
     train and the corresponding test set.
     Args:
@@ -89,15 +99,17 @@ def get_memorization_scores(analysis_config: AnalysisConfig, train_file: str, te
         list: A list of memorization scores (sequence overlap) for each model.
     """
     memorization_scores = []
+    memorization_counts = []
     compairr_output_dir = f"{output_dir}/compairr_output"
     for file in test_or_gen_files:
-        score = compute_overlap_score(analysis_config, train_file, file, compairr_output_dir, name)
-        memorization_scores.append(score)
+        memorization_ratio, memorization_n = compute_overlap_score(analysis_config, train_file, file, compairr_output_dir, name)
+        memorization_scores.append(memorization_ratio)
+        memorization_counts.append(memorization_n)
 
-    return memorization_scores
+    return memorization_scores, memorization_counts
 
 
-def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test_or_gen_file: str, compairr_output_dir: str, name: str) -> float:
+def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test_or_gen_file: str, compairr_output_dir: str, name: str) -> tuple:
     """ Compute overlap score between two datasets using CompAIRR.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -121,8 +133,9 @@ def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
     ratio = n_nonzero_rows / len(compairr_result)
+    novel_sequences = len(compairr_result) - n_nonzero_rows
 
-    return ratio
+    return ratio, novel_sequences
 
 
 def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str, receptor_type: str) \
