@@ -4,6 +4,7 @@ import concurrent.futures
 from gen_airr_bm.analysis.analysis_orchestrator import AnalysisOrchestrator
 from gen_airr_bm.core.main_config import MainConfig
 from gen_airr_bm.data_processing.data_generation_orchestrator import DataGenerationOrchestrator
+from gen_airr_bm.sampling.sampling_orchestrator import SamplingOrchestrator
 from gen_airr_bm.training.training_orchestrator import TrainingOrchestrator
 from gen_airr_bm.tuning.tuning_orchestrator import TuningOrchestrator
 
@@ -28,6 +29,11 @@ def run_tuning(tuning, orchestrator):
     orchestrator.run_tuning(tuning)
 
 
+def run_sampling(sampling, orchestrator):
+    print(f"Running sampling: {sampling}")
+    orchestrator.run_sampling(sampling)
+
+
 def main(config_path, break_main=False, parallel=True):
     config = MainConfig(config_path)
 
@@ -35,6 +41,7 @@ def main(config_path, break_main=False, parallel=True):
     training_orchestrator = TrainingOrchestrator()
     analysis_orchestrator = AnalysisOrchestrator()
     tuning_orchestrator = TuningOrchestrator()
+    sampling_orchestrator = SamplingOrchestrator()
 
     if parallel:
         if break_main:
@@ -62,6 +69,12 @@ def main(config_path, break_main=False, parallel=True):
                         config.tuning_configs):
                     pass
 
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for _ in executor.map(
+                        lambda sampling: run_sampling(sampling, sampling_orchestrator),
+                        config.sampling_configs):
+                    pass
+
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 executor.map(
@@ -82,6 +95,11 @@ def main(config_path, break_main=False, parallel=True):
                 executor.map(
                     lambda tuning: run_tuning(tuning, tuning_orchestrator),
                     config.tuning_configs)
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.map(
+                    lambda sampling: run_sampling(sampling, sampling_orchestrator),
+                    config.sampling_configs)
     else:
         for data_generation in config.data_generation_configs:
             run_data_generation(data_generation, data_generation_orchestrator)
@@ -94,6 +112,9 @@ def main(config_path, break_main=False, parallel=True):
 
         for tuning in config.tuning_configs:
             run_tuning(tuning, tuning_orchestrator)
+
+        for sampling in config.sampling_configs:
+            run_sampling(sampling, sampling_orchestrator)
 
 
 if __name__ == "__main__":

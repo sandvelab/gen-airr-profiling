@@ -1,6 +1,7 @@
 import os
 import yaml
 
+from gen_airr_bm.core.SamplingConfig import SamplingConfig
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.data_generation_config import DataGenerationConfig
 from gen_airr_bm.core.model_config import ModelConfig
@@ -21,6 +22,7 @@ class MainConfig:
         self.model_configs = []
         self.analysis_configs = []
         self.tuning_configs = []
+        self.sampling_configs = []
 
         base_seed = data["seed"]
         experimental_datasets = []
@@ -94,6 +96,20 @@ class MainConfig:
                 for tuning in data.get("tuning", [])
             ])
 
+        if "sampling" in data:
+            # Sampling should be run independently after training, so we don't tie it to the experiment loop.
+            # Instead, we just create configs for each sampling task (experiments are specified per task).
+            self.sampling_configs.extend([
+                SamplingConfig(model_name=sampling["model_name"],
+                               experiment_name=sampling["experiment_name"],
+                               immuneml_config=sampling["immuneml_config"],
+                               train_dir=sampling["train_dir"],
+                               n_samples=sampling["n_samples"],
+                               root_output_dir=self.output_dir)
+                for sampling in data.get("sampling", [])
+            ])
+
     def __repr__(self):
         return (f"MainConfig(n_experiments={self.n_experiments}, simulation_configs={self.data_generation_configs},"
-                f" training={self.model_configs}, analyses={self.analysis_configs}, tuning={self.tuning_configs})")
+                f" training={self.model_configs}, analyses={self.analysis_configs}, tuning={self.tuning_configs}),"
+                f" sampling={self.sampling_configs})")

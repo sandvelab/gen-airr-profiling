@@ -1,0 +1,8 @@
+definitions: []
+
+instructions:
+  gen_model:
+    type: ApplyGenModel
+    gen_examples_count: 0
+    ml_config_path: "path"
+    reports: []
