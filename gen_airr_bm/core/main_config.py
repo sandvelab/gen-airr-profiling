@@ -97,17 +97,20 @@ class MainConfig:
             ])
 
         if "sampling" in data:
-            # Sampling should be run independently after training, so we don't tie it to the experiment loop.
-            # Instead, we just create configs for each sampling task (experiments are specified per task).
-            self.sampling_configs.extend([
-                SamplingConfig(model_name=sampling["model_name"],
-                               experiment_name=sampling["experiment_name"],
-                               immuneml_config=sampling["immuneml_config"],
-                               train_dir=sampling["train_dir"],
-                               n_samples=sampling["n_samples"],
-                               root_output_dir=self.output_dir)
-                for sampling in data.get("sampling", [])
-            ])
+            # n_experiments is not relevant for sampling configs since each entry defines its own experiment names.
+            for sampling in data.get("sampling", []):
+                experiment_names = sampling.get("experiment_names")
+                if not experiment_names:
+                    raise ValueError("Sampling entries must define 'experiment_names' with at least one experiment.")
+                for experiment_name in experiment_names:
+                    self.sampling_configs.append(
+                        SamplingConfig(model_name=sampling["model_name"],
+                                       experiment_name=experiment_name,
+                                       immuneml_config=sampling["immuneml_config"],
+                                       train_dir=sampling["train_dir"],
+                                       n_samples=sampling["n_samples"],
+                                       root_output_dir=self.output_dir)
+                    )
 
     def __repr__(self):
         return (f"MainConfig(n_experiments={self.n_experiments}, simulation_configs={self.data_generation_configs},"

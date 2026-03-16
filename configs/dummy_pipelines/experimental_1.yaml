@@ -100,22 +100,12 @@ seed: 42
 #      receptor_type: "TCR"
 sampling:
   - model_name: "vae"
-    experiment_name: "exp_0"
+    experiment_names: ["exp_0", "exp_1"]
     immuneml_config: "configs/dummy_pipelines/sampling.yaml"
     train_dir: "train"
     n_samples: 1000
   - model_name: "pwm"
-    experiment_name: "exp_0"
-    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-    train_dir: "train"
-    n_samples: 1000
-  - model_name: "vae"
-    experiment_name: "exp_1"
-    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-    train_dir: "train"
-    n_samples: 1000
-  - model_name: "pwm"
-    experiment_name: "exp_1"
+    experiment_names: ["exp_0", "exp_1"]
     immuneml_config: "configs/dummy_pipelines/sampling.yaml"
     train_dir: "train"
     n_samples: 1000
