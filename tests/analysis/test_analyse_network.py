@@ -30,7 +30,11 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_root",
         default_model_name="humanTRB",
         reference_data=["train", "test"],
-        n_subsets=5
+        n_subsets=5,
+        subfolder_name="analysis_subfolder",
+        receptor_type="TCR",
+        indels=True,
+        allowed_mismatches=1
     )
 
 
@@ -98,7 +102,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     gen_degree_dists = [pd.Series([2, 1], index=[0, 1], name="genA"),
                         pd.Series([0, 1], index=[1, 2], name="genB")]
 
-    def gcd_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference, analysis_output_dir):
+    def gcd_side_effect(ref_file, gen_files, helper_dir, output_dir, model_name, reference, allowed_mismatches, indels):
         # Mimic dataset_name derivation in implementation: basename without extension
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
         # Return the proper 3-tuple
@@ -128,7 +132,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     expected_calc_div_calls = 2 * len(sample_analysis_config.reference_data) * len(sample_analysis_config.model_names)
     assert mock_calc_div.call_count == expected_calc_div_calls
 
-    # summarize_and_plot_dataset_connectivity called once per dataset per reference (after aggregating across models)
+    # # summarize_and_plot_dataset_connectivity called once per dataset per reference (after aggregating across models)
     expected_plot_dataset_calls = 2 * len(sample_analysis_config.reference_data)  # two datasets: ref1, ref2
     assert mock_plot_dataset.call_count == expected_plot_dataset_calls
 
@@ -136,6 +140,7 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     called_refs = set()
     called_datasets = []
     for call in mock_plot_dataset.call_args_list:
+        # summarize_and_plot_dataset_connectivity(dataset_name, divergence_scores, analysis_config.analysis_output_dir, reference)
         ds_name, divergence_scores, out_dir, reference = call.args
         called_refs.add(reference)
         called_datasets.append(ds_name)
@@ -161,10 +166,8 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     assert mock_get_ref_score.call_count == 1
     mock_plot_all.assert_called_once()
     all_args = mock_plot_all.call_args[0]
-    divergence_scores_all, analysis_output_dir, references, mean_ref_score = all_args
+    sample_analysis_config, divergence_scores_all, mean_ref_score = all_args
 
-    assert analysis_output_dir == sample_analysis_config.analysis_output_dir
-    assert references == sample_analysis_config.reference_data
     assert mean_ref_score == 0.42
 
     # Light structure checks on divergence_scores_all
@@ -176,10 +179,9 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
                 assert divergence_scores_all[reference][ds][model] == [0.1, 0.2]
 
 
-def test_get_connectivity_distributions_by_dataset(mocker):
+def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_config):
     """Test get_connectivity_distributions_by_dataset computes distributions and plots them."""
     mock_get_dists = mocker.patch('gen_airr_bm.analysis.analyse_network.get_node_degree_distributions')
-    mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
 
     # Mock degree distributions
     ref_dist = pd.Series([2, 1], index=[0, 1])
@@ -193,12 +195,33 @@ def test_get_connectivity_distributions_by_dataset(mocker):
         "/tmp/output",
         "model1",
         "test",
-        "/tmp/analysis"
+        sample_analysis_config.allowed_mismatches,
+        sample_analysis_config.indels
     )
 
     mock_get_dists.assert_called_once()
-    mock_plot.assert_called_once_with(ref_dist, gen_dists, "/tmp/analysis", "model1", "test", "dataset1")
     assert dataset_name == "dataset1"
+
+    # get_node_degree_distributions should have been called with the exact positional args
+    mock_get_dists.assert_called_once_with(
+        "/path/to/dataset1.tsv",
+        ["/path/to/gen1.tsv", "/path/to/gen2.tsv"],
+        "/tmp/helper",
+        "/tmp/output",
+        "model1",
+        "test",
+        sample_analysis_config.allowed_mismatches,
+        sample_analysis_config.indels
+    )
+
+    # The returned reference distribution should match the mocked one
+    pd.testing.assert_series_equal(ref1_degree_dist, ref_dist)
+
+    # The returned generated distributions should be a list of Series matching the mocked ones
+    assert isinstance(gen_degree_dists, list)
+    assert len(gen_degree_dists) == len(gen_dists)
+    for returned, expected in zip(gen_degree_dists, gen_dists):
+        pd.testing.assert_series_equal(returned, expected)
 
 
 def test_calculate_divergence_scores(mocker):
@@ -245,7 +268,9 @@ def test_get_node_degree_distributions(mocker):
         "/tmp/helper",
         "/tmp/output",
         "model1",
-        "test"
+        "test",
+        1,
+        True
     )
 
     # Check that compute_connectivity_with_compairr was called 3 times
@@ -281,6 +306,8 @@ def test_compute_connectivity_with_compairr_valid_new_file(mocker):
         "/tmp/helper",
         "/tmp/output",
         "test",
+        1,
+        True
     )
 
     # Check that deduplicate_single_dataset was called
@@ -315,6 +342,8 @@ def test_compute_connectivity_with_compairr_invalid_file_not_found(mocker):
             "/tmp/helper",
             "/tmp/output",
             "test",
+            1,
+            True
         )
 
 
@@ -341,6 +370,8 @@ def test_compute_connectivity_with_compairr_valid_existing_file(mocker):
         "/tmp/helper",
         "/tmp/output",
         "test",
+        1,
+        True
     )
 
     # Check that deduplicate_single_dataset was NOT called
@@ -473,9 +504,8 @@ def test_summarize_and_plot_all(mocker):
     mean_reference_score = 0.21
 
     summarize_and_plot_all(
+        analysis_config=sample_analysis_config,
         divergence_scores_all=divergence_scores_all,
-        output_dir=output_dir,
-        reference_datasets=reference_datasets,
         mean_reference_score=mean_reference_score
     )
 
@@ -503,11 +533,9 @@ def test_summarize_and_plot_all(mocker):
             assert std_scores[ref][model] == pytest.approx(exp_val, rel=1e-12, abs=1e-12)
 
     # Non-float kwargs can be compared directly
-    assert kwargs["output_dir"] == output_dir
-    assert kwargs["reference_data"] == reference_datasets
     assert kwargs["distribution_type"] == "connectivity"
     assert kwargs["file_name"] == "all_datasets_connectivity"
-    assert kwargs["scoring_method"] == "JSD"
+    assert kwargs["scoring_method"] == "Jensen-Shannon Divergence"
     assert kwargs["reference_score"] == mean_reference_score
 
 
@@ -554,7 +582,7 @@ def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
         mocker.patch('gen_airr_bm.analysis.analyse_network.deduplicate_single_dataset')
         mocker.patch('gen_airr_bm.analysis.analyse_network.run_compairr_existence')
         mock_read_csv = mocker.patch('pandas.read_csv')
-        mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution')
+        mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution_by_dataset')
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_avg_scores')
         mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd', return_value=[0.1])
         mocker.patch('gen_airr_bm.analysis.analyse_network.get_mean_reference_divergence_score', return_value=0.25)

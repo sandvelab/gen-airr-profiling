@@ -23,7 +23,11 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_output",
         default_model_name="humanTRB",
         reference_data=["train", "test"],  # include both for upper reference
-        n_subsets=3
+        n_subsets=3,
+        subfolder_name="analysis_subfolder",
+        allowed_mismatches=0,
+        indels=False,
+        receptor_type="TCR"
     )
 
 
@@ -43,10 +47,6 @@ def test_compute_and_plot_precision_recall_scores(mocker, sample_analysis_config
     mock_collect = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.collect_model_scores", autospec=True
     )
-    mock_add_ref = mocker.patch(
-        "gen_airr_bm.analysis.analyse_precision_recall.add_upper_reference", autospec=True
-    )
-    mock_plot_avg = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_avg_scores")
     mock_plot_grouped = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_grouped_bar_precision_recall")
 
     # Patch PrecisionRecallScores so mean_precision dict isn't just empty
@@ -66,9 +66,7 @@ def test_compute_and_plot_precision_recall_scores(mocker, sample_analysis_config
 
     compute_and_plot_precision_recall_scores(sample_analysis_config, "/tmp/test_output/analysis/compairr_output")
     assert mock_collect.call_count == len(sample_analysis_config.model_names)
-    mock_add_ref.assert_called_once()
     # Should plot for each dataset
-    assert mock_plot_avg.call_count == 2 * len(datasets)
     mock_plot_grouped.assert_called_once()
 
 
@@ -108,7 +106,7 @@ def test_collect_model_scores(mocker, sample_analysis_config):
     )
     mock_get_scores = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.get_precision_recall_scores",
-        side_effect=lambda ref, gen, out, model: ([0.9], [0.8])
+        side_effect=lambda sample_analysis_config, ref, gen, out, model: ([0.9], [0.8])
     )
     storage = PrecisionRecallScores()
     collect_model_scores(sample_analysis_config, "modelA", "test", "/tmp/compairr_out", storage)
@@ -129,29 +127,29 @@ def test_add_upper_reference(mocker, sample_analysis_config):
     assert ss.recall_all["ds3"]["upper_reference"] == [0.88]
 
 
-def test_get_precision_recall_scores(mocker):
+def test_get_precision_recall_scores(mocker, sample_analysis_config):
     mock_overlap = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.compute_compairr_overlap_ratio",
         side_effect=[0.81, 0.61]
     )
-    precision, recall = get_precision_recall_scores("ref.tsv", ["gen1.tsv"], "/tmp/out", "myModel")
-    mock_overlap.assert_any_call("gen1.tsv", "ref.tsv", "/tmp/out", "myModel", "precision")
-    mock_overlap.assert_any_call("ref.tsv", "gen1.tsv", "/tmp/out", "myModel", "recall")
+    precision, recall = get_precision_recall_scores(sample_analysis_config, "ref.tsv", ["gen1.tsv"], "/tmp/out", "myModel")
+    mock_overlap.assert_any_call(sample_analysis_config, "gen1.tsv", "ref.tsv", "/tmp/out", "myModel", "precision")
+    mock_overlap.assert_any_call(sample_analysis_config, "ref.tsv", "gen1.tsv", "/tmp/out", "myModel", "recall")
     assert precision == [0.81]
     assert recall == [0.61]
 
 
-def test_get_precision_recall_reference(mocker):
+def test_get_precision_recall_reference(mocker, sample_analysis_config):
     mock_overlap = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.compute_compairr_overlap_ratio",
                                 side_effect=[0.76, 0.55])
-    p, r = get_precision_recall_reference("train.tsv", "test.tsv", "/tmp/out")
-    mock_overlap.assert_any_call("train.tsv", "test.tsv", "/tmp/out", "upper_reference", "precision")
-    mock_overlap.assert_any_call("test.tsv", "train.tsv", "/tmp/out", "upper_reference", "recall")
+    p, r = get_precision_recall_reference(sample_analysis_config, "train.tsv", "test.tsv", "/tmp/out")
+    mock_overlap.assert_any_call(sample_analysis_config, "train.tsv", "test.tsv", "/tmp/out", "upper_reference", "precision")
+    mock_overlap.assert_any_call(sample_analysis_config, "test.tsv", "train.tsv", "/tmp/out", "upper_reference", "recall")
     assert p == 0.76
     assert r == 0.55
 
 
-def test_compute_compairr_overlap_ratio(mocker, tmp_path):
+def test_compute_compairr_overlap_ratio(mocker, tmp_path, sample_analysis_config):
     out_dir = tmp_path
     simple_path = out_dir / "somefile.tsv"
     # The path that will be READ is (according to function logic):
@@ -161,7 +159,7 @@ def test_compute_compairr_overlap_ratio(mocker, tmp_path):
     df.to_csv(overlap_path, sep="\t", index=False)
     mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.run_compairr_existence", return_value=None)
     ratio = compute_compairr_overlap_ratio(
-        str(simple_path), "other.tsv", str(out_dir), "modelA", "precision"
+        sample_analysis_config, str(simple_path), "other.tsv", str(out_dir), "modelA", "precision"
     )
     assert ratio == pytest.approx(2 / 3, 0.01)
 

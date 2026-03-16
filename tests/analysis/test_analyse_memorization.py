@@ -4,7 +4,7 @@ import pytest
 
 from gen_airr_bm.analysis.analyse_memorization import (
     run_memorization_analysis,
-    get_model_memorization_scores,
+    get_mean_model_memorization_scores,
     get_mean_reference_memorization_score,
     get_memorization_scores,
     plot_results,
@@ -21,7 +21,11 @@ def sample_analysis_config():
         root_output_dir="/tmp/test_output",
         default_model_name="humanTRB",
         reference_data=["train", "test"],
-        n_subsets=5
+        n_subsets=5,
+        subfolder_name="analysis_subfolder",
+        allowed_mismatches=0,
+        indels=False,
+        receptor_type="TCR"
     )
 
 
@@ -29,7 +33,7 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
     # Mocks
     mock_makedirs = mocker.patch("os.makedirs")
     mock_get_model_scores = mocker.patch(
-        "gen_airr_bm.analysis.analyse_memorization.get_model_memorization_scores",
+        "gen_airr_bm.analysis.analyse_memorization.get_mean_model_memorization_scores",
         return_value={"model1": [0.1, 0.2], "model2": [0.3]}
     )
     mock_get_reference_score = mocker.patch(
@@ -49,34 +53,27 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
     mock_get_model_scores.assert_called_once_with(
         sample_analysis_config, "/tmp/test_output/analysis_mem", "train"
     )
-    mock_get_reference_score.assert_called_once_with(
-        sample_analysis_config, "/tmp/test_output/analysis_mem"
-    )
 
     # Plot called with expected data
     mock_plot_results.assert_called_once_with(
         {"model1": [0.1, 0.2], "model2": [0.3]},
-        0.123,
+        None,  # get_mean_reference_memorization_score not called for non-UMI TCR
         "/tmp/test_output/analysis_mem",
-        "memorization"
+        "memorization",
+        "TCR"
     )
 
 
 def test_run_memorization_analysis_empty_reference(mocker, sample_analysis_config):
     mocker.patch("os.makedirs")
 
-    # Case 1: Missing 'test'
-    sample_analysis_config.reference_data = ["train"]
-    with pytest.raises(ValueError):
-        run_memorization_analysis(sample_analysis_config)
-
-    # Case 2: Missing 'train'
+    # Case 1: Missing 'train'
     sample_analysis_config.reference_data = ["test"]
     with pytest.raises(ValueError):
         run_memorization_analysis(sample_analysis_config)
 
 
-def test_get_model_memorization_scores(mocker, sample_analysis_config):
+def test_get_mean_model_memorization_scores(mocker, sample_analysis_config):
     # Prepare a deterministic mapping of reference->generated files
     comparison_mapping = {
         "/ref/ref1.tsv": ["/gen/g1.tsv", "/gen/g2.tsv"],
@@ -89,15 +86,17 @@ def test_get_model_memorization_scores(mocker, sample_analysis_config):
     )
 
     # Side effect returns one value per generated file to match lengths
-    def mem_scores_side_effect(ref_file, gen_files, output_dir, model_name):
-        return [0.0] * len(gen_files)
+    def mem_scores_side_effect(analysis_config, ref_file, gen_files, output_dir, model_name):
+        return [0.0] * len(gen_files), [10] * len(gen_files)  # scores, n sequences
 
     mock_get_mem_scores = mocker.patch(
         "gen_airr_bm.analysis.analyse_memorization.get_memorization_scores",
         side_effect=mem_scores_side_effect
     )
 
-    result = get_model_memorization_scores(
+    mock_to_csv = mocker.patch("pandas.DataFrame.to_csv")
+
+    result = get_mean_model_memorization_scores(
         analysis_config=sample_analysis_config,
         output_dir="/tmp/test_output/analysis_mem",
         train_reference="train"
@@ -134,7 +133,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     )
 
     # get_memorization_scores returns a list, we'll return one score to match usage
-    seq = [[0.1], [0.3], [0.5]]
+    seq = [([0.1], [100]), ([0.3], [100]), ([0.5], [100])]
     mock_get_mem_scores = mocker.patch(
         "gen_airr_bm.analysis.analyse_memorization.get_memorization_scores",
         side_effect=seq
@@ -149,7 +148,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     assert mock_get_mem_scores.call_count == len(file_pairs)
     for i, (train_f, test_f) in enumerate(file_pairs):
         assert mock_get_mem_scores.call_args_list[i].args == (
-            train_f, [test_f], "/tmp/test_output/analysis_mem", "reference"
+            sample_analysis_config, train_f, [test_f], "/tmp/test_output/analysis_mem", "reference"
         )
 
     # Expected mean of the first (and only) elements per pair
@@ -157,7 +156,7 @@ def test_get_reference_memorization_score(mocker, sample_analysis_config):
     assert mean_score == expected_mean
 
 
-def test_get_memorization_scores_calls_compute(mocker):
+def test_get_memorization_scores_calls_compute(mocker, sample_analysis_config):
     ref_file = "/ref/train.tsv"
     gen_files = ["/gen/a.tsv", "/gen/b.tsv", "/gen/c.tsv"]
 
@@ -166,31 +165,28 @@ def test_get_memorization_scores_calls_compute(mocker):
 
     # Return increasing scores per call
     mock_compute = mocker.patch(
-        "gen_airr_bm.analysis.analyse_memorization.compute_jaccard_similarity",
-        side_effect=[0.11, 0.22, 0.33]
+        "gen_airr_bm.analysis.analyse_memorization.compute_overlap_score",
+        side_effect=[(0.11, 100), (0.22, 200), (0.33, 300)]
     )
 
-    out = get_memorization_scores(
+    scores, ns = get_memorization_scores(
+        analysis_config=sample_analysis_config,
         train_file=ref_file,
         test_or_gen_files=gen_files,
         output_dir="/tmp/test_output/analysis_mem",
         name="modelX"
     )
 
-    # Helper dir created
-    mock_makedirs.assert_called_once()
-    helper_dir = f"/tmp/test_output/analysis_mem/compairr_helper_files"
-    assert mock_makedirs.call_args.kwargs.get("exist_ok") is True
-
-    # compute_jaccard_similarity called for each gen file
+    # compute_overlap_score called for each gen file
     assert mock_compute.call_count == len(gen_files)
     for i, gen in enumerate(gen_files):
         assert mock_compute.call_args_list[i].args == (
-            helper_dir, ref_file, gen, "/tmp/test_output/analysis_mem", "modelX"
+            sample_analysis_config, ref_file, gen, "/tmp/test_output/analysis_mem/compairr_output", "modelX"
         )
 
     # Expected output
-    assert out == [0.11, 0.22, 0.33]
+    assert scores == [0.11, 0.22, 0.33]
+    assert ns == [100, 200, 300]
 
 
 def test_plot_results(mocker):
@@ -201,15 +197,16 @@ def test_plot_results(mocker):
 
     # Inputs
     model_scores = {
-        "model2": [0.5, 0.7],    # mean=0.6, std=something
+        "model2": [0.5, 0.7],  # mean=0.6, std=something
         "model1": [0.1, 0.2, 0.3]  # mean=0.2
     }
     mean_reference_score = 0.42
     fig_dir = "/tmp/out/mem"
     file_name = "mem_plot"
+    receptor_type = "TCR"
 
     # Execute
-    plot_results(model_scores, mean_reference_score, fig_dir, file_name)
+    plot_results(model_scores, mean_reference_score, fig_dir, file_name, receptor_type)
 
     # Figure constructed
     mock_Figure.assert_called_once()
@@ -232,18 +229,11 @@ def test_plot_results(mocker):
     # Layout updated with expected labels and title
     assert mock_fig.update_layout.call_count == 1
     layout_kwargs = mock_fig.update_layout.call_args.kwargs
-    assert "Average Memorization Scores Across Models" in layout_kwargs["title"]
-    assert layout_kwargs["xaxis_title"] == "Models"
-    assert layout_kwargs["yaxis_title"] == "Mean Jaccard Similarity"
+    assert f"Mean Memorization Score for Generated {receptor_type} Sets" in layout_kwargs["title"]
+    assert layout_kwargs["xaxis_title"] == "Model"
+    assert layout_kwargs["yaxis_title"] == "Mean Memorization Ratio"
     assert layout_kwargs["xaxis_tickangle"] == -45
     assert layout_kwargs["template"] == "plotly_white"
-
-    # Reference line added
-    assert mock_fig.add_hline.call_count == 1
-    hline_kwargs = mock_fig.add_hline.call_args.kwargs
-    assert hline_kwargs["y"] == mean_reference_score
-    assert "reference=" in hline_kwargs["annotation_text"]
-    assert f"{mean_reference_score:.3f}" in hline_kwargs["annotation_text"]
 
     # Saved to correct path
     mock_fig.write_image.assert_called_once_with(os.path.join(fig_dir, file_name + ".png"))

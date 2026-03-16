@@ -1,0 +1,35 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    model:
+      SimpleLSTM:
+        locus: beta
+        sequence_type: amino_acid
+        num_epochs: 500
+        batch_size: 500
+        device: cpu
+        hidden_size: 256
+        learning_rate: 0.001
+        embed_size: 64
+        temperature: 0.8
+        num_layers: 3
+        region_type: IMGT_JUNCTION
+        iter_to_report: 1
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: model
+    gen_examples_count: 140000
+    number_of_processes: 1
+    training_percentage: 1

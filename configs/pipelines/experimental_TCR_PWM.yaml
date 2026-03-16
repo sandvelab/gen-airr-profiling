@@ -1,0 +1,18 @@
+n_experiments: 11
+output_dir: "RESULTS_NOV12/TCR"
+input_dir: "data/experimental/collectionA"
+seed: 42
+
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 21500
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+
+models:
+    - name: "PWM"
+      immuneml_model_config: "configs/generative_models/TCR/PWM/PWM.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500

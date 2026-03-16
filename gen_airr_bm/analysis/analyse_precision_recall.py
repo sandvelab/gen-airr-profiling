@@ -6,8 +6,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
-from gen_airr_bm.utils.compairr_utils import run_compairr_existence
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall
+from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall, \
+    plot_avg_innovation_scores
 
 
 @dataclass
@@ -60,10 +61,6 @@ def compute_and_plot_precision_recall_scores(analysis_config: AnalysisConfig, co
     for model in analysis_config.model_names:
         collect_model_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
 
-    if train_reference:
-        print(f"Adding upper reference scores using {train_reference} data.")
-        add_upper_reference(analysis_config, train_reference, test_reference, scores, compairr_output_dir)
-
     plot_precision_recall_scores(analysis_config, scores, test_reference)
 
 
@@ -84,8 +81,8 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     for ref_file, gen_files in comparison_files_dir.items():
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
-        precision_scores, recall_scores = get_precision_recall_scores(ref_file, gen_files, compairr_output_dir,
-                                                                      model)
+        precision_scores, recall_scores = get_precision_recall_scores(analysis_config, ref_file, gen_files,
+                                                                      compairr_output_dir, model)
 
         mean_p, std_p = np.mean(precision_scores), np.std(precision_scores)
         mean_r, std_r = np.mean(recall_scores), np.std(recall_scores)
@@ -118,15 +115,18 @@ def add_upper_reference(analysis_config: AnalysisConfig, train_reference: str, t
         train_file = f"{train_dir}/{dataset}.tsv"
         test_file = f"{test_dir}/{dataset}.tsv"
 
-        ref_precision, ref_recall = get_precision_recall_reference(train_file, test_file, compairr_output_dir)
+        ref_precision, ref_recall = get_precision_recall_reference(analysis_config, train_file, test_file,
+                                                                   compairr_output_dir)
 
         scores.precision_all[dataset]["upper_reference"] = [ref_precision]
         scores.recall_all[dataset]["upper_reference"] = [ref_recall]
 
 
-def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_dir: str, model: str) -> tuple:
+def get_precision_recall_scores(analysis_config: AnalysisConfig, ref_file: str, gen_files: list,
+                                compairr_output_dir: str, model: str) -> tuple:
     """ Get precision and recall scores for the generated files compared to the reference file.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         ref_file (str): Path to the reference file.
         gen_files (list): List of paths to generated files.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -136,9 +136,9 @@ def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_
     """
     precision_scores, recall_scores = [], []
     for gen_file in gen_files:
-        precision = compute_compairr_overlap_ratio(gen_file, ref_file, compairr_output_dir,
+        precision = compute_compairr_overlap_ratio(analysis_config, gen_file, ref_file, compairr_output_dir,
                                                    model, "precision")
-        recall = compute_compairr_overlap_ratio(ref_file, gen_file, compairr_output_dir,
+        recall = compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir,
                                                 model, "recall")
 
         precision_scores.append(precision)
@@ -147,9 +147,11 @@ def get_precision_recall_scores(ref_file: str, gen_files: list, compairr_output_
     return precision_scores, recall_scores
 
 
-def get_precision_recall_reference(train_file, test_file, compairr_output_dir) -> tuple:
+def get_precision_recall_reference(analysis_config: AnalysisConfig, train_file: str, test_file: str,
+                                   compairr_output_dir: str) -> tuple:
     """ Get precision and recall scores for the upper reference between train and test files.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         train_file (str): Path to the train file (train used as replacement of generated (model) file for upper
         reference.
         test_file (str): Path to the test file.
@@ -157,17 +159,18 @@ def get_precision_recall_reference(train_file, test_file, compairr_output_dir) -
     Returns:
         tuple: Precision and recall scores for the upper reference.
     """
-    precision = compute_compairr_overlap_ratio(train_file, test_file, compairr_output_dir,
+    precision = compute_compairr_overlap_ratio(analysis_config, train_file, test_file, compairr_output_dir,
                                                'upper_reference', "precision")
-    recall = compute_compairr_overlap_ratio(test_file, train_file, compairr_output_dir,
+    recall = compute_compairr_overlap_ratio(analysis_config, test_file, train_file, compairr_output_dir,
                                             'upper_reference', "recall")
     return precision, recall
 
 
-def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, compairr_output_dir: str, name: str,
-                                   metric: str) -> float:
+def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_file: str, search_in_file: str,
+                                   compairr_output_dir: str, name: str, metric: str) -> float:
     """ Compute the overlap ratio between two sequence sets using CompAIRR for precision or recall.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         search_for_file (str): Path to the file of sequences for which to search for existence in another sequence set.
         search_in_file (str): Path to the file to search for existence in.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -181,8 +184,11 @@ def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, co
     else:
         file_name = f"{os.path.splitext(os.path.basename(search_in_file))[0]}_{name}_{metric}"
 
-    run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name, allowed_mismatches=1,
-                           indels=True)
+    if analysis_config.deduplicate:
+        search_for_file, search_in_file = run_sequence_deduplication(analysis_config, search_for_file, search_in_file)
+
+    run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_name,
+                           allowed_mismatches=analysis_config.allowed_mismatches, indels=analysis_config.indels)
     compairr_result = pd.read_csv(f"{compairr_output_dir}/{file_name}_overlap.tsv", sep='\t',
                                   names=['sequence_id', 'overlap_count'], header=0)
     n_nonzero_rows = compairr_result[(compairr_result['overlap_count'] != 0)].shape[0]
@@ -191,6 +197,7 @@ def compute_compairr_overlap_ratio(search_for_file: str, search_in_file: str, co
     return ratio
 
 
+#TODO: Refactor recall plotting hack
 def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: PrecisionRecallScores,
                                  test_reference: str) -> None:
     """ Plot precision and recall scores for each dataset and model.
@@ -202,15 +209,49 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
         None
     """
     for dataset in scores.mean_precision:
-        plot_avg_scores(scores.mean_precision[dataset], scores.std_precision[dataset],
+        plot_avg_innovation_scores(analysis_config, scores.mean_precision[dataset], scores.std_precision[dataset],
                         analysis_config.analysis_output_dir, "precision",
                         f"{dataset}_precision", "precision",
                         scoring_method="precision")
 
-        plot_avg_scores(scores.mean_recall[dataset], scores.std_recall[dataset],
+        plot_avg_innovation_scores(analysis_config, scores.mean_recall[dataset], scores.std_recall[dataset],
                         analysis_config.analysis_output_dir, "recall",
                         f"{dataset}_recall", "recall",
                         scoring_method="recall")
 
     plot_grouped_bar_precision_recall(scores.precision_all, scores.recall_all,
-                                      analysis_config.analysis_output_dir, test_reference)
+                                      analysis_config.analysis_output_dir, test_reference,
+                                      analysis_config.receptor_type, analysis_config.allowed_mismatches)
+
+    mean_recall, std_recall =collapse_mean_std_across_datasets(scores.mean_recall, scores.std_recall)
+
+    plot_avg_innovation_scores(analysis_config, mean_recall, std_recall,
+                               analysis_config.analysis_output_dir, "recall",
+                               f"recall_{analysis_config.receptor_type}", "recall",
+                               scoring_method="recall")
+
+
+def collapse_mean_std_across_datasets(mean_dict, std_dict):
+    """
+    mean_dict: {dataset: {model: mean_value}}
+    std_dict:  {dataset: {model: std_value}}
+
+    Returns:
+        final_mean: {model: float}
+        final_std:  {model: float}
+    """
+
+    # Collect values across datasets
+    mean_values = defaultdict(list)
+    std_values = defaultdict(list)
+
+    for dataset in mean_dict:
+        for model in mean_dict[dataset]:
+            mean_values[model].append(mean_dict[dataset][model])
+            std_values[model].append(std_dict[dataset][model])
+
+    # Compute final aggregated mean + std
+    final_mean = {model: float(np.mean(vals)) for model, vals in mean_values.items()}
+    final_std  = {model: float(np.mean(vals)) for model, vals in std_values.items()}
+
+    return final_mean, final_std

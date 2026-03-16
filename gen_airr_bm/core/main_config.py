@@ -4,6 +4,7 @@ import yaml
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.data_generation_config import DataGenerationConfig
 from gen_airr_bm.core.model_config import ModelConfig
+from gen_airr_bm.core.tuning_config import TuningConfig
 
 
 class MainConfig:
@@ -18,15 +19,8 @@ class MainConfig:
         self.input_dir = data.get("input_dir", None)
         self.data_generation_configs = []
         self.model_configs = []
-        # if analyses are not present in the config, we want empty list
-        self.analysis_configs = [
-            AnalysisConfig(analysis["name"], analysis["model_names"],
-                           f"{self.output_dir}/analyses/{analysis['name']}/"
-                           f"{'_'.join(m.lower() for m in analysis['model_names'])}",
-                           self.output_dir, analysis["default_model_name"], analysis.get("reference_data", None),
-                           analysis.get("n_subsets", None))
-            for analysis in data.get("analyses", [])
-        ] if data.get("analyses") else []
+        self.analysis_configs = []
+        self.tuning_configs = []
 
         base_seed = data["seed"]
         experimental_datasets = []
@@ -66,6 +60,40 @@ class MainConfig:
                         for model_data in data["models"]]
                 )
 
+        if "analyses" in data:
+            self.analysis_configs.extend([
+                AnalysisConfig(analysis=analysis["name"],
+                               model_names=analysis["model_names"],
+                               analysis_output_dir=f"{self.output_dir}/analyses/{analysis['name']}/"
+                                                   f"{'_'.join(analysis['subfolder_name'].split())}",
+                               root_output_dir=self.output_dir,
+                               default_model_name=analysis["default_model_name"],
+                               reference_data=analysis.get("reference_data", None),
+                               subfolder_name=analysis.get("subfolder_name", ""),
+                               n_subsets=analysis.get("n_subsets", None),
+                               allowed_mismatches=analysis.get("allowed_mismatches", 0),
+                               indels=analysis.get("indels", False),
+                               deduplicate=analysis.get("deduplicate", False),
+                               receptor_type=analysis["receptor_type"])
+                for analysis in data.get("analyses", [])
+            ])
+
+        if "tuning" in data:
+            if self.n_experiments > 1:
+                raise ValueError("Parameter tuning can only be performed with a single experiment (n_experiments=1).")
+            self.tuning_configs.extend([
+                TuningConfig(tuning_method=tuning["tuning_method"],
+                             model_names=tuning["model_names"],
+                             reference_data=tuning["reference_data"],
+                             tuning_output_dir=f"{self.output_dir}/tuning/{tuning['tuning_method']}/"
+                                               f"{'_'.join(tuning['subfolder_name'].split())}",
+                             root_output_dir=self.output_dir,
+                             k_values=tuning.get("k_values", None),
+                             subfolder_name=tuning.get("subfolder_name", ""),
+                             hyperparameter_table_path=tuning["hyperparameter_table_path"])
+                for tuning in data.get("tuning", [])
+            ])
+
     def __repr__(self):
         return (f"MainConfig(n_experiments={self.n_experiments}, simulation_configs={self.data_generation_configs},"
-                f" training={self.model_configs})")
+                f" training={self.model_configs}, analyses={self.analysis_configs}, tuning={self.tuning_configs})")

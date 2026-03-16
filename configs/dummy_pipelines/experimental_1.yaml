@@ -2,64 +2,99 @@ n_experiments: 2
 output_dir: "results_dummy/experimental"
 input_dir: "data/experimental/dummy"
 seed: 42
-data_generation:
-  experimental: True
-  method: "experimental"
-  n_samples: 100
-  default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
-models:
-    - name: "vae"
-      immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
-    - name: "pwm"
-      immuneml_model_config: "configs/dummy_generative_models/PWM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
-    - name: "sonnia"
-      immuneml_model_config: "configs/dummy_generative_models/SoNNia.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
-    - name: "lstm"
-      immuneml_model_config: "configs/dummy_generative_models/SimpleLSTM.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 100
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 100
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
+#models:
+#    - name: "vae"
+#      immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
+#    - name: "pwm"
+#      immuneml_model_config: "configs/dummy_generative_models/PWM.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
+#    - name: "sonnia"
+#      immuneml_model_config: "configs/dummy_generative_models/SoNNia.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
+#    - name: "lstm"
+#      immuneml_model_config: "configs/dummy_generative_models/SimpleLSTM.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 100
 analyses:
-    - name: "memorization"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
-    - name: "reduced_dimensionality"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-    - name: "diversity"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
+#    - name: "memorization"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 10
+#      allowed_mismatches: 1
+#      indels: True
+#      subfolder_name: "all dummy models dist 1"
+#      receptor_type: "TCR"
+#    - name: "reduced_dimensionality"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 10
+#      subfolder_name: "dummy models"
+#      receptor_type: "TCR"
+#    - name: "diversity"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 10
+#      subfolder_name: "dummy models"
+#      receptor_type: "TCR"
     - name: "phenotype"
       model_names: ["pwm"]
       default_model_name: "humanTRB"
+      subfolder_name: "pwm"
+      receptor_type: "TCR"
+      allowed_mismatches: 0
+      indels: False
     - name: "phenotype"
-      model_names: ["sonnia"]
+      model_names: ["train"]
       default_model_name: "humanTRB"
-    - name: "phenotype"
-      model_names: [ "vae" ]
-      default_model_name: "humanTRB"
-    - name: "network"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
-    - name: "precision_recall"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
-      reference_data: [ "train", "test" ]
-      n_subsets: 10
+      subfolder_name: "train"
+      receptor_type: "TCR"
+      allowed_mismatches: 0
+      indels: False
+#    - name: "phenotype"
+#      model_names: ["sonnia"]
+#      default_model_name: "humanTRB"
+#      subfolder_name: "sonnia"
+#      receptor_type: "TCR"
+#      allowed_mismatches: 0
+#      indels: False
+#    - name: "phenotype"
+#      model_names: [ "vae" ]
+#      default_model_name: "humanTRB"
+#      subfolder_name: "vae"
+#      receptor_type: "TCR"
+#      allowed_mismatches: 0
+#      indels: False
+#    - name: "network"
+#      model_names: [ "pwm" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 10
+#      allowed_mismatches: 1
+#      subfolder_name: "dummy models"
+#      receptor_type: "TCR"
+#    - name: "precision_recall"
+#      model_names: [ "pwm", "vae" ]
+#      default_model_name: "humanTRB"
+#      reference_data: [ "train", "test" ]
+#      n_subsets: 10
+#      allowed_mismatches: 1
+#      indels: True
+#      subfolder_name: "all dummy models dist 1"
+#      receptor_type: "TCR"

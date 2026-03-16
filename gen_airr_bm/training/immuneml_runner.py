@@ -12,9 +12,9 @@ def write_immuneml_config(input_model_template, input_simulated_data, output_con
     model_template_config['definitions']['datasets']['dataset']['params']['path'] = input_simulated_data
 
     if default_model_name:
-        config_name = os.path.basename(input_model_template).replace('.yaml', '')
-        if 'default_model_name' in model_template_config['definitions']['ml_methods']['model'][config_name]:
-            model_template_config['definitions']['ml_methods']['model'][config_name]['default_model_name'] = 'human' + default_model_name
+        model_keyname = list(model_template_config['definitions']['ml_methods']['model'].keys())[0]
+        if 'default_model_name' in model_template_config['definitions']['ml_methods']['model'][model_keyname]:
+            model_template_config['definitions']['ml_methods']['model'][model_keyname]['default_model_name'] = 'human' + default_model_name
 
     with open(output_config_file, 'w') as file:
         yaml.safe_dump(model_template_config, file)

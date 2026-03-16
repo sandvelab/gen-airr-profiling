@@ -67,7 +67,8 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, reference
                 if dataset.startswith(datasets_group)
             ])
 
-    plot_diversity_scatter_plotly(reference_diversities, models_diversities_grouped, output_path, metric_name)
+    plot_diversity_scatter_plotly(reference_diversities, models_diversities_grouped, output_path, metric_name,
+                                  analysis_config.receptor_type)
 
 
 def compute_diversities_for_models(models: list, gen_dir, diversity_function: Callable) -> dict:
@@ -177,7 +178,7 @@ def gini_coefficient(sequences: list) -> float:
 
 
 def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversities: dict, output_path: str,
-                                  metric_name: str) -> None:
+                                  metric_name: str, receptor_type: str) -> None:
     """ Plot diversity scores using Plotly scatter plot.
     Args:
         reference_diversities (dict): Dictionary with reference dataset names and their diversity scores.
@@ -187,15 +188,18 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     Returns:
         None
     """
+    unique_set_ref_value = None
+    if "UMI" in receptor_type.upper():
+        assert not (reference_diversities.keys() & models_diversities.keys()), "Overlapping keys!"
+        plotting_diversities = {**reference_diversities, **models_diversities}
+    else:
+        plotting_diversities = models_diversities
+        unique_set_ref_value = list(reference_diversities['train'].values())[0]
+
     data = []
-
-    for ref_name, div_dict in reference_diversities.items():
+    for name, div_dict in plotting_diversities.items():
         for dataset, value in div_dict.items():
-            data.append({"dataset": dataset, metric_name.lower(): value, "source": ref_name})
-
-    for model_name, div_dict in models_diversities.items():
-        for dataset, value in div_dict.items():
-            data.append({"dataset": dataset, metric_name.lower(): value, "source": model_name})
+            data.append({"dataset": dataset.rsplit("_", 1)[0], metric_name.lower(): value, "source": name})
 
     df = pd.DataFrame(data)
     if not os.path.exists(output_path + ".tsv"):
@@ -207,11 +211,24 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
         y=metric_name.lower(),
         color="dataset",
         hover_data=["dataset", metric_name.lower()],
-        title=f"{metric_name} by Source and Dataset",
+        title=f"{metric_name} for Generated {receptor_type} Sets",
         labels={"source": "Source", metric_name.lower(): f"{metric_name} Score"},
     )
 
     fig.update_traces(marker=dict(size=10, opacity=0.8), selector=dict(mode='markers'))
-    fig.update_layout(legend_title_text="Dataset", xaxis_title="Source", yaxis_title=metric_name)
+    fig.update_layout(legend_title_text="Dataset",
+                      xaxis_title="Data Origin",
+                      yaxis_title=metric_name,
+                      template="plotly_white",
+                      colorway=px.colors.qualitative.Safe
+                      )
+
+    if unique_set_ref_value:
+        fig.add_hline(
+            y=unique_set_ref_value,
+            line=dict(color="black", dash="dash"),
+            annotation_text=f"All Unique = {unique_set_ref_value:.3f}",
+            annotation_position="top right"
+        )
 
     fig.write_image(output_path + ".png")

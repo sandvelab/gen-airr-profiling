@@ -1,0 +1,4 @@
+Hyperparameters	sonnia_01	sonnia_02	sonnia_03	sonnia_04	sonnia_05	sonnia_06	sonnia_07	sonnia_08	sonnia_09	sonnia_10	sonnia_11	sonnia_12	sonnia_13	sonnia_14	sonnia_15	sonnia_16	sonnia_17	sonnia_18	sonnia_19	sonnia_20	sonnia_21	sonnia_22	sonnia_23	sonnia_24
+batch_size	500	1000	500	1000	500	1000	1000	1000	1000	1000	1000	1000	1000	1000	1000	500	500	500	500	500	500	500	500	500
+epochs	30	30	50	50	100	100	30	30	30	50	50	50	100	100	100	30	30	30	50	50	50	100	100	100
+n_gen_seqs	100K	100K	100K	100K	100K	100K	200K	500K	1M	200K	500K	1M	200K	500K	1M	200K	500K	1M	200K	500K	1M	200K	500K	1M

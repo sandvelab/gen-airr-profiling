@@ -73,7 +73,9 @@ def test_aa_distribution_strategy_plot_scores(mocker):
         root_output_dir="output",
         analysis_output_dir="output/analysis",
         analysis="test",
-        default_model_name="model"
+        default_model_name="model",
+        subfolder_name="analysis_subfolder",
+        receptor_type="TCR"
     )
 
     strategy.plot_scores_by_reference(mean_scores, std_scores, config, "dummy", [0.5]*len(range(10, 21)))

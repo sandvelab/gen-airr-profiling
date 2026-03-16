@@ -63,7 +63,9 @@ def test_plot_scores_calls_plot_jsd_scores(mocker):
         root_output_dir="output",
         analysis_output_dir="output/analysis",
         analysis="test",
-        default_model_name="model"
+        default_model_name="model",
+        subfolder_name="analysis_subfolder",
+        receptor_type="TCR"
     )
 
     strategy.plot_scores(mean_scores, std_scores, config, "dummy")

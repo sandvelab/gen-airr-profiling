@@ -15,6 +15,10 @@ class BaseDistributionStrategy(ABC):
     def compute_divergence(self, gen_seqs: list[str], ref_seqs: list[str]) -> Any:
         pass
 
+    def plot_distributions_per_dataset(self, analysis_config: AnalysisConfig, dataset_label: str, gen_seqs: list,
+                                       ref_seqs: list, gen_label, ref_label) -> None:
+        pass
+
     def init_mean_std_scores(self) -> tuple[dict, dict]:
         return {}, {}
 
@@ -47,6 +51,7 @@ class BaseDistributionStrategy(ABC):
         data_df = pd.read_csv(file_path, sep='\t', usecols=["junction_aa"])
         return data_df["junction_aa"].tolist()
 
+    #TODO: this can be removed. It is not used anywhere.
     def plot_scores(self, mean_scores: dict, std_scores: dict,
                     analysis_config: AnalysisConfig, distribution_type: str) -> None:
         file_name = f"{distribution_type}"
@@ -61,7 +66,7 @@ class BaseDistributionStrategy(ABC):
         mean_scores_by_ref: {ref_label: {model: mean_score}}
         std_scores_by_ref: {ref_label: {model: std_score}}
         """
-        file_name = f"{distribution_type}_grouped"
-        plot_grouped_avg_scores(mean_scores_by_ref, std_scores_by_ref,
-                                analysis_config.analysis_output_dir, analysis_config.reference_data,
-                                file_name, distribution_type, "JSD", mean_reference_score)
+        file_name = distribution_type.replace(" ", "") + "_grouped"
+        plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
+                                file_name, distribution_type, "Jensen-Shannon Divergence",
+                                mean_reference_score)

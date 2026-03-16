@@ -35,31 +35,43 @@ analyses:
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 45
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all models dist 1"
     - name: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
+      subfolder_name: "all models"
     - name: "diversity"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 45
+      subfolder_name: "all models"
     - name: "phenotype"
       model_names: ["pwm"]
       default_model_name: "humanTRB"
+      subfolder_name: "pwm"
     - name: "phenotype"
       model_names: ["sonnia"]
       default_model_name: "humanTRB"
+      subfolder_name: "sonnia"
     - name: "phenotype"
       model_names: [ "vae" ]
       default_model_name: "humanTRB"
+      subfolder_name: "vae"
     - name: "network"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 45
+      subfolder_name: "all models"
     - name: "precision_recall"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 45
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all models dist 1"

@@ -1,0 +1,10 @@
+Hyperparameters	vae1	vae2
+latent_dim	20	20
+linear_nodes_count	75	75
+beta	0.75	0.75
+warmup_epochs	1	1
+pretrains	1	1
+batch_size	100	100
+learning_rate	0.001	0.001
+patience	1	1
+epochs	1	1
