@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from gen_airr_bm.core.SamplingConfig import SamplingConfig
+from gen_airr_bm.core.sampling_config import SamplingConfig
 from gen_airr_bm.training.immuneml_runner import run_immuneml_command
 
 

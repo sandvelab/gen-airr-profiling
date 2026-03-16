@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from gen_airr_bm.core.SamplingConfig import SamplingConfig
+from gen_airr_bm.core.sampling_config import SamplingConfig
 from gen_airr_bm.sampling.sampling_orchestrator import SamplingOrchestrator
 
 
@@ -14,7 +14,6 @@ def make_sampling_config(tmp_path, **overrides):
         model_name="modelA",
         experiment_name="exp_3",
         immuneml_config=str(tmp_path / "base.yaml"),
-        train_dir="train",
         n_samples=50,
         root_output_dir=str(root_dir),
     )
@@ -101,7 +100,6 @@ def test_run_sampling(mocker):
         model_name="modelB",
         experiment_name="exp_7",
         immuneml_config="config.yaml",
-        train_dir="train",
         n_samples=100,
         root_output_dir="/tmp/root",
     )

@@ -1,7 +1,7 @@
 import os
 import yaml
 
-from gen_airr_bm.core.SamplingConfig import SamplingConfig
+from gen_airr_bm.core.sampling_config import SamplingConfig
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.data_generation_config import DataGenerationConfig
 from gen_airr_bm.core.model_config import ModelConfig
@@ -107,7 +107,6 @@ class MainConfig:
                         SamplingConfig(model_name=sampling["model_name"],
                                        experiment_name=experiment_name,
                                        immuneml_config=sampling["immuneml_config"],
-                                       train_dir=sampling["train_dir"],
                                        n_samples=sampling["n_samples"],
                                        root_output_dir=self.output_dir)
                     )
