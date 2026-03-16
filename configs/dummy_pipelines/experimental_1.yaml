@@ -29,7 +29,7 @@ seed: 42
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 100
-analyses:
+#analyses:
 #    - name: "memorization"
 #      model_names: [ "pwm", "vae" ]
 #      default_model_name: "humanTRB"
@@ -53,20 +53,20 @@ analyses:
 #      n_subsets: 10
 #      subfolder_name: "dummy models"
 #      receptor_type: "TCR"
-    - name: "phenotype"
-      model_names: ["pwm"]
-      default_model_name: "humanTRB"
-      subfolder_name: "pwm"
-      receptor_type: "TCR"
-      allowed_mismatches: 0
-      indels: False
-    - name: "phenotype"
-      model_names: ["train"]
-      default_model_name: "humanTRB"
-      subfolder_name: "train"
-      receptor_type: "TCR"
-      allowed_mismatches: 0
-      indels: False
+#    - name: "phenotype"
+#      model_names: ["pwm"]
+#      default_model_name: "humanTRB"
+#      subfolder_name: "pwm"
+#      receptor_type: "TCR"
+#      allowed_mismatches: 0
+#      indels: False
+#    - name: "phenotype"
+#      model_names: ["train"]
+#      default_model_name: "humanTRB"
+#      subfolder_name: "train"
+#      receptor_type: "TCR"
+#      allowed_mismatches: 0
+#      indels: False
 #    - name: "phenotype"
 #      model_names: ["sonnia"]
 #      default_model_name: "humanTRB"
@@ -98,3 +98,12 @@ analyses:
 #      indels: True
 #      subfolder_name: "all dummy models dist 1"
 #      receptor_type: "TCR"
+sampling:
+  - model_name: "vae"
+    experiment_names: ["exp_0", "exp_1"]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "pwm"
+    experiment_names: ["exp_0", "exp_1"]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
