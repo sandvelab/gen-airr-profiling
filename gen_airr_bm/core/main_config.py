@@ -1,6 +1,7 @@
 import os
 import yaml
 
+from gen_airr_bm.core.postprocessing_config import PostProcessingConfig
 from gen_airr_bm.core.sampling_config import SamplingConfig
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.data_generation_config import DataGenerationConfig
@@ -23,6 +24,7 @@ class MainConfig:
         self.analysis_configs = []
         self.tuning_configs = []
         self.sampling_configs = []
+        self.postprocessing_configs = []
 
         base_seed = data["seed"]
         experimental_datasets = []
@@ -109,6 +111,24 @@ class MainConfig:
                                        immuneml_config=sampling["immuneml_config"],
                                        n_samples=sampling["n_samples"],
                                        root_output_dir=self.output_dir)
+                    )
+
+        if "postprocessing" in data:
+            # n_experiments is not relevant for sampling configs since each entry defines its own experiment names.
+            for postprocessing in data.get("postprocessing", []):
+                experiment_names = postprocessing.get("experiment_names")
+                if not experiment_names:
+                    raise ValueError("Postprocessing entries must define 'experiment_names' with at least one "
+                                     "experiment.")
+                for experiment_name in experiment_names:
+                    self.postprocessing_configs.append(
+                        PostProcessingConfig(
+                            model_name=postprocessing["model_name"],
+                            experiment_name=experiment_name,
+                            n_samples=postprocessing["n_samples"],
+                            root_output_dir=self.output_dir,
+                            n_subsets=postprocessing["n_subsets"]
+                        )
                     )
 
     def __repr__(self):

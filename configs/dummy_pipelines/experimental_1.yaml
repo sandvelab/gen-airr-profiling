@@ -98,12 +98,21 @@ seed: 42
 #      indels: True
 #      subfolder_name: "all dummy models dist 1"
 #      receptor_type: "TCR"
-sampling:
+#sampling:
+#  - model_name: "vae"
+#    experiment_names: ["exp_0", "exp_1"]
+#    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+#    n_samples: 1000
+#  - model_name: "pwm"
+#    experiment_names: ["exp_0", "exp_1"]
+#    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+#    n_samples: 1000
+postprocessing:
   - model_name: "vae"
     experiment_names: ["exp_0", "exp_1"]
-    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-    n_samples: 1000
+    n_samples: 100
+    n_subsets: 10
   - model_name: "pwm"
     experiment_names: ["exp_0", "exp_1"]
-    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-    n_samples: 1000
+    n_samples: 100
+    n_subsets: 10

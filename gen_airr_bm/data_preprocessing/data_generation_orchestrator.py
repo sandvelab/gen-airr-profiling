@@ -1,5 +1,5 @@
 from gen_airr_bm.core.data_generation_config import DataGenerationConfig
-from gen_airr_bm.data_processing.data_generation_methods import (simulate_rare_and_frequent_olga_sequences,
+from gen_airr_bm.data_preprocessing.data_generation_methods import (simulate_rare_and_frequent_olga_sequences,
                                                                  preprocess_experimental_data,
                                                                  preprocess_experimental_umi_data)
 
