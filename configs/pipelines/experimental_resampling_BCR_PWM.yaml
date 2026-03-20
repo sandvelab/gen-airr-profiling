@@ -5,6 +5,6 @@ seed: 42
 
 sampling:
   - model_name: "PWM"
-    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
+    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 60000
