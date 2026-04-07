@@ -46,7 +46,6 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     """
     test_reference = 'test'
 
-    preprocess_gen_for_innovation_precision(analysis_config)
     scores = InnovationScores()
 
     for model in analysis_config.model_names:
