@@ -3,7 +3,8 @@ import concurrent.futures
 
 from gen_airr_bm.analysis.analysis_orchestrator import AnalysisOrchestrator
 from gen_airr_bm.core.main_config import MainConfig
-from gen_airr_bm.data_processing.data_generation_orchestrator import DataGenerationOrchestrator
+from gen_airr_bm.data_postprocessing.postprocessing_orchestrator import PostProcessingOrchestrator
+from gen_airr_bm.data_preprocessing.data_generation_orchestrator import DataGenerationOrchestrator
 from gen_airr_bm.sampling.sampling_orchestrator import SamplingOrchestrator
 from gen_airr_bm.training.training_orchestrator import TrainingOrchestrator
 from gen_airr_bm.tuning.tuning_orchestrator import TuningOrchestrator
@@ -34,6 +35,11 @@ def run_sampling(sampling, orchestrator):
     orchestrator.run_sampling(sampling)
 
 
+def run_postprocessing(postprocessing, orchestrator):
+    print(f"Running post-processing: {postprocessing}")
+    orchestrator.run_postprocessing(postprocessing)
+
+
 def main(config_path, break_main=False, parallel=True):
     config = MainConfig(config_path)
 
@@ -42,6 +48,7 @@ def main(config_path, break_main=False, parallel=True):
     analysis_orchestrator = AnalysisOrchestrator()
     tuning_orchestrator = TuningOrchestrator()
     sampling_orchestrator = SamplingOrchestrator()
+    postprocessing_orchestrator = PostProcessingOrchestrator()
 
     if parallel:
         if break_main:
@@ -75,6 +82,12 @@ def main(config_path, break_main=False, parallel=True):
                         config.sampling_configs):
                     pass
 
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for _ in executor.map(
+                        lambda postprocessing: run_postprocessing(postprocessing, postprocessing_orchestrator),
+                        config.postprocessing_configs):
+                    pass
+
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 executor.map(
@@ -100,6 +113,12 @@ def main(config_path, break_main=False, parallel=True):
                 executor.map(
                     lambda sampling: run_sampling(sampling, sampling_orchestrator),
                     config.sampling_configs)
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.map(
+                    lambda postprocessing: run_postprocessing(postprocessing, postprocessing_orchestrator),
+                    config.postprocessing_configs)
+
     else:
         for data_generation in config.data_generation_configs:
             run_data_generation(data_generation, data_generation_orchestrator)
@@ -115,6 +134,9 @@ def main(config_path, break_main=False, parallel=True):
 
         for sampling in config.sampling_configs:
             run_sampling(sampling, sampling_orchestrator)
+
+        for postprocessing in config.postprocessing_configs:
+            run_postprocessing(postprocessing, postprocessing_orchestrator)
 
 
 if __name__ == "__main__":

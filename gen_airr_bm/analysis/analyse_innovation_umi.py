@@ -8,7 +8,7 @@ import plotly.express as px
 from collections import defaultdict
 from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files_for_no_train_overlap
+from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
 from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores, wrap_title
 
@@ -76,7 +76,7 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     Returns:
         None
     """
-    comparison_files_dir = get_sequence_files_for_no_train_overlap(analysis_config, model, test_reference)
+    comparison_files_dir = get_sequence_files(analysis_config, model, test_reference)
 
     for ref_file, gen_files in comparison_files_dir.items():
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]

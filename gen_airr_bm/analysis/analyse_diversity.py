@@ -52,9 +52,13 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, reference
     for reference_name, reference_dir in reference_dirs.items():
         reference_diversities[reference_name] = compute_diversity(reference_dir, diversity_function)
 
+    if analysis_config.receptor_type == "BCR UMI":
+        sequences_dir_name = f"generated_compairr_sequences_split"
+    else:
+        sequences_dir_name = f"novel_generated_compairr_sequences_split"
     models_diversities = compute_diversities_for_models(analysis_config.model_names,
                                                         f"{analysis_config.root_output_dir}/"
-                                                        f"generated_compairr_sequences_split",
+                                                        f"{sequences_dir_name}",
                                                         diversity_function)
     models_diversities_grouped = defaultdict(dict)
     for model in analysis_config.model_names:

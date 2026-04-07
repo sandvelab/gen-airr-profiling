@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from gen_airr_bm.analysis.analyse_innovation_umi import preprocess_gen_for_innovation_precision, \
     plot_innovation_scores_by_n_gen_novel, plot_innovation_precision_recall
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files_for_no_train_overlap
+from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
 
 
@@ -46,7 +46,6 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     """
     test_reference = 'test'
 
-    preprocess_gen_for_innovation_precision(analysis_config)
     scores = InnovationScores()
 
     for model in analysis_config.model_names:
@@ -57,8 +56,9 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
 
 
-def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_reference: str, compairr_output_dir: str,
-                         scores: InnovationScores) -> None:
+def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_reference: str,
+                              compairr_output_dir: str,
+                              scores: InnovationScores) -> None:
     """ Collect precision and recall scores for a given model.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -69,12 +69,11 @@ def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_
     Returns:
         None
     """
-    comparison_files_dir = get_sequence_files_for_no_train_overlap(analysis_config, model, test_reference)
+    comparison_files_dir = get_sequence_files(analysis_config, model, test_reference)
 
     for ref_file, gen_files in comparison_files_dir.items():
         for gen_file in gen_files:
-            compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir,
-                                                    model, scores)
+            compute_compairr_overlap_ratio(analysis_config, ref_file, gen_file, compairr_output_dir, model, scores)
 
 
 def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, ref_file: str, gen_file: str,

@@ -19,16 +19,21 @@ def preprocess_files_for_compairr(sequences_dir, compairr_sequences_dir):
     datasets = os.listdir(sequences_dir)
     os.makedirs(f"{compairr_sequences_dir}", exist_ok=True)
     for dataset in datasets:
-        data = pd.read_csv(f"{sequences_dir}/{dataset}", sep='\t')
+        preprocess_file_for_compairr(sequences_dir, compairr_sequences_dir, dataset)
 
-        if 'duplicate_count' in data.columns:
-            data.replace({'duplicate_count': {-1: 1}}, inplace=True)
-        else:
-            data['duplicate_count'] = 1
 
-        data['sequence_id'] = [f"sequence_{i + 1}" for i in range(len(data))]
+def preprocess_file_for_compairr(sequences_dir, compairr_sequences_dir, dataset):
+    data = pd.read_csv(f"{sequences_dir}/{dataset}", sep='\t')
 
-        data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
+    if 'duplicate_count' in data.columns:
+        data.replace({'duplicate_count': {-1: 1}}, inplace=True)
+    else:
+        data['duplicate_count'] = 1
+
+    data['sequence_id'] = [f"sequence_{i + 1}" for i in range(len(data))]
+    data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
+
+    return f"{compairr_sequences_dir}/{dataset}"
 
 
 def run_compairr_existence(compairr_output_dir, search_for_file, search_in_file, file_identifier,

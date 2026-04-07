@@ -99,7 +99,7 @@ def test_compute_and_plot_diversity_scores(mocker, sample_analysis_config):
     mock_compute_diversity.assert_called_once_with("/some/fake/path", dummy_diversity_func)
 
     # Check compute_diversities_for_models called with correct args
-    expected_model_dir = "/tmp/test_output/generated_compairr_sequences_split"
+    expected_model_dir = "/tmp/test_output/novel_generated_compairr_sequences_split"
     mock_compute_diversities_for_models.assert_called_once_with(
         ["model1", "model2"], expected_model_dir, dummy_diversity_func
     )
