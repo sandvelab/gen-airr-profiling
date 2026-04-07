@@ -12,7 +12,23 @@ class PostProcessingOrchestrator:
 
     @staticmethod
     def run_postprocessing(postprocessing_config: PostProcessingConfig):
-        print("Running post-processing...")
+        """ Orchestrates the post-processing steps to prepare generated sequences for statistical analysis. It aims
+        to merge initially generated sequences with resampled sequences to ensure a sufficient number of novel sequences
+        for analysis, while removing any sequences that were present in the training data. The steps include:
+        1. Removing training sequences from the resampled sequences.
+        2. Preprocessing the resampled sequences for CompAIRR.
+        3. Dividing the resampled sequences into subsets to ensure fair division.
+        4. Removing training sequences from the initially generated sequences.
+        5. Collecting novel sequence splits by merging the initially generated and resampled sequences, ensuring
+        a sufficient number of novel sequences.
+        6. Creating deduplicated, novel sequence splits to ensure unique sequences for the innovation analysis.
+        7. Merging the novel sequence splits back into a single file for phenotype analysis.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+        Returns:
+            None
+        """
         exp_id = int(postprocessing_config.experiment_name.split("_")[1])
         train_sequences_path = glob.glob(f"{postprocessing_config.root_output_dir}"
                                          f"/train_compairr_sequences/*_{exp_id}.tsv")[0]
@@ -30,7 +46,7 @@ class PostProcessingOrchestrator:
             postprocessing_config, resampled_no_train_sequences_compairr_path, dataset_name)
         generated_compairr_sequences_no_train_dir = (PostProcessingOrchestrator.remove_train_from_generated
                                                      (postprocessing_config, dataset_name, train_sequences_path))
-        novel_sequences_split_dir = (PostProcessingOrchestrator.generate_novel_sequences_splits
+        novel_sequences_split_dir = (PostProcessingOrchestrator.collect_novel_sequences_splits
                                      (postprocessing_config, generated_compairr_sequences_no_train_dir,
                                       divided_resampled_no_train_sequences_compairr_dir, dataset_name))
         _ = PostProcessingOrchestrator.deduplicate_novel_sequences_splits(postprocessing_config,
@@ -41,6 +57,19 @@ class PostProcessingOrchestrator:
     @staticmethod
     def remove_train_from_resampled(postprocessing_config: PostProcessingConfig, train_sequences_path: str,
                                     dataset_name: str):
+        """ Removes sequences present in the training data from the resampled sequences to ensure that only novel
+        sequences are retained for analysis. It reads both the training and resampled sequences, identifies the unique
+        sequences in the resampled set that are not present in the training set, and saves the resulting novel sequences
+        to a new file in "resampled_no_train_sequences" folder.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+            train_sequences_path (str): Path to the file containing training sequences.
+            dataset_name (str): Name of the dataset being processed, used for naming the output file.
+        Returns:
+            Tuple[str, str]: A tuple containing the path to the file with novel resampled sequences and the directory
+            where it is stored.
+        """
         resampled_sequences_path = (f"{postprocessing_config.root_output_dir}/resampled_sequences_raw/"
                                     f"{postprocessing_config.model_name}/{dataset_name}.tsv")
         resampled_no_train_sequences_dir = f"{postprocessing_config.root_output_dir}/resampled_no_train_sequences/" \
@@ -60,6 +89,20 @@ class PostProcessingOrchestrator:
     @staticmethod
     def divide_resampled_sequences(postprocessing_config: PostProcessingConfig,
                                    resampled_no_train_sequences_compairr_path, dataset_name):
+        """ Divides the resampled sequences that do not overlap with the training data into subsets to ensure a fair
+        division of sequences for merging with the initially generated sequences splits. It reads the novel resampled
+        sequences, and splits the sequences into equal parts. Each subset is saved to a separate file
+        in the "resampled_no_train_compairr_sequences_split" folder for later use in merging with the generated
+        sequences.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+            resampled_no_train_sequences_compairr_path (str): Path to the file containing novel resampled sequences that
+            have been preprocessed for CompAIRR.
+            dataset_name (str): Name of the dataset being processed, used for naming the output files.
+        Returns:
+            str: Path to the directory where the divided resampled sequences are stored.
+        """
         divided_sequences_output_dir = (f"{postprocessing_config.root_output_dir}/"
                                         f"resampled_no_train_compairr_sequences_split/"
                                         f"{postprocessing_config.model_name}")
@@ -80,6 +123,17 @@ class PostProcessingOrchestrator:
 
     @staticmethod
     def remove_train_from_generated(postprocessing_config, dataset_name, train_sequences_path):
+        """ Removes sequences present in the training data from the initially generated sequences, and saves
+        the resulting novel sequences to new files in "generated_no_train_compairr_sequences_split" folder for each
+        subset of generated sequences.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+            dataset_name (str): Name of the dataset being processed, used for naming the output files.
+            train_sequences_path (str): Path to the file containing training sequences.
+        Returns:
+            str: Path to the directory where the generated sequences with training sequences removed are stored.
+        """
         generated_sequences_split_dir = (f"{postprocessing_config.root_output_dir}/generated_compairr_sequences_split/"
                                          f"{postprocessing_config.model_name}")
         generated_no_train_sequences_split_dir = (f"{postprocessing_config.root_output_dir}/"
@@ -98,9 +152,27 @@ class PostProcessingOrchestrator:
         return generated_no_train_sequences_split_dir
 
     @staticmethod
-    def generate_novel_sequences_splits(postprocessing_config: PostProcessingConfig,
-                                        divided_generated_no_train_sequences_dir: str,
-                                        divided_resampled_no_train_sequences_dir: str, dataset_name: str):
+    def collect_novel_sequences_splits(postprocessing_config: PostProcessingConfig,
+                                       divided_generated_no_train_sequences_dir: str,
+                                       divided_resampled_no_train_sequences_dir: str, dataset_name: str):
+        """ Collects novel sequence splits by merging the initially generated sequences (with training sequences
+        removed) with the resampled sequences (with training sequences removed) to ensure a sufficient number of novel
+        sequences for analysis. For each subset of generated sequences, it reads the corresponding subset of resampled
+        sequences, identifies how many novel sequences are missing from the generated subset to reach the desired number
+        of samples, and randomly samples the required number of novel sequences from the resampled subset. The merged
+        novel sequences are then saved to new files in "novel_generated_compairr_sequences_split" folder for each
+        subset.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+            divided_generated_no_train_sequences_dir (str): Path to the directory containing the generated sequences
+            with training sequences removed, divided into subsets.
+            divided_resampled_no_train_sequences_dir (str): Path to the directory containing the resampled sequences
+            with training sequences removed, divided into subsets.
+            dataset_name (str): Name of the dataset being processed, used for naming the output files.
+        Returns:
+            str: Path to the directory where the merged novel sequence splits are stored.
+        """
         connected_sequences_dir = (f"{postprocessing_config.root_output_dir}/novel_generated_compairr_sequences_split/"
                                    f"{postprocessing_config.model_name}")
         os.makedirs(connected_sequences_dir, exist_ok=True)
@@ -130,6 +202,18 @@ class PostProcessingOrchestrator:
 
     @staticmethod
     def deduplicate_novel_sequences_splits(postprocessing_config, novel_sequences_split_dir, dataset_name):
+        """ For each subset of merged novel sequences, it reads the sequences, removes any duplicates based on the
+        "junction_aa" column, and saves the resulting unique sequences to new files in
+        "novel_unique_generated_compairr_sequences_split" folder for each subset. This step is crucial for the
+        innovation analysis, which is performed on unique sequences.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+            novel_sequences_split_dir (str): Path to the directory containing the merged novel sequence splits.
+            dataset_name (str): Name of the dataset being processed, used for naming the output files.
+        Returns:
+            str: Path to the directory where the deduplicated novel sequence splits are stored.
+        """
         deduplicated_novel_sequences_dir = (f"{postprocessing_config.root_output_dir}/"
                                             f"novel_unique_generated_compairr_sequences_split/"
                                             f"{postprocessing_config.model_name}")
@@ -145,6 +229,17 @@ class PostProcessingOrchestrator:
 
     @staticmethod
     def merge_novel_sequences_splits(postprocessing_config, novel_sequences_split_dir, dataset_name):
+        """ Merges the deduplicated novel sequence splits into a single file for phenotype analysis. It reads each
+        subset of novel sequences, concatenates them into a single DataFrame, assigns unique sequence IDs, and saves the
+        merged novel sequences to a new file in "novel_generated_compairr_sequences" folder for the phenotype analysis.
+        Args:
+            postprocessing_config (PostProcessingConfig): Configuration object containing paths and parameters for
+            post-processing.
+            novel_sequences_split_dir (str): Path to the directory containing the deduplicated novel sequence splits.
+            dataset_name (str): Name of the dataset being processed, used for naming the output file.
+        Returns:
+            str: Path to the file containing the merged novel sequences for phenotype analysis.
+        """
         merged_novel_sequences_dir = (f"{postprocessing_config.root_output_dir}/novel_generated_compairr_sequences/"
                                       f"{postprocessing_config.model_name}")
         os.makedirs(merged_novel_sequences_dir, exist_ok=True)

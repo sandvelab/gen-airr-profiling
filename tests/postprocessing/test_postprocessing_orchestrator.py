@@ -48,7 +48,7 @@ def test_run_postprocessing(tmp_path, monkeypatch):
         assert train_path_arg == str(train_path)
         return str(generated_dir)
 
-    def fake_generate(cfg, generated_no_train_dir, resampled_dir, dataset_name):
+    def fake_collect(cfg, generated_no_train_dir, resampled_dir, dataset_name):
         assert cfg is config
         assert generated_no_train_dir == str(generated_dir)
         assert resampled_dir == str(resampled_divided_dir)
@@ -75,7 +75,7 @@ def test_run_postprocessing(tmp_path, monkeypatch):
                         fake_preprocess)
     monkeypatch.setattr(PostProcessingOrchestrator, "divide_resampled_sequences", fake_divide)
     monkeypatch.setattr(PostProcessingOrchestrator, "remove_train_from_generated", fake_remove_train_generated)
-    monkeypatch.setattr(PostProcessingOrchestrator, "generate_novel_sequences_splits", fake_generate)
+    monkeypatch.setattr(PostProcessingOrchestrator, "collect_novel_sequences_splits", fake_collect)
     monkeypatch.setattr(PostProcessingOrchestrator, "deduplicate_novel_sequences_splits", fake_deduplicate)
     monkeypatch.setattr(PostProcessingOrchestrator, "merge_novel_sequences_splits", fake_merge)
 
@@ -175,7 +175,7 @@ def test_generate_novel_sequences_splits(tmp_path):
     _write_tsv(resampled_dir / f"{dataset_name}_1.tsv",
                pd.DataFrame({"junction_aa": ["HHH", "III", "JJJ"], "sequence_id": ["y3", "y4", "y5"]}))
 
-    output_dir = PostProcessingOrchestrator.generate_novel_sequences_splits(
+    output_dir = PostProcessingOrchestrator.collect_novel_sequences_splits(
         config, str(generated_dir), str(resampled_dir), dataset_name)
 
     expected_dir = root_dir / "novel_generated_compairr_sequences_split" / config.model_name
