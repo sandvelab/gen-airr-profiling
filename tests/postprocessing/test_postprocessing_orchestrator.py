@@ -28,7 +28,7 @@ def test_run_postprocessing(tmp_path, monkeypatch):
         assert cfg is config
         assert train_path_arg == str(train_path)
         assert dataset_name == "alpha_2"
-        return "resampled.tsv", str(resampled_divided_dir)
+        return str(resampled_divided_dir)
 
     def fake_preprocess(input_dir, output_dir, filename):
         assert input_dir == str(resampled_divided_dir)
@@ -94,15 +94,11 @@ def test_remove_train_from_resampled(tmp_path):
     resampled_path = resampled_dir / f"{dataset_name}.tsv"
     _write_tsv(resampled_path, pd.DataFrame({"junction_aa": ["AAA", "CCC", "DDD"], "value": [5, 6, 7]}))
 
-    no_train_path, no_train_dir = PostProcessingOrchestrator.remove_train_from_resampled(
+    no_train_dir = PostProcessingOrchestrator.remove_train_from_resampled(
         config, str(train_path), dataset_name)
 
     expected_dir = root_dir / "resampled_no_train_sequences" / config.model_name
     assert no_train_dir == str(expected_dir)
-    assert no_train_path == str(expected_dir / f"{dataset_name}.tsv")
-
-    result_df = pd.read_csv(no_train_path, sep="\t")
-    assert list(result_df["junction_aa"]) == ["CCC", "DDD"]
 
 
 def test_divide_resampled_sequences(tmp_path):

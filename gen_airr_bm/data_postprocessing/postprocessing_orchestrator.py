@@ -33,9 +33,9 @@ class PostProcessingOrchestrator:
         train_sequences_path = glob.glob(f"{postprocessing_config.root_output_dir}"
                                          f"/train_compairr_sequences/*_{exp_id}.tsv")[0]
         dataset_name = os.path.splitext(os.path.basename(train_sequences_path))[0]
-        resampled_no_train_sequences_path, resampled_no_train_sequences_dir = \
-            (PostProcessingOrchestrator.remove_train_from_resampled(postprocessing_config, train_sequences_path,
-                                                                    dataset_name))
+        resampled_no_train_sequences_dir = PostProcessingOrchestrator.remove_train_from_resampled(postprocessing_config,
+                                                                                                  train_sequences_path,
+                                                                                                  dataset_name)
         resampled_no_train_sequences_compairr_dir = (f"{postprocessing_config.root_output_dir}"
                                                      f"/resampled_no_train_compairr_sequences/"
                                                      f"{postprocessing_config.model_name}")
@@ -67,7 +67,7 @@ class PostProcessingOrchestrator:
             train_sequences_path (str): Path to the file containing training sequences.
             dataset_name (str): Name of the dataset being processed, used for naming the output file.
         Returns:
-            Tuple[str, str]: A tuple containing the path to the file with novel resampled sequences and the directory
+            str: A tuple containing the path to the file with novel resampled sequences and the directory
             where it is stored.
         """
         resampled_sequences_path = (f"{postprocessing_config.root_output_dir}/resampled_sequences_raw/"
@@ -84,7 +84,7 @@ class PostProcessingOrchestrator:
             train_sequences_df["junction_aa"])]
         resampled_sequences_no_train_df.to_csv(resampled_no_train_sequences_path, sep="\t", index=False)
 
-        return resampled_no_train_sequences_path, resampled_no_train_sequences_dir
+        return resampled_no_train_sequences_dir
 
     @staticmethod
     def divide_resampled_sequences(postprocessing_config: PostProcessingConfig,
