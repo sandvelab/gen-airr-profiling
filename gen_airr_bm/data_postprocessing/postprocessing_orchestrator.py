@@ -187,10 +187,10 @@ class PostProcessingOrchestrator:
             missing_sequences_n = postprocessing_config.n_samples - len(generated_no_train_sequences_df)
 
             if missing_sequences_n > 0:
-                sampled_resampled_no_train_sequences_df = resampled_no_train_sequences_df.sample(n=missing_sequences_n,
-                                                                                                 random_state=42)
+                resampled_no_train_sequences_for_backfill_df = (resampled_no_train_sequences_df.sample
+                                                                (n=missing_sequences_n, random_state=42))
                 generated_no_train_sequences_df = pd.concat([generated_no_train_sequences_df,
-                                                             sampled_resampled_no_train_sequences_df],
+                                                             resampled_no_train_sequences_for_backfill_df],
                                                             ignore_index=True)
 
             generated_no_train_sequences_df["sequence_id"] = [f"sequence_{j}" for j in
