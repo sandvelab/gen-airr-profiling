@@ -28,7 +28,11 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
     if model_name == DatasetSplit.TRAIN.value:
         compairr_sequences_dir = f"{analysis_config.root_output_dir}/{model_name}_compairr_sequences"
     else:
-        compairr_sequences_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences/{model_name}"
+        if analysis_config.receptor_type == 'BCR UMI':
+            sequences_dir_name = f"generated_compairr_sequences"
+        else:
+            sequences_dir_name = f"novel_generated_compairr_sequences"
+        compairr_sequences_dir = f"{analysis_config.root_output_dir}/{sequences_dir_name}/{model_name}"
 
     similarities_matrix, dataset_names = calculate_similarities_matrix(analysis_config, compairr_sequences_dir,)
 

@@ -21,6 +21,7 @@ def test_run_postprocessing(tmp_path, monkeypatch):
     resampled_no_train_compairr_dir = root_dir / "resampled_no_train_compairr_sequences" / config.model_name
     generated_dir = root_dir / "generated_no_train_compairr_sequences_split" / config.model_name
     novel_split_dir = root_dir / "novel_generated_compairr_sequences_split" / config.model_name
+    novel_unique_split_dir = root_dir / "novel_unique_generated_compairr_sequences_split" / config.model_name
     resampled_divided_dir = root_dir / "resampled_no_train_compairr_sequences_split" / config.model_name
 
     def fake_remove_train(cfg, train_path_arg, dataset_name):
@@ -54,6 +55,12 @@ def test_run_postprocessing(tmp_path, monkeypatch):
         assert dataset_name == "alpha_2"
         return str(novel_split_dir)
 
+    def fake_deduplicate(cfg, novel_dir, dataset_name):
+        assert cfg is config
+        assert novel_dir == str(novel_split_dir)
+        assert dataset_name == "alpha_2"
+        return str(novel_unique_split_dir)
+
     merge_called = {}
 
     def fake_merge(cfg, novel_dir, dataset_name):
@@ -69,6 +76,7 @@ def test_run_postprocessing(tmp_path, monkeypatch):
     monkeypatch.setattr(PostProcessingOrchestrator, "divide_resampled_sequences", fake_divide)
     monkeypatch.setattr(PostProcessingOrchestrator, "remove_train_from_generated", fake_remove_train_generated)
     monkeypatch.setattr(PostProcessingOrchestrator, "generate_novel_sequences_splits", fake_generate)
+    monkeypatch.setattr(PostProcessingOrchestrator, "deduplicate_novel_sequences_splits", fake_deduplicate)
     monkeypatch.setattr(PostProcessingOrchestrator, "merge_novel_sequences_splits", fake_merge)
 
     PostProcessingOrchestrator.run_postprocessing(config)

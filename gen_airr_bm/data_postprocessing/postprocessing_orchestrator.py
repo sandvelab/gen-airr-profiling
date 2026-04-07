@@ -33,6 +33,8 @@ class PostProcessingOrchestrator:
         novel_sequences_split_dir = (PostProcessingOrchestrator.generate_novel_sequences_splits
                                      (postprocessing_config, generated_compairr_sequences_no_train_dir,
                                       divided_resampled_no_train_sequences_compairr_dir, dataset_name))
+        _ = PostProcessingOrchestrator.deduplicate_novel_sequences_splits(postprocessing_config,
+                                                                          novel_sequences_split_dir, dataset_name)
         _ = (PostProcessingOrchestrator.merge_novel_sequences_splits
              (postprocessing_config, novel_sequences_split_dir, dataset_name))
 
@@ -125,6 +127,21 @@ class PostProcessingOrchestrator:
                                                    sep="\t", index=False)
 
         return connected_sequences_dir
+
+    @staticmethod
+    def deduplicate_novel_sequences_splits(postprocessing_config, novel_sequences_split_dir, dataset_name):
+        deduplicated_novel_sequences_dir = (f"{postprocessing_config.root_output_dir}/"
+                                            f"novel_unique_generated_compairr_sequences_split/"
+                                            f"{postprocessing_config.model_name}")
+        os.makedirs(deduplicated_novel_sequences_dir, exist_ok=True)
+        for i in range(postprocessing_config.n_subsets):
+            split_path = f"{novel_sequences_split_dir}/{dataset_name}_{i}.tsv"
+            split_df = pd.read_csv(split_path, sep="\t")
+            deduplicated_split_df = split_df.drop_duplicates(subset=["junction_aa"])
+            deduplicated_split_df.to_csv(f"{deduplicated_novel_sequences_dir}/{dataset_name}_{i}.tsv",
+                                         sep="\t", index=False)
+
+        return deduplicated_novel_sequences_dir
 
     @staticmethod
     def merge_novel_sequences_splits(postprocessing_config, novel_sequences_split_dir, dataset_name):

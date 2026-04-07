@@ -135,7 +135,11 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list
         list: A list of tuples, each containing (generated_file_path, reference_file_path, reference_label).
     """
     comparison_pairs = []
-    gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
+    if analysis_config.receptor_type == "BCR UMI":
+        sequences_dir_name = f"generated_compairr_sequences_split"
+    else:
+        sequences_dir_name = f"novel_generated_compairr_sequences_split"
+    gen_dir = f"{analysis_config.root_output_dir}/{sequences_dir_name}/{model}"
     gen_files = os.listdir(gen_dir)
     gen_files = [file for file in gen_files if
                  int(os.path.splitext(file)[0].split('_')[-1]) < analysis_config.n_subsets]
