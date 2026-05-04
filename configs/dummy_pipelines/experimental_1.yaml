@@ -2,23 +2,23 @@ n_experiments: 2
 output_dir: "results_dummy/experimental"
 input_dir: "data/experimental/dummy"
 seed: 42
-#data_generation:
-#  experimental: True
-#  method: "experimental"
-#  n_samples: 100
-#  default_model_name: "humanTRB"
-#  input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
-#models:
-#    - name: "vae"
-#      immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
-#      train_dir: "train"
-#      test_dir: "test"
-#      n_subset_samples: 100
-#    - name: "pwm"
-#      immuneml_model_config: "configs/dummy_generative_models/PWM.yaml"
-#      train_dir: "train"
-#      test_dir: "test"
-#      n_subset_samples: 100
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 100
+  default_model_name: "humanTRB"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
+models:
+    - name: "vae"
+      immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
+    - name: "pwm"
+      immuneml_model_config: "configs/dummy_generative_models/PWM.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
 #    - name: "sonnia"
 #      immuneml_model_config: "configs/dummy_generative_models/SoNNia.yaml"
 #      train_dir: "train"
@@ -29,7 +29,7 @@ seed: 42
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 100
-#analyses:
+analyses:
 #    - name: "memorization"
 #      model_names: [ "pwm", "vae" ]
 #      default_model_name: "humanTRB"
@@ -106,15 +106,23 @@ seed: 42
 #      subfolder_name: "all models"
 #      receptor_type: "TCR"
 #      n_subsets: 10
-#sampling:
-#  - model_name: "vae"
-#    experiment_names: ["exp_0", "exp_1"]
-#    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-#    n_samples: 1000
-#  - model_name: "pwm"
-#    experiment_names: ["exp_0", "exp_1"]
-#    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-#    n_samples: 1000
+    - name: "innovation_distances"
+      model_names: [ "pwm", "vae" ]
+      default_model_name: "humanTRB"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all models"
+      receptor_type: "TCR"
+      n_subsets: 10
+sampling:
+  - model_name: "vae"
+    experiment_names: ["exp_0", "exp_1"]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "pwm"
+    experiment_names: ["exp_0", "exp_1"]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
 postprocessing:
   - model_name: "vae"
     experiment_names: ["exp_0", "exp_1"]

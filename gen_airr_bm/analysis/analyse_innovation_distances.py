@@ -36,6 +36,7 @@ def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> s
     for model in analysis_config.model_names:
         os.makedirs(f"{innovative_sequences_dir}/{model}", exist_ok=True)
         comparison_files_dir = get_sequence_files(analysis_config, model, test_reference)
+
         for ref_file, gen_files in comparison_files_dir.items():
             for gen_file in gen_files:
                 file_name = os.path.basename(gen_file)
@@ -49,9 +50,9 @@ def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> s
     return innovative_sequences_dir
 
 
-def compute_distances_to_train(analysis_config: AnalysisConfig, innovation_sequences_dir: str) -> tuple:
+def compute_distances_to_train(analysis_config: AnalysisConfig, innovation_sequences_dir: str) -> dict:
     """
-    Computes the distances from the innovative model sequences and tes sequences to the training sequences
+    Computes the distances from the innovative model sequences and test sequences to the training sequences
     at distances 1-3 using CompAIRR.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -67,30 +68,29 @@ def compute_distances_to_train(analysis_config: AnalysisConfig, innovation_seque
         os.makedirs(compairr_output_dir, exist_ok=True)
 
         gen_train_overlap_counts = {}
-        test_train_overlap_counts = {}  # cached per dataset_name
+        test_train_overlap_counts = {}
 
         for innovation_gen_file_split in os.listdir(f"{innovation_sequences_dir}/{model}"):
-            split_base_name = os.path.splitext(innovation_gen_file_split)[0]
-            dataset_name = split_base_name.rsplit('_', 1)[0]
+            dataset_split_name = os.path.splitext(innovation_gen_file_split)[0]
+            dataset_name = dataset_split_name.rsplit('_', 1)[0]
 
             gen_file = f"{innovation_sequences_dir}/{model}/{innovation_gen_file_split}"
             train_file = f"{analysis_config.root_output_dir}/train_compairr_sequences/{dataset_name}.tsv"
             test_file = f"{analysis_config.root_output_dir}/test_compairr_sequences/{dataset_name}.tsv"
 
-            gen_train_counts, gen_n_seqs = _compute_overlap_counts(
+            gen_train_counts, gen_n_seqs = compute_nearest_neighbor_counts(
                 compairr_output_dir=compairr_output_dir,
                 search_for_file=gen_file,
                 search_in_file=train_file,
-                identifier_prefix=f"{split_base_name}_{model}",
+                identifier_prefix=f"{dataset_split_name}_{model}",
                 distances=[1, 2, 3]
             )
             gen_train_counts[">3"] = gen_n_seqs - sum(gen_train_counts[str(d)] for d in [1, 2, 3])
             gen_train_counts["n_sequences"] = gen_n_seqs
-            gen_train_overlap_counts[split_base_name] = gen_train_counts
+            gen_train_overlap_counts[dataset_split_name] = gen_train_counts
 
-            # --- test-train distances (skip if already computed for this dataset) ---
             if dataset_name not in test_train_overlap_counts:
-                test_train_counts, test_n_seqs = _compute_overlap_counts(
+                test_train_counts, test_n_seqs = compute_nearest_neighbor_counts(
                     compairr_output_dir=compairr_output_dir,
                     search_for_file=test_file,
                     search_in_file=train_file,
@@ -110,10 +110,19 @@ def compute_distances_to_train(analysis_config: AnalysisConfig, innovation_seque
     return all_distance_dfs
 
 
-def _compute_overlap_counts(compairr_output_dir: str, search_for_file: str, search_in_file: str,
-                                                    identifier_prefix: str, distances: list) -> tuple:
+def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: str, search_in_file: str,
+                                    identifier_prefix: str, distances: list) -> tuple:
     """
     Runs CompAIRR at each distance and returns exclusive per-distance counts and total sequence count.
+    Args:
+        compairr_output_dir (str): Directory to store CompAIRR output files.
+        search_for_file (str): Path to the file of sequences for which to search for existence in another sequence set.
+        search_in_file (str): Path to the file to search for existence in.
+        identifier_prefix (str): Base name for output files.
+        distances (list): List of distances to compute counts for (e.g., [1, 2, 3]).
+    Returns:
+        counts (dict): Dict with distance as key and count of sequences at that distance as value.
+        n_sequences (int): Total number of sequences in the search_for_file.
     """
     counts = {}
     last_result = None
@@ -140,7 +149,7 @@ def _compute_overlap_counts(compairr_output_dir: str, search_for_file: str, sear
 
 def plot_innovation_distances(analysis_config: AnalysisConfig, plotting_dfs: pd.DataFrame) -> None:
     """
-    Plots the distribution of distances from innovative sequences to the training set and from test sequences to the training set.
+    Plot number of sequences with distance 1, 2, 3, and >3 to the nearest training sequence for each model and test.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         plotting_dfs (pd.DataFrame): DataFrame containing counts of sequences at each distance to the training set.
@@ -161,8 +170,8 @@ def plot_innovation_distances(analysis_config: AnalysisConfig, plotting_dfs: pd.
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
         fig = make_distance_figure(plotting_dfs,
-                                   title=f'Average sequence counts by distance to nearest train sequence for dataset {dataset}',
-                                    subset_mask=subset_mask)
+                                   title=f'Average sequence counts by distance to nearest train sequence ({dataset})',
+                                   subset_mask=subset_mask)
         png_path = f"{analysis_config.analysis_output_dir}/innovation_distances_{dataset}_plot.png"
         fig.write_image(png_path)
         print(f"Plot saved at: {png_path}")
