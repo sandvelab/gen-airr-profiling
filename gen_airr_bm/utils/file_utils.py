@@ -16,7 +16,7 @@ def get_sequence_files(analysis_config: AnalysisConfig, model: str, reference_da
     else:
         if analysis_config.analysis == "memorization":
             gen_dir = f"{analysis_config.root_output_dir}/generated_compairr_sequences_split/{model}"
-        elif analysis_config.analysis == "innovation":
+        elif analysis_config.analysis == "innovation" or analysis_config.analysis == "innovation_distances":
             gen_dir = f"{analysis_config.root_output_dir}/novel_unique_generated_compairr_sequences_split/{model}"
         else:
             gen_dir = f"{analysis_config.root_output_dir}/novel_generated_compairr_sequences_split/{model}"
