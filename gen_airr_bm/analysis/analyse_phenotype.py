@@ -130,28 +130,26 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     clustered.index = [name.rsplit('_', 1)[0] for name in clustered.index]
     clustered.columns = [name.rsplit('_', 1)[0] for name in clustered.columns]
 
-    # blues = px.colors.sequential.Blues_r
-    # blues_cut = blues[2:-2]
-    thermal = px.colors.sequential.thermal_r[:-2]
+    z_values = clustered.values.copy()
+    np.fill_diagonal(z_values, np.nan)
 
-    # Build thermal colors but compressed into 0–0.1
-    custom_colorscale = []
-    for i, c in enumerate(thermal):
-        position = i / (len(thermal) - 1)
-        custom_colorscale.append((position * 0.2, c))
-
-    # Add fixed color at value 1.0
-    custom_colorscale.append((1.0, "white"))  # or any other color
+    GLOBAL_ZMAX = 0.12  # set this consistently across all models for fair comparison
 
     fig = go.Figure(
         data=go.Heatmap(
-            z=clustered.values,
+            z=z_values,
             x=clustered.columns,
             y=clustered.index,
-            colorscale=custom_colorscale,
+            colorscale=px.colors.sequential.thermal_r[:-2],
             zmin=0.0,
-            zmax=1.0,
-            colorbar=dict(title="Similarity"),
+            zmax=GLOBAL_ZMAX,
+            colorbar=dict(
+                title="Jaccard similarity",
+                tickvals=[0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12],
+                ticktext=["0", "0.02", "0.04", "0.06", "0.08", "0.10", "0.12"],
+                lenmode="fraction",
+                len=1.0,
+            ),
             text=annotation_text,
             texttemplate="%{text}",
             textfont=dict(color="black", size=17),
@@ -159,19 +157,16 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     )
 
     fig.update_layout(
-        title={"text": f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} "
-              f"Sets (Hamming Distance = {analysis_config.allowed_mismatches})",
-               "font": {'size': 20}},
+        title={
+            "text": f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} "
+                    f"Sets (Hamming Distance = {analysis_config.allowed_mismatches})",
+            "font": {"size": 20},
+        },
+        plot_bgcolor="white",
         width=1000,
         height=900,
         xaxis=dict(tickangle=45),
         template="plotly_white",
-        coloraxis_colorbar=dict(
-            tickvals=[0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 1.0],
-            ticktext=["0", "0.01", "0.02", "0.03", "0.05", "0.07", "0.1", "1.0"],
-            lenmode="fraction",
-            len=1.0
-        )
     )
 
     png_path = f"{output_dir}/cluster_heatmap.png"
