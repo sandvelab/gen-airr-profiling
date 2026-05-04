@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 #TODO: We need to find more elegant solution for setting the backend
 import matplotlib
+from scipy.spatial.distance import squareform
+
 matplotlib.use('Agg')
 import plotly.graph_objects as go
 import plotly.express as px
@@ -117,7 +119,10 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     if not os.path.exists(tsv_path):
         similarities_matrix.to_csv(tsv_path, sep='\t')
 
-    Z = linkage(similarities_matrix.values, method="average", metric="euclidean")
+    distance_matrix = 1.0 - similarities_matrix.values
+    np.fill_diagonal(distance_matrix, 0.0)
+    condensed = squareform(distance_matrix, checks=False)
+    Z = linkage(condensed, method="average")
     leaf_order = leaves_list(Z)
 
     clustered = similarities_matrix.iloc[leaf_order, :].iloc[:, leaf_order]
