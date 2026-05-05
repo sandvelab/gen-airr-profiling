@@ -56,15 +56,16 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
         n_repertoires=len(dataset_names),
     )
 
-    print(f"MAP (phenotype) = {map_phenotype:.3f}")
-    print(f"MAP (subject)   = {map_subject:.3f}")
-
     plot_cluster_heatmap(analysis_config, similarities_df, model_name, map_phenotype, map_subject)
 
 
 def extract_phenotype(analysis_config: AnalysisConfig, name: str):
     """Extract phenotype label from a dataset filename.
-    Example: 'cd4_pancreatic_LN_subject3_rep1' -> 'cd4'
+    Args:
+        analysis_config: AnalysisConfig object containing the receptor type information.
+        name: dataset filename,
+    Returns:
+        str: phenotype label extracted from the filename.
     """
     receptor_type = analysis_config.receptor_type
     parts = name.split('_')
@@ -80,7 +81,11 @@ def extract_phenotype(analysis_config: AnalysisConfig, name: str):
 
 def extract_subject(analysis_config: AnalysisConfig, name: str):
     """Extract subject label from a dataset filename.
-    Example: 'cd4_pancreatic_LN_subject3_rep1' -> 'subject3'
+    Args:
+        analysis_config: AnalysisConfig object containing the receptor type information.
+        name: dataset filename,
+    Returns:
+        str: subject label extracted from the filename.
     """
     receptor_type = analysis_config.receptor_type
     parts = name.split('_')
@@ -276,7 +281,14 @@ def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
     """For each query repertoire, save a ranked list of all other repertoires
     with their similarity, rank, and label match info.
 
-    Output is long-format: one row per (query, neighbor) pair.
+    Args:
+        similarities_df: pd.DataFrame, square similarity matrix with repertoire names as index/columns
+        phenotypes: list of phenotype labels corresponding to the rows/columns of similarities_df
+        subjects: list of subject labels corresponding to the rows/columns of similarities_df
+        output_dir: directory to save the rankings CSV
+
+    Returns:
+        pd.DataFrame: DataFrame containing the rankings and metadata for each query repertoire.
     """
     sim = similarities_df.values
     names = list(similarities_df.index)
@@ -316,7 +328,19 @@ def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
 
 def save_map_metrics(output_dir, model_name, receptor_type, allowed_mismatches,
                      map_phenotype, map_subject, n_repertoires):
-    """Save MAP scores to a TSV file."""
+    """Save MAP scores to a TSV file.
+    Args:
+        output_dir: Directory to save the metrics file.
+        model_name: Name of the model being analyzed.
+        receptor_type: Type of receptor (e.g., TCR, BCR).
+        allowed_mismatches: Number of mismatches allowed in similarity calculation.
+        map_phenotype: MAP score for phenotype classification.
+        map_subject: MAP score for subject classification.
+        n_repertoires: Number of repertoires analyzed.
+
+    Returns:
+        None
+    """
     metrics = pd.DataFrame({
         'model': [model_name],
         'receptor_type': [receptor_type],
