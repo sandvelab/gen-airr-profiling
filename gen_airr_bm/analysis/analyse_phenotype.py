@@ -45,6 +45,7 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
 
     map_phenotype = compute_map(similarities_df, phenotypes)
     map_subject = compute_map(similarities_df, subjects)
+    save_ranking_analysis(similarities_df, phenotypes, subjects, analysis_config.analysis_output_dir)
 
     print(f"MAP (phenotype) = {map_phenotype:.3f}")
     print(f"MAP (subject)   = {map_subject:.3f}")
@@ -260,3 +261,45 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     png_path = f"{output_dir}/cluster_heatmap.png"
     fig.write_image(png_path)
     print(f"Saved clustered heatmap: {png_path}")
+
+
+def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
+    """For each query repertoire, save a ranked list of all other repertoires
+    with their similarity, rank, and label match info.
+
+    Output is long-format: one row per (query, neighbor) pair.
+    """
+    sim = similarities_df.values
+    names = list(similarities_df.index)
+    n = len(names)
+
+    rows = []
+    for i in range(n):
+        query_name = names[i]
+        query_pheno = phenotypes[i]
+        query_subject = subjects[i]
+
+        # Get similarities to all other repertoires (exclude self)
+        sims_to_others = [(j, sim[i, j]) for j in range(n) if j != i]
+        # Sort by similarity descending
+        sims_to_others.sort(key=lambda x: x[1], reverse=True)
+
+        for rank, (j, similarity) in enumerate(sims_to_others, start=1):
+            rows.append({
+                'query': query_name,
+                'query_phenotype': query_pheno,
+                'query_subject': query_subject,
+                'rank': rank,
+                'neighbor': names[j],
+                'neighbor_phenotype': phenotypes[j],
+                'neighbor_subject': subjects[j],
+                'similarity': similarity,
+                'same_phenotype': phenotypes[j] == query_pheno,
+                'same_subject': subjects[j] == query_subject,
+            })
+
+    df = pd.DataFrame(rows)
+    csv_path = f"{output_dir}/rankings.csv"
+    df.to_csv(csv_path, index=False)
+    print(f"Saved rankings: {csv_path}")
+    return df
