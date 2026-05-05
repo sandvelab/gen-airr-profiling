@@ -228,8 +228,8 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
             zmax=GLOBAL_ZMAX,
             colorbar=dict(
                 title="Jaccard similarity",
-                tickvals=[0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12],
-                ticktext=["0", "0.02", "0.04", "0.06", "0.08", "0.10", "0.12"],
+                tickvals=[0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20],
+                ticktext=["0", "0.02", "0.04", "0.06", "0.08", "0.10", "0.12", "0.14", "0.16", "0.18", "0.20"],
                 lenmode="fraction",
                 len=1.0,
             ),
