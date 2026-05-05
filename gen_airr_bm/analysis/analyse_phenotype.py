@@ -39,7 +39,90 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
     similarities_matrix, dataset_names = calculate_similarities_matrix(analysis_config, compairr_sequences_dir,)
 
     similarities_df = pd.DataFrame(similarities_matrix, index=dataset_names, columns=dataset_names)
-    plot_cluster_heatmap(analysis_config, similarities_df, model_name)
+
+    phenotypes = [extract_phenotype(analysis_config, name) for name in dataset_names]
+    subjects = [extract_subject(analysis_config, name) for name in dataset_names]
+
+    map_phenotype = compute_map(similarities_df, phenotypes)
+    map_subject = compute_map(similarities_df, subjects)
+
+    print(f"MAP (phenotype) = {map_phenotype:.3f}")
+    print(f"MAP (subject)   = {map_subject:.3f}")
+
+    plot_cluster_heatmap(analysis_config, similarities_df, model_name, map_phenotype, map_subject)
+
+
+def extract_phenotype(analysis_config: AnalysisConfig, name: str):
+    """Extract phenotype label from a dataset filename.
+    Example: 'cd4_pancreatic_LN_subject3_rep1' -> 'cd4'
+    """
+    receptor_type = analysis_config.receptor_type
+    parts = name.split('_')
+    if receptor_type == 'TCR':
+        return parts[2]
+    elif receptor_type == 'BCR':
+        return parts[1]
+    elif receptor_type == 'BCR UMI':
+        return parts[0]
+    else:
+        raise ValueError(f"Unknown receptor_type: {receptor_type}")
+
+
+def extract_subject(analysis_config: AnalysisConfig, name: str):
+    """Extract subject label from a dataset filename.
+    Example: 'cd4_pancreatic_LN_subject3_rep1' -> 'subject3'
+    """
+    receptor_type = analysis_config.receptor_type
+    parts = name.split('_')
+    if receptor_type == 'TCR':
+        return parts[0]
+    elif receptor_type == 'BCR':
+        return parts[0]
+    elif receptor_type == 'BCR UMI':
+        return parts[1]
+    else:
+        raise ValueError(f"Unknown receptor_type: {receptor_type}")
+
+
+def compute_map(similarities_df, labels):
+    """Compute Mean Average Precision over rankings induced by similarity.
+
+    For each query (row), rank other items by similarity (descending) and compute
+    Average Precision over items sharing the query's label. MAP is the mean across queries.
+
+    Args:
+        similarities_df: pd.DataFrame, square similarity matrix (higher = more similar)
+        labels: list of labels, same order as rows/columns of similarities_df
+    Returns:
+        float: MAP score in [0, 1]
+    """
+    sim = similarities_df.values.copy().astype(float)
+    n = len(labels)
+    np.fill_diagonal(sim, -np.inf)  # exclude self from ranking
+
+    aps = []
+    for i in range(n):
+        query_label = labels[i]
+        # number of relevant items (same label, excluding self)
+        n_relevant = sum(1 for j in range(n) if j != i and labels[j] == query_label)
+        if n_relevant == 0:
+            continue  # skip queries with no peers
+
+        # rank all other items by similarity, descending
+        ranking = np.argsort(-sim[i])
+
+        hits = 0
+        sum_precisions = 0.0
+        for rank, idx in enumerate(ranking, start=1):
+            if labels[idx] == query_label:
+                hits += 1
+                sum_precisions += hits / rank
+                if hits == n_relevant:
+                    break  # all relevant items found
+
+        aps.append(sum_precisions / n_relevant)
+
+    return float(np.mean(aps)) if aps else 0.0
 
 
 # TODO: There's a lot of file operations here, we should consider refactoring this function a bit more
@@ -105,7 +188,7 @@ def calculate_similarities_matrix(analysis_config, sequences_dir):
     return similarities_matrix, sequence_datasets_names
 
 
-def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, model_name):
+def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, model_name, map_phenotype, map_subject):
     """ Plot a clustered heatmap of the similarities matrix using seaborn.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -133,7 +216,7 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     z_values = clustered.values.copy()
     np.fill_diagonal(z_values, np.nan)
 
-    GLOBAL_ZMAX = 0.12  # set this consistently across all models for fair comparison
+    GLOBAL_ZMAX = 0.2  # set this consistently across all models for fair comparison
 
     fig = go.Figure(
         data=go.Heatmap(
@@ -156,10 +239,15 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         )
     )
 
+    title_text = (
+        f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} "
+        f"Sets (Hamming Distance = {analysis_config.allowed_mismatches})"
+        f"<br><sub>MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</sub>"
+    )
+
     fig.update_layout(
         title={
-            "text": f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} "
-                    f"Sets (Hamming Distance = {analysis_config.allowed_mismatches})",
+            "text": title_text,
             "font": {"size": 20},
         },
         plot_bgcolor="white",
