@@ -46,6 +46,15 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
     map_phenotype = compute_map(similarities_df, phenotypes)
     map_subject = compute_map(similarities_df, subjects)
     save_ranking_analysis(similarities_df, phenotypes, subjects, analysis_config.analysis_output_dir)
+    save_map_metrics(
+        output_dir=analysis_config.analysis_output_dir,
+        model_name=model_name,
+        receptor_type=analysis_config.receptor_type,
+        allowed_mismatches=analysis_config.allowed_mismatches,
+        map_phenotype=map_phenotype,
+        map_subject=map_subject,
+        n_repertoires=len(dataset_names),
+    )
 
     print(f"MAP (phenotype) = {map_phenotype:.3f}")
     print(f"MAP (subject)   = {map_subject:.3f}")
@@ -303,3 +312,20 @@ def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
     df.to_csv(csv_path, index=False)
     print(f"Saved rankings: {csv_path}")
     return df
+
+
+def save_map_metrics(output_dir, model_name, receptor_type, allowed_mismatches,
+                     map_phenotype, map_subject, n_repertoires):
+    """Save MAP scores to a TSV file."""
+    metrics = pd.DataFrame({
+        'model': [model_name],
+        'receptor_type': [receptor_type],
+        'allowed_mismatches': [allowed_mismatches],
+        'n_repertoires': [n_repertoires],
+        'map_phenotype': [map_phenotype],
+        'map_subject': [map_subject],
+    })
+
+    metrics_path = f"{output_dir}/map_metrics.tsv"
+    metrics.to_csv(metrics_path, sep='\t', index=False)
+    print(f"Saved MAP metrics: {metrics_path}")
