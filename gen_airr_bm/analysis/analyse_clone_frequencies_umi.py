@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from scipy.spatial import distance
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, pearsonr
 
 from gen_airr_bm.analysis.analyse_innovation_umi import symlog_transform
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -48,16 +48,17 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
 
             jsd_scores = plot_frequencies_by_dataset(frequencies_dfs, model_output_dir, reference, model_name)
             jsd_scores_by_ref[reference][model_name].extend(jsd_scores)
+            jsd_scores_avg = np.mean(jsd_scores)
 
-            plot_frequencies_combined(frequencies_dfs, model_output_dir, reference, model_name)
+            plot_frequencies_combined(frequencies_dfs, model_output_dir, reference, model_name, jsd_scores_avg)
 
     ref_frequencies = collect_clone_frequencies_reference(analysis_config)
     ref_output_dir = os.path.join(output_dir, "reference_comparison")
     os.makedirs(ref_output_dir, exist_ok=True)
     ref_jsd_scores = plot_frequencies_by_dataset(ref_frequencies, ref_output_dir, "train", "test")
-    plot_frequencies_combined(ref_frequencies, ref_output_dir, "train", "test", filter_combined_rep=False)
-
     reference_score = np.mean(ref_jsd_scores) if ref_jsd_scores else None
+    plot_frequencies_combined(ref_frequencies, ref_output_dir, "train", "test", reference_score,
+                              filter_combined_rep=False)
 
     mean_scores_by_ref = {}
     std_scores_by_ref = {}
@@ -153,7 +154,7 @@ def get_frequencies_df(sample_1: list, sample_2: list, label_1: str, label_2: st
     return df
 
 
-#def pseudo_log_transform(x, threshold=1e-3):
+# def pseudo_log_transform(x, threshold=1e-3):
 #     return np.sign(x) * np.log1p(np.abs(x / threshold))
 def pseudo_log_transform(x, linthresh=1e-5, base=10):
     return symlog_transform(x)
@@ -219,7 +220,7 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
         line=dict(color="red", dash="dash", width=2)
     )
 
-    threshold = 1/450000
+    threshold = 1 / 450000
     tickvals = np.arange(0, max_val + 1)
     ticktext = ["0"] + [f"{threshold * 10 ** (i - 1):.0e}" for i in tickvals[1:]]
 
@@ -271,7 +272,8 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
     return jsd_scores
 
 
-def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, name2: str, filter_combined_rep: bool = True) -> None:
+def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, name2: str, jsd_avg: float,
+                              filter_combined_rep: bool = True) -> None:
     """ Plots combined clone frequencies for multiple datasets on a single plot.
 
     Each dataset is shown with a different color.
@@ -281,6 +283,7 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
         output_dir (str): Directory to save the generated plots.
         name1 (str): The reference dataset label.
         name2 (str): The generative model label.
+        jsd_avg (float): The mean JSD score to include in the plot title.
         filter_combined_rep (bool): If True, only include datasets with '_all' suffix (full repertoire). If False, include all datasets.
     Returns:
         None
@@ -295,6 +298,9 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
         return
 
     combined_data = []
+    spearman_rhos = []
+    pearson_rhos = []
+
     for dataset_name, freq_df in selected_datasets.items():
         clean_name = dataset_name.replace('_all', '').replace('reference_', '')
 
@@ -303,15 +309,33 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
         df_copy[f"pseudo_freq_{name1}"] = pseudo_log_transform(df_copy[f"freq_{name1}"])
         df_copy['repertoire'] = clean_name
         df_copy['sequence'] = df_copy.index
-
         combined_data.append(df_copy)
 
+    frequencies_exclude_all = {k: v for k, v in frequencies.items() if '_all' not in k}
+    for dataset_name, freq_df in frequencies_exclude_all.items():
+        df_copy = freq_df.copy()
+        df_copy[f"pseudo_freq_{name2}"] = pseudo_log_transform(df_copy[f"freq_{name2}"])
+        df_copy[f"pseudo_freq_{name1}"] = pseudo_log_transform(df_copy[f"freq_{name1}"])
+
+        rho, p = spearmanr(df_copy[f"pseudo_freq_{name1}"], df_copy[f"pseudo_freq_{name2}"])
+        spearman_rhos.append(rho)
+        rho, p = pearsonr(df_copy[f"pseudo_freq_{name1}"], df_copy[f"pseudo_freq_{name2}"])
+        pearson_rhos.append(rho)
+
     combined_df = pd.concat(combined_data, ignore_index=False)
-    rho, p = spearmanr(combined_df[f"pseudo_freq_{name1}"], combined_df[f"pseudo_freq_{name2}"])
-    title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (ρ = {rho:.3f})"
+    spearman_rho_avg = np.mean(spearman_rhos)
+    pearson_rhos_avg = np.mean(pearson_rhos)
+
+    save_scatter_with_metric(combined_df, name1, name2, output_dir, os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_spearman.png"),
+                             f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (Spearman ρ = {spearman_rho_avg:.3f})")
+    save_scatter_with_metric(combined_df, name1, name2, output_dir, os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_pearson.png"),
+                             f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (Pearson ρ = {pearson_rhos_avg:.3f})")
+    save_scatter_with_metric(combined_df, name1, name2, output_dir,
+                             os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_jsd.png"),
+                             f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (Mean JSD = {jsd_avg:.3f})")
+
+
+def save_scatter_with_metric(combined_df, name1, name2, output_dir, png_path, title_text):
     fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire', width=800, height=600)
-    png_path = os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog.png")
     fig.write_image(png_path)
     print(f"Combined plot saved as PNG at: {png_path}")
-
-

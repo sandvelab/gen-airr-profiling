@@ -111,11 +111,11 @@ def test_plot_frequencies_combined(tmp_path, monkeypatch):
     }, index=["AAA", "BBB"])  
 
     df_part = pd.DataFrame({
-        "count_ref": [1],
-        "count_mod": [1],
-        "freq_ref": [1.0],
-        "freq_mod": [1.0],
-    }, index=["CCC"])  
+        "count_ref": [1, 1],
+        "count_mod": [1, 1],
+        "freq_ref": [1.0, 1.0],
+        "freq_mod": [1.0, 1.0],
+    }, index=["CCC", "DDD"])
 
     freqs = {
         "dataset_all": df_all,
@@ -134,11 +134,11 @@ def test_plot_frequencies_combined(tmp_path, monkeypatch):
     outdir.mkdir()
 
     # With filter_combined_rep=True -> only uses dataset_all
-    plot_frequencies_combined(freqs, str(outdir), name1="ref", name2="mod", filter_combined_rep=True)
-    expected_png = outdir / "combined_repertoires_mod_ref_symlog.png"
+    plot_frequencies_combined(freqs, str(outdir), "ref", "mod", 0, filter_combined_rep=True)
+    expected_png = outdir / "combined_repertoires_mod_ref_symlog_jsd.png"
     assert expected_png.exists()
 
     # Ensure figure creation worked even when including all datasets
-    # Overwrite file again should still succeed
-    plot_frequencies_combined(freqs, str(outdir), name1="ref", name2="mod", filter_combined_rep=False)
+    # # Overwrite file again should still succeed
+    plot_frequencies_combined(freqs, str(outdir), "ref", "mod", 0, filter_combined_rep=False)
     assert expected_png.exists()  # still present
