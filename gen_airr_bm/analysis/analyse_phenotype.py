@@ -102,8 +102,8 @@ def extract_subject(analysis_config: AnalysisConfig, name: str):
 def compute_map(similarities_df, labels):
     """Compute Mean Average Precision over rankings induced by similarity.
 
-    For each query (row), rank other items by similarity (descending) and compute
-    Average Precision over items sharing the query's label. MAP is the mean across queries.
+    For each repertoire (row), rank other items by similarity (descending) and compute
+    Average Precision over items sharing the repertoire's label. MAP is the mean across repertoires.
 
     Args:
         similarities_df: pd.DataFrame, square similarity matrix (higher = more similar)
@@ -117,11 +117,11 @@ def compute_map(similarities_df, labels):
 
     aps = []
     for i in range(n):
-        query_label = labels[i]
+        repertoire_label = labels[i]
         # number of relevant items (same label, excluding self)
-        n_relevant = sum(1 for j in range(n) if j != i and labels[j] == query_label)
+        n_relevant = sum(1 for j in range(n) if j != i and labels[j] == repertoire_label)
         if n_relevant == 0:
-            continue  # skip queries with no peers
+            continue  # skip repertoires with no peers
 
         # rank all other items by similarity, descending
         ranking = np.argsort(-sim[i])
@@ -129,7 +129,7 @@ def compute_map(similarities_df, labels):
         hits = 0
         sum_precisions = 0.0
         for rank, idx in enumerate(ranking, start=1):
-            if labels[idx] == query_label:
+            if labels[idx] == repertoire_label:
                 hits += 1
                 sum_precisions += hits / rank
                 if hits == n_relevant:
@@ -224,14 +224,12 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     leaf_order = leaves_list(Z)
 
     clustered = similarities_matrix.iloc[leaf_order, :].iloc[:, leaf_order]
-    annotation_text = np.round(clustered.values, 3).astype(str)
+    annotation_text = np.round(clustered.values, 4).astype(str)
     clustered.index = [name.rsplit('_', 1)[0] for name in clustered.index]
     clustered.columns = [name.rsplit('_', 1)[0] for name in clustered.columns]
 
     z_values = clustered.values.copy()
     np.fill_diagonal(z_values, np.nan)
-
-    GLOBAL_ZMAX = 0.2  # set this consistently across all models for fair comparison
 
     fig = go.Figure(
         data=go.Heatmap(
@@ -240,35 +238,35 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
             y=clustered.index,
             colorscale=px.colors.sequential.thermal_r[:-2],
             zmin=0.0,
-            zmax=GLOBAL_ZMAX,
+            zmax=0.16,
             colorbar=dict(
                 title="Jaccard similarity",
-                tickvals=[0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20],
-                ticktext=["0", "0.02", "0.04", "0.06", "0.08", "0.10", "0.12", "0.14", "0.16", "0.18", "0.20"],
+                tickvals=[0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16],
+                ticktext=["0", "0.02", "0.04", "0.06", "0.08", "0.10", "0.12", "0.14", "0.16"],
                 lenmode="fraction",
                 len=1.0,
             ),
             text=annotation_text,
             texttemplate="%{text}",
-            textfont=dict(color="black", size=17),
+            textfont=dict(color="black", size=20),
         )
     )
 
     title_text = (
-        f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} "
-        f"Sets (Hamming Distance = {analysis_config.allowed_mismatches})"
+        f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} Sets"
         f"<br><sub>MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</sub>"
     )
 
     fig.update_layout(
         title={
             "text": title_text,
-            "font": {"size": 20},
+            "font": {"size": 30},
         },
         plot_bgcolor="white",
         width=1000,
         height=900,
         xaxis=dict(tickangle=45),
+        font=dict(size=16),
         template="plotly_white",
     )
 
@@ -278,7 +276,7 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
 
 
 def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
-    """For each query repertoire, save a ranked list of all other repertoires
+    """For each repertoire, save a ranked list of all other repertoires
     with their similarity, rank, and label match info.
 
     Args:
@@ -288,7 +286,7 @@ def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
         output_dir: directory to save the rankings CSV
 
     Returns:
-        pd.DataFrame: DataFrame containing the rankings and metadata for each query repertoire.
+        pd.DataFrame: DataFrame containing the rankings and metadata for each repertoire.
     """
     sim = similarities_df.values
     names = list(similarities_df.index)
@@ -296,9 +294,9 @@ def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
 
     rows = []
     for i in range(n):
-        query_name = names[i]
-        query_pheno = phenotypes[i]
-        query_subject = subjects[i]
+        repertoire_name = names[i]
+        repertoire_pheno = phenotypes[i]
+        repertoire_subject = subjects[i]
 
         # Get similarities to all other repertoires (exclude self)
         sims_to_others = [(j, sim[i, j]) for j in range(n) if j != i]
@@ -307,16 +305,16 @@ def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
 
         for rank, (j, similarity) in enumerate(sims_to_others, start=1):
             rows.append({
-                'query': query_name,
-                'query_phenotype': query_pheno,
-                'query_subject': query_subject,
+                'repertoire': repertoire_name,
+                'repertoire_phenotype': repertoire_pheno,
+                'repertoire_subject': repertoire_subject,
                 'rank': rank,
                 'neighbor': names[j],
                 'neighbor_phenotype': phenotypes[j],
                 'neighbor_subject': subjects[j],
                 'similarity': similarity,
-                'same_phenotype': phenotypes[j] == query_pheno,
-                'same_subject': subjects[j] == query_subject,
+                'same_phenotype': phenotypes[j] == repertoire_pheno,
+                'same_subject': subjects[j] == repertoire_subject,
             })
 
     df = pd.DataFrame(rows)
