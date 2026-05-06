@@ -8,14 +8,14 @@ from gen_airr_bm.utils.file_utils import get_sequence_files
 import plotly.graph_objects as go
 
 
-def run_innovation_distances_analysis(analysis_config: AnalysisConfig) -> None:
-    """ Runs innovation sequence distances analysis on the generated innovative and reference sequences.
+def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
+    """ Runs innovation sequence diversity analysis on the generated innovative and reference sequences.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
         None
     """
-    print("Running innovation sequence distances analysis")
+    print("Running innovation sequence diversity analysis")
 
     innovation_sequences_dir = save_innovative_sequences_for_compairr(analysis_config)
     nearest_neighbor_plotting_data = count_nearest_neighbors(analysis_config, innovation_sequences_dir)
@@ -31,7 +31,7 @@ def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> s
     Returns:
         innovative_sequences_dir (str): Directory where the innovative sequences are saved for CompAIRR analysis.
     """
-    innovative_sequences_dir = f"{analysis_config.root_output_dir}/innovation_overlap_compairr_sequences_split"
+    innovative_sequences_dir = f"{analysis_config.root_output_dir}/innovation_unique_overlap_compairr_sequences_split"
     os.makedirs(innovative_sequences_dir, exist_ok=True)
 
     test_reference = 'test'

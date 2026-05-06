@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from gen_airr_bm.analysis.analyse_innovation_distances import (
-    run_innovation_distances_analysis,
+from gen_airr_bm.analysis.analyse_innovation_diversity import (
+    run_innovation_diversity_analysis,
     save_innovative_sequences_for_compairr,
     count_nearest_neighbors,
     compute_nearest_neighbor_counts,
@@ -17,7 +17,7 @@ from gen_airr_bm.core.analysis_config import AnalysisConfig
 @pytest.fixture
 def sample_analysis_config():
     return AnalysisConfig(
-        analysis="innovation_distances",
+        analysis="innovation_diversity",
         model_names=["model1", "model2"],
         analysis_output_dir="/tmp/test_output/analysis_innov",
         root_output_dir="/tmp/test_output",
@@ -31,27 +31,27 @@ def sample_analysis_config():
     )
 
 
-def test_run_innovation_distances_analysis(mocker, sample_analysis_config):
+def test_run_innovation_diversity_analysis(mocker, sample_analysis_config):
     mock_save = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.save_innovative_sequences_for_compairr",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.save_innovative_sequences_for_compairr",
         return_value="/tmp/test_output/innov_dir",
     )
     mock_count = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.count_nearest_neighbors",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.count_nearest_neighbors",
         return_value={"model1": mocker.Mock(), "test": mocker.Mock()},
     )
     mock_plot_nn = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.plot_nn_counts_across_datasets"
+        "gen_airr_bm.analysis.analyse_innovation_diversity.plot_nn_counts_across_datasets"
     )
     mock_cluster = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.cluster_innovation_sequences",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.cluster_innovation_sequences",
         return_value={"model1": {"ds_0": {1: 1}}},
     )
     mock_plot_cluster = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.plot_cluster_counts"
+        "gen_airr_bm.analysis.analyse_innovation_diversity.plot_cluster_counts"
     )
 
-    run_innovation_distances_analysis(sample_analysis_config)
+    run_innovation_diversity_analysis(sample_analysis_config)
 
     mock_save.assert_called_once_with(sample_analysis_config)
     mock_count.assert_called_once_with(sample_analysis_config, "/tmp/test_output/innov_dir")
@@ -64,7 +64,7 @@ def test_save_innovative_sequences_for_compairr(mocker, sample_analysis_config):
     mocker.patch("os.makedirs")
     comparison_mapping = {"/ref/test_ds.tsv": ["/gen/ds_0.tsv", "/gen/ds_1.tsv"]}
     mock_get_sequence_files = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.get_sequence_files",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.get_sequence_files",
         return_value=comparison_mapping,
     )
 
@@ -81,7 +81,7 @@ def test_save_innovative_sequences_for_compairr(mocker, sample_analysis_config):
 
     out_dir = save_innovative_sequences_for_compairr(sample_analysis_config)
 
-    assert out_dir == "/tmp/test_output/innovation_overlap_compairr_sequences_split"
+    assert out_dir == "/tmp/test_output/innovation_unique_overlap_compairr_sequences_split"
 
     assert mock_get_sequence_files.call_count == len(sample_analysis_config.model_names)
     for i, model in enumerate(sample_analysis_config.model_names):
@@ -114,7 +114,7 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
     mocker.patch("os.listdir", side_effect=listdir_side_effect)
 
     mock_compute = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.compute_nearest_neighbor_counts",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.compute_nearest_neighbor_counts",
         side_effect=[
             {"1": 1, "2": 2, "3": 3, ">3": 4, "n_sequences": 10},
             {"1": 2, "2": 1, "3": 0, ">3": 7, "n_sequences": 10},
@@ -134,7 +134,7 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
 
 
 def test_compute_nearest_neighbor_counts(mocker):
-    mocker.patch("gen_airr_bm.analysis.analyse_innovation_distances.run_compairr_existence")
+    mocker.patch("gen_airr_bm.analysis.analyse_innovation_diversity.run_compairr_existence")
 
     df_d1 = pd.DataFrame({"sequence_id": [1, 2, 3, 4], "overlap_count": [1, 0, 3, 0]})
     df_d2 = pd.DataFrame({"sequence_id": [1, 2, 3, 4], "overlap_count": [1, 5, 3, 0]})
@@ -156,7 +156,7 @@ def test_compute_nearest_neighbor_counts(mocker):
 def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
     mock_fig = mocker.Mock()
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.plot_single_dataset",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.plot_single_dataset",
         return_value=mock_fig,
     )
 
@@ -175,13 +175,13 @@ def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
 
 
 def test_make_distance_figure(mocker):
-    mocker.patch("gen_airr_bm.analysis.analyse_innovation_distances.go.Figure")
-    mock_go_Scatter = mocker.patch("gen_airr_bm.analysis.analyse_innovation_distances.go.Scatter")
+    mocker.patch("gen_airr_bm.analysis.analyse_innovation_diversity.go.Figure")
+    mock_go_Scatter = mocker.patch("gen_airr_bm.analysis.analyse_innovation_diversity.go.Scatter")
 
     fig = mocker.Mock()
     fig.data = []
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.go.Figure", return_value=fig
+        "gen_airr_bm.analysis.analyse_innovation_diversity.go.Figure", return_value=fig
     )
 
     dfs = {
@@ -229,7 +229,7 @@ def test_cluster_innovation_sequences(mocker, sample_analysis_config):
     mocker.patch("os.listdir", side_effect=listdir_side_effect)
 
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.run_compairr_cluster",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.run_compairr_cluster",
         side_effect=[
             "/tmp/r1.tsv",
             "/tmp/r2.tsv",
@@ -260,7 +260,7 @@ def test_cluster_innovation_sequences(mocker, sample_analysis_config):
 def test_plot_cluster_counts(mocker, sample_analysis_config):
     mock_fig = mocker.Mock()
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.plot_single_dataset",
+        "gen_airr_bm.analysis.analyse_innovation_diversity.plot_single_dataset",
         return_value=mock_fig,
     )
 

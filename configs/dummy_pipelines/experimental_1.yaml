@@ -106,7 +106,7 @@ analyses:
 #      subfolder_name: "all models"
 #      receptor_type: "TCR"
 #      n_subsets: 10
-    - name: "innovation_distances"
+    - name: "innovation_diversity"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       allowed_mismatches: 0
