@@ -67,17 +67,28 @@ def run_compairr_existence(compairr_output_dir, search_for_file, search_in_file,
         run_command(compairr_command)
 
 
-def run_compairr_cluster(compairr_output_dir, sequnces_path, file_name, model_name=None):
+def run_compairr_cluster(compairr_output_dir: str, sequences_path: str, output_file_identifier: str, distance: int) -> str:
+    """ Run CompAIRR to cluster sequences based on similarity.
+    Args:
+        compairr_output_dir (str): Directory to save CompAIRR output.
+        sequences_path (str): Path to the file of sequences to cluster.
+        output_file_identifier (str): Base name for output files.
+        distance (int): Distance threshold for clustering sequences.
+    Returns:
+        str: Path to the CompAIRR output file containing clustered sequences.
+    """
     os.makedirs(compairr_output_dir, exist_ok=True)
     # TODO: Maybe replace -u method ignoring illegal characters in sequences
-    compairr_command = (f"compairr -c {sequnces_path} -o {compairr_output_dir}/{file_name}.tsv -g -d 1 -u "
-                        f"--log {compairr_output_dir}/{file_name}_log.txt --indels")
-    os.system(compairr_command)
+    output_file_name = f"{compairr_output_dir}/{output_file_identifier}"
+    compairr_command = (f"compairr -c {sequences_path} -o {output_file_name}.tsv -g -d {distance} -u "
+                        f"--log {output_file_name}_log.txt")
 
-    if os.path.exists(f"{compairr_output_dir}/{file_name}.tsv"):
-        print(f"Compairr output already exists for {file_name}. Skipping execution.")
+    if os.path.exists(f"{output_file_name}.tsv"):
+        print(f"Compairr output already exists for {output_file_name}. Skipping execution.")
     else:
         run_command(compairr_command)
+
+    return f"{output_file_name}.tsv"
 
 
 def deduplicate_and_merge_two_datasets(data1_path, data2_path, output_file_unique, output_file_concat):
