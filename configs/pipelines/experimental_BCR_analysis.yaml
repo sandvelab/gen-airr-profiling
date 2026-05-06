@@ -121,7 +121,6 @@ analyses:
       allowed_mismatches: 0
       indels: False
       receptor_type: "BCR"
-      n_subsets: 6
     - name: "innovation"
       model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
       default_model_name: "humanIGH"
