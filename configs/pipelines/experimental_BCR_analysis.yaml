@@ -30,26 +30,6 @@ analyses:
       indels: True
       subfolder_name: "all models"
       receptor_type: "BCR"
-#    - name: "precision_recall"
-#      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 6
-#      allowed_mismatches: 0
-#      indels: False
-#      deduplicate: False
-#      subfolder_name: "all models with distance 0"
-#      receptor_type: "BCR"
-#    - name: "precision_recall"
-#      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
-#      default_model_name: "humanIGH"
-#      reference_data: [ "train", "test" ]
-#      n_subsets: 6
-#      allowed_mismatches: 1
-#      indels: True
-#      deduplicate: False
-#      subfolder_name: "all models with distance 1"
-#      receptor_type: "BCR"
 #    - name: "diversity"
 #      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
 #      default_model_name: "humanIGH"
@@ -124,6 +104,13 @@ analyses:
       model_names: [ "ProGen_overlap" ]
       default_model_name: "humanIGH"
       subfolder_name: "ProGen_overlap"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR"
+    - name: "phenotype"
+      model_names: [ "ProGen_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "ProGen_kmer"
       allowed_mismatches: 0
       indels: False
       receptor_type: "BCR"
