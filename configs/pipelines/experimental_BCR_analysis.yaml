@@ -117,13 +117,6 @@ analyses:
     - name: "phenotype"
       model_names: [ "train" ]
       default_model_name: "humanIGH"
-      subfolder_name: "ProGen_kmer"
-      allowed_mismatches: 0
-      indels: False
-      receptor_type: "BCR"
-    - name: "phenotype"
-      model_names: [ "train" ]
-      default_model_name: "humanIGH"
       subfolder_name: "train"
       allowed_mismatches: 0
       indels: False
