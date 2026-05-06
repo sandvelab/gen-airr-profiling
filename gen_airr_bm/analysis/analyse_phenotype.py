@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 #TODO: We need to find more elegant solution for setting the backend
 import matplotlib
+from scipy.spatial.distance import squareform
+
 matplotlib.use('Agg')
 import plotly.graph_objects as go
 import plotly.express as px
@@ -37,7 +39,105 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
     similarities_matrix, dataset_names = calculate_similarities_matrix(analysis_config, compairr_sequences_dir,)
 
     similarities_df = pd.DataFrame(similarities_matrix, index=dataset_names, columns=dataset_names)
-    plot_cluster_heatmap(analysis_config, similarities_df, model_name)
+
+    phenotypes = [extract_phenotype(analysis_config, name) for name in dataset_names]
+    subjects = [extract_subject(analysis_config, name) for name in dataset_names]
+
+    map_phenotype = compute_map(similarities_df, phenotypes)
+    map_subject = compute_map(similarities_df, subjects)
+    save_ranking_analysis(similarities_df, phenotypes, subjects, analysis_config.analysis_output_dir)
+    save_map_metrics(
+        output_dir=analysis_config.analysis_output_dir,
+        model_name=model_name,
+        receptor_type=analysis_config.receptor_type,
+        allowed_mismatches=analysis_config.allowed_mismatches,
+        map_phenotype=map_phenotype,
+        map_subject=map_subject,
+        n_repertoires=len(dataset_names),
+    )
+
+    plot_cluster_heatmap(analysis_config, similarities_df, model_name, map_phenotype, map_subject)
+
+
+def extract_phenotype(analysis_config: AnalysisConfig, name: str):
+    """Extract phenotype label from a dataset filename.
+    Args:
+        analysis_config: AnalysisConfig object containing the receptor type information.
+        name: dataset filename,
+    Returns:
+        str: phenotype label extracted from the filename.
+    """
+    receptor_type = analysis_config.receptor_type
+    parts = name.split('_')
+    if receptor_type == 'TCR':
+        return parts[2]
+    elif receptor_type == 'BCR':
+        return parts[1]
+    elif receptor_type == 'BCR UMI':
+        return parts[0]
+    else:
+        raise ValueError(f"Unknown receptor_type: {receptor_type}")
+
+
+def extract_subject(analysis_config: AnalysisConfig, name: str):
+    """Extract subject label from a dataset filename.
+    Args:
+        analysis_config: AnalysisConfig object containing the receptor type information.
+        name: dataset filename,
+    Returns:
+        str: subject label extracted from the filename.
+    """
+    receptor_type = analysis_config.receptor_type
+    parts = name.split('_')
+    if receptor_type == 'TCR':
+        return parts[0]
+    elif receptor_type == 'BCR':
+        return parts[0]
+    elif receptor_type == 'BCR UMI':
+        return parts[1]
+    else:
+        raise ValueError(f"Unknown receptor_type: {receptor_type}")
+
+
+def compute_map(similarities_df, labels):
+    """Compute Mean Average Precision over rankings induced by similarity.
+
+    For each repertoire (row), rank other items by similarity (descending) and compute
+    Average Precision over items sharing the repertoire's label. MAP is the mean across repertoires.
+
+    Args:
+        similarities_df: pd.DataFrame, square similarity matrix (higher = more similar)
+        labels: list of labels, same order as rows/columns of similarities_df
+    Returns:
+        float: MAP score in [0, 1]
+    """
+    sim = similarities_df.values.copy().astype(float)
+    n = len(labels)
+    np.fill_diagonal(sim, -np.inf)  # exclude self from ranking
+
+    aps = []
+    for i in range(n):
+        repertoire_label = labels[i]
+        # number of relevant items (same label, excluding self)
+        n_relevant = sum(1 for j in range(n) if j != i and labels[j] == repertoire_label)
+        if n_relevant == 0:
+            continue  # skip repertoires with no peers
+
+        # rank all other items by similarity, descending
+        ranking = np.argsort(-sim[i])
+
+        hits = 0
+        sum_precisions = 0.0
+        for rank, idx in enumerate(ranking, start=1):
+            if labels[idx] == repertoire_label:
+                hits += 1
+                sum_precisions += hits / rank
+                if hits == n_relevant:
+                    break  # all relevant items found
+
+        aps.append(sum_precisions / n_relevant)
+
+    return float(np.mean(aps)) if aps else 0.0
 
 
 # TODO: There's a lot of file operations here, we should consider refactoring this function a bit more
@@ -103,7 +203,7 @@ def calculate_similarities_matrix(analysis_config, sequences_dir):
     return similarities_matrix, sequence_datasets_names
 
 
-def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, model_name):
+def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, model_name, map_phenotype, map_subject):
     """ Plot a clustered heatmap of the similarities matrix using seaborn.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -117,58 +217,137 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     if not os.path.exists(tsv_path):
         similarities_matrix.to_csv(tsv_path, sep='\t')
 
-    Z = linkage(similarities_matrix.values, method="average", metric="euclidean")
+    distance_matrix = 1.0 - similarities_matrix.values
+    np.fill_diagonal(distance_matrix, 0.0)
+    condensed = squareform(distance_matrix, checks=False)
+    Z = linkage(condensed, method="average")
     leaf_order = leaves_list(Z)
 
     clustered = similarities_matrix.iloc[leaf_order, :].iloc[:, leaf_order]
-    annotation_text = np.round(clustered.values, 3).astype(str)
+    annotation_text = np.round(clustered.values, 4).astype(str)
     clustered.index = [name.rsplit('_', 1)[0] for name in clustered.index]
     clustered.columns = [name.rsplit('_', 1)[0] for name in clustered.columns]
 
-    # blues = px.colors.sequential.Blues_r
-    # blues_cut = blues[2:-2]
-    thermal = px.colors.sequential.thermal_r[:-2]
-
-    # Build thermal colors but compressed into 0–0.1
-    custom_colorscale = []
-    for i, c in enumerate(thermal):
-        position = i / (len(thermal) - 1)
-        custom_colorscale.append((position * 0.2, c))
-
-    # Add fixed color at value 1.0
-    custom_colorscale.append((1.0, "white"))  # or any other color
+    z_values = clustered.values.copy()
+    np.fill_diagonal(z_values, np.nan)
 
     fig = go.Figure(
         data=go.Heatmap(
-            z=clustered.values,
+            z=z_values,
             x=clustered.columns,
             y=clustered.index,
-            colorscale=custom_colorscale,
+            colorscale=px.colors.sequential.thermal_r[:-2],
             zmin=0.0,
-            zmax=1.0,
-            colorbar=dict(title="Similarity"),
+            zmax=0.16,
+            colorbar=dict(
+                title="Jaccard similarity",
+                tickvals=[0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16],
+                ticktext=["0", "0.02", "0.04", "0.06", "0.08", "0.10", "0.12", "0.14", "0.16"],
+                lenmode="fraction",
+                len=1.0,
+            ),
             text=annotation_text,
             texttemplate="%{text}",
-            textfont=dict(color="black", size=17),
+            textfont=dict(color="black", size=20),
         )
     )
 
+    title_text = (
+        f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} Sets"
+        f"<br><sub>MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</sub>"
+    )
+
     fig.update_layout(
-        title={"text": f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} "
-              f"Sets (Hamming Distance = {analysis_config.allowed_mismatches})",
-               "font": {'size': 20}},
+        title={
+            "text": title_text,
+            "font": {"size": 30},
+        },
+        plot_bgcolor="white",
         width=1000,
         height=900,
         xaxis=dict(tickangle=45),
+        font=dict(size=16),
         template="plotly_white",
-        coloraxis_colorbar=dict(
-            tickvals=[0, 0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 1.0],
-            ticktext=["0", "0.01", "0.02", "0.03", "0.05", "0.07", "0.1", "1.0"],
-            lenmode="fraction",
-            len=1.0
-        )
     )
 
     png_path = f"{output_dir}/cluster_heatmap.png"
     fig.write_image(png_path)
     print(f"Saved clustered heatmap: {png_path}")
+
+
+def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):
+    """For each repertoire, save a ranked list of all other repertoires
+    with their similarity, rank, and label match info.
+
+    Args:
+        similarities_df: pd.DataFrame, square similarity matrix with repertoire names as index/columns
+        phenotypes: list of phenotype labels corresponding to the rows/columns of similarities_df
+        subjects: list of subject labels corresponding to the rows/columns of similarities_df
+        output_dir: directory to save the rankings CSV
+
+    Returns:
+        pd.DataFrame: DataFrame containing the rankings and metadata for each repertoire.
+    """
+    sim = similarities_df.values
+    names = list(similarities_df.index)
+    n = len(names)
+
+    rows = []
+    for i in range(n):
+        repertoire_name = names[i]
+        repertoire_pheno = phenotypes[i]
+        repertoire_subject = subjects[i]
+
+        # Get similarities to all other repertoires (exclude self)
+        sims_to_others = [(j, sim[i, j]) for j in range(n) if j != i]
+        # Sort by similarity descending
+        sims_to_others.sort(key=lambda x: x[1], reverse=True)
+
+        for rank, (j, similarity) in enumerate(sims_to_others, start=1):
+            rows.append({
+                'repertoire': repertoire_name,
+                'repertoire_phenotype': repertoire_pheno,
+                'repertoire_subject': repertoire_subject,
+                'rank': rank,
+                'neighbor': names[j],
+                'neighbor_phenotype': phenotypes[j],
+                'neighbor_subject': subjects[j],
+                'similarity': similarity,
+                'same_phenotype': phenotypes[j] == repertoire_pheno,
+                'same_subject': subjects[j] == repertoire_subject,
+            })
+
+    df = pd.DataFrame(rows)
+    csv_path = f"{output_dir}/rankings.csv"
+    df.to_csv(csv_path, index=False)
+    print(f"Saved rankings: {csv_path}")
+    return df
+
+
+def save_map_metrics(output_dir, model_name, receptor_type, allowed_mismatches,
+                     map_phenotype, map_subject, n_repertoires):
+    """Save MAP scores to a TSV file.
+    Args:
+        output_dir: Directory to save the metrics file.
+        model_name: Name of the model being analyzed.
+        receptor_type: Type of receptor (e.g., TCR, BCR).
+        allowed_mismatches: Number of mismatches allowed in similarity calculation.
+        map_phenotype: MAP score for phenotype classification.
+        map_subject: MAP score for subject classification.
+        n_repertoires: Number of repertoires analyzed.
+
+    Returns:
+        None
+    """
+    metrics = pd.DataFrame({
+        'model': [model_name],
+        'receptor_type': [receptor_type],
+        'allowed_mismatches': [allowed_mismatches],
+        'n_repertoires': [n_repertoires],
+        'map_phenotype': [map_phenotype],
+        'map_subject': [map_subject],
+    })
+
+    metrics_path = f"{output_dir}/map_metrics.tsv"
+    metrics.to_csv(metrics_path, sep='\t', index=False)
+    print(f"Saved MAP metrics: {metrics_path}")
