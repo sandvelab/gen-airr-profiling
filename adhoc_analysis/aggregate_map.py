@@ -67,7 +67,8 @@ def plot_map_metrics_per_receptor(df, output_dir="."):
             ]
         )
         color_palette = px.colors.qualitative.Safe
-        title_text = f"Mean Average Precision of Ranked Jaccard Similarities for {receptor_type} Sets"
+        title_text = (f"Mean Average Precision for Jaccard-based Ranking <br> of Repertoire Labels for "
+                      f"{receptor_type.upper()} Sets")
         fig.update_layout(
             title={'text': title_text,
                    'font': {'size': 20}},
