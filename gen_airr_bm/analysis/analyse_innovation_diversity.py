@@ -91,21 +91,21 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, innovation_sequence
             )
             gen_train_overlap_counts[dataset_split_name] = gen_train_counts
 
-            if dataset_name not in test_train_overlap_counts:
-                test_train_counts = compute_nearest_neighbor_counts(
-                    compairr_output_dir=compairr_output_dir,
-                    search_for_file=test_file,
-                    search_in_file=train_file,
-                    identifier_prefix=f"{dataset_name}_test",
-                    distances=[1, 2, 3]
-                )
-                test_train_overlap_counts[dataset_name] = test_train_counts
+            # if dataset_name not in test_train_overlap_counts:
+            #     test_train_counts = compute_nearest_neighbor_counts(
+            #         compairr_output_dir=compairr_output_dir,
+            #         search_for_file=test_file,
+            #         search_in_file=train_file,
+            #         identifier_prefix=f"{dataset_name}_test",
+            #         distances=[1, 2, 3]
+            #     )
+            #     test_train_overlap_counts[dataset_name] = test_train_counts
 
         gen_train_df = pd.DataFrame.from_dict(gen_train_overlap_counts, orient='index')
-        test_train_df = pd.DataFrame.from_dict(test_train_overlap_counts, orient='index')
+        # test_train_df = pd.DataFrame.from_dict(test_train_overlap_counts, orient='index')
 
         all_distance_dfs[model] = gen_train_df
-        all_distance_dfs["test"] = test_train_df
+        # all_distance_dfs["test"] = test_train_df
 
     return all_distance_dfs
 
