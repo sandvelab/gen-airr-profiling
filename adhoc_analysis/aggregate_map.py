@@ -82,10 +82,10 @@ def plot_map_metrics_per_receptor(df, output_dir="."):
 
         out_path = os.path.join(output_dir, f"map_metrics_{receptor_type}.png")
         fig.write_image(out_path, scale=2)
-        print(f"  saved {out_path}")
+        print(f"Plot saved: {out_path}")
 
 
 if __name__ == "__main__":
     combined = aggregate_map_metrics()
     if combined is not None:
-        plot_map_metrics_per_receptor(combined, output_dir="../phenotype_results3/map_plots")
+        plot_map_metrics_per_receptor(combined)
