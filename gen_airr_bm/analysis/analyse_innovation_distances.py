@@ -19,7 +19,7 @@ def run_innovation_distances_analysis(analysis_config: AnalysisConfig) -> None:
 
     innovation_sequences_dir = save_innovative_sequences_for_compairr(analysis_config)
     nearest_neighbor_plotting_data = count_nearest_neighbors(analysis_config, innovation_sequences_dir)
-    plot_nearest_neighbor_counts(analysis_config, nearest_neighbor_plotting_data)
+    plot_nn_counts_across_datasets(analysis_config, nearest_neighbor_plotting_data)
     cluster_counts_plotting_data = cluster_innovation_sequences(analysis_config, innovation_sequences_dir)
     plot_cluster_counts(analysis_config, cluster_counts_plotting_data)
 
@@ -82,27 +82,23 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, innovation_sequence
             train_file = f"{analysis_config.root_output_dir}/train_compairr_sequences/{dataset_name}.tsv"
             test_file = f"{analysis_config.root_output_dir}/test_compairr_sequences/{dataset_name}.tsv"
 
-            gen_train_counts, gen_n_seqs = compute_nearest_neighbor_counts(
+            gen_train_counts = compute_nearest_neighbor_counts(
                 compairr_output_dir=compairr_output_dir,
                 search_for_file=gen_file,
                 search_in_file=train_file,
                 identifier_prefix=f"{dataset_split_name}_{model}",
                 distances=[1, 2, 3]
             )
-            gen_train_counts[">3"] = gen_n_seqs - sum(gen_train_counts[str(d)] for d in [1, 2, 3])
-            gen_train_counts["n_sequences"] = gen_n_seqs
             gen_train_overlap_counts[dataset_split_name] = gen_train_counts
 
             if dataset_name not in test_train_overlap_counts:
-                test_train_counts, test_n_seqs = compute_nearest_neighbor_counts(
+                test_train_counts = compute_nearest_neighbor_counts(
                     compairr_output_dir=compairr_output_dir,
                     search_for_file=test_file,
                     search_in_file=train_file,
                     identifier_prefix=f"{dataset_name}_test",
                     distances=[1, 2, 3]
                 )
-                test_train_counts[">3"] = test_n_seqs - sum(test_train_counts[str(d)] for d in [1, 2, 3])
-                test_train_counts["n_sequences"] = test_n_seqs
                 test_train_overlap_counts[dataset_name] = test_train_counts
 
         gen_train_df = pd.DataFrame.from_dict(gen_train_overlap_counts, orient='index')
@@ -115,7 +111,7 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, innovation_sequence
 
 
 def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: str, search_in_file: str,
-                                    identifier_prefix: str, distances: list) -> tuple:
+                                    identifier_prefix: str, distances: list) -> dict:
     """
     Runs CompAIRR at each distance and returns per-distance counts and total sequence count.
     Args:
@@ -126,7 +122,6 @@ def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: s
         distances (list): List of distances to compute counts for (e.g., [1, 2, 3]).
     Returns:
         counts (dict): Dict with distance as key and count of sequences at that distance as value.
-        cumulative_n (int): Total number of sequences in the search_for_file.
     """
     counts = {}
     prev_result = None
@@ -149,11 +144,17 @@ def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: s
         prev_cumulative_n = cumulative_n
         prev_result = result
 
-    cumulative_n = prev_result.shape[0]
-    return counts, cumulative_n
+    total_n = 0 if prev_result is None else prev_result.shape[0]
+    max_d = max(distances) if distances else None
+    if max_d is not None:
+        counts[f">{max_d}"] = total_n - prev_cumulative_n
+
+    counts["n_sequences"] = total_n
+
+    return counts
 
 
-def plot_nearest_neighbor_counts(analysis_config: AnalysisConfig, plotting_dfs: dict) -> None:
+def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs: dict) -> None:
     """
     Plot number of sequences with distance 1, 2, 3, and >3 to the nearest training sequence for each model and test.
     Args:
@@ -163,9 +164,9 @@ def plot_nearest_neighbor_counts(analysis_config: AnalysisConfig, plotting_dfs: 
         None
     """
     nearest_neighbor_counts_dir = f"{analysis_config.analysis_output_dir}/nearest_neighbor_counts"
-    fig = make_distance_figure(plotting_dfs, title='Average sequence counts by distance to nearest <br> train sequence',
-                               xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
-                               distance_cols=['1', '2', '3', '>3'])
+    fig = plot_single_dataset(plotting_dfs, title='Average sequence counts by distance to nearest <br> train sequence',
+                              xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
+                              distance_cols=['1', '2', '3', '>3'])
     png_path = f"{nearest_neighbor_counts_dir}/innovation_distances_plot.png"
     fig.write_image(png_path)
     print(f"Plot saved at: {png_path}")
@@ -178,17 +179,17 @@ def plot_nearest_neighbor_counts(analysis_config: AnalysisConfig, plotting_dfs: 
     for dataset in sorted(dataset_base_names):
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
-        fig = make_distance_figure(plotting_dfs,
-                                   title=f'Average sequence counts by distance to nearest <br> train sequence ({dataset})',
-                                   xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
-                                   distance_cols=['1', '2', '3', '>3'],
-                                   subset_mask=subset_mask)
+        fig = plot_single_dataset(plotting_dfs,
+                                  title=f'Average sequence counts by distance to nearest <br> train sequence ({dataset})',
+                                  xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
+                                  distance_cols=['1', '2', '3', '>3'],
+                                  subset_mask=subset_mask)
         png_path = f"{nearest_neighbor_counts_dir}/innovation_distances_{dataset}_plot.png"
         fig.write_image(png_path)
         print(f"Plot saved at: {png_path}")
 
 
-def make_distance_figure(plotting_dfs: dict, title, xtitle: str, ytitle: str, distance_cols: list, subset_mask=None) -> go.Figure:
+def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, distance_cols: list, subset_mask=None) -> go.Figure:
     """
     Creates a Plotly figure comparing either:
         1) the average sequence counts at each distance to the training set for each model and test.
@@ -286,7 +287,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
         for model, dataset_dict in num_clusters_by_model.items()
     }
 
-    fig = make_distance_figure(
+    fig = plot_single_dataset(
         cluster_dfs,
         title='Average number of clusters by distance threshold',
         xtitle='Distance',
@@ -304,7 +305,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
     for dataset in sorted(dataset_base_names):
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in cluster_dfs.items()}
-        fig = make_distance_figure(
+        fig = plot_single_dataset(
             cluster_dfs,
             title=f'Average number of clusters by distance threshold <br> ({dataset})',
             xtitle='Distance',

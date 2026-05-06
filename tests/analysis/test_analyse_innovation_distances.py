@@ -6,8 +6,8 @@ from gen_airr_bm.analysis.analyse_innovation_distances import (
     save_innovative_sequences_for_compairr,
     count_nearest_neighbors,
     compute_nearest_neighbor_counts,
-    plot_nearest_neighbor_counts,
-    make_distance_figure,
+    plot_nn_counts_across_datasets,
+    plot_single_dataset,
     cluster_innovation_sequences,
     plot_cluster_counts,
 )
@@ -41,7 +41,7 @@ def test_run_innovation_distances_analysis(mocker, sample_analysis_config):
         return_value={"model1": mocker.Mock(), "test": mocker.Mock()},
     )
     mock_plot_nn = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.plot_nearest_neighbor_counts"
+        "gen_airr_bm.analysis.analyse_innovation_distances.plot_nn_counts_across_datasets"
     )
     mock_cluster = mocker.patch(
         "gen_airr_bm.analysis.analyse_innovation_distances.cluster_innovation_sequences",
@@ -116,11 +116,11 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
     mock_compute = mocker.patch(
         "gen_airr_bm.analysis.analyse_innovation_distances.compute_nearest_neighbor_counts",
         side_effect=[
-            ({"1": 1, "2": 2, "3": 3}, 10),
-            ({"1": 2, "2": 1, "3": 0}, 20),
-            ({"1": 0, "2": 0, "3": 1}, 5),
-            ({"1": 3, "2": 2, "3": 1}, 10),
-            ({"1": 2, "2": 2, "3": 2}, 30),
+            {"1": 1, "2": 2, "3": 3, ">3": 4, "n_sequences": 10},
+            {"1": 2, "2": 1, "3": 0, ">3": 7, "n_sequences": 10},
+            {"1": 0, "2": 0, "3": 1, ">3": 9, "n_sequences": 10},
+            {"1": 3, "2": 2, "3": 1, ">3": 4, "n_sequences": 10},
+            {"1": 2, "2": 2, "3": 2, ">3": 4, "n_sequences": 10},
         ],
     )
 
@@ -142,7 +142,7 @@ def test_compute_nearest_neighbor_counts(mocker):
 
     mocker.patch("pandas.read_csv", side_effect=[df_d1, df_d2, df_d3])
 
-    counts, n_sequences = compute_nearest_neighbor_counts(
+    counts = compute_nearest_neighbor_counts(
         compairr_output_dir="/tmp/out",
         search_for_file="/tmp/gen.tsv",
         search_in_file="/tmp/train.tsv",
@@ -150,14 +150,13 @@ def test_compute_nearest_neighbor_counts(mocker):
         distances=[1, 2, 3],
     )
 
-    assert counts == {"1": 2, "2": 1, "3": 0}
-    assert n_sequences == 4
+    assert counts == {"1": 2, "2": 1, "3": 0, ">3": 1, "n_sequences": 4}
 
 
 def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
     mock_fig = mocker.Mock()
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.make_distance_figure",
+        "gen_airr_bm.analysis.analyse_innovation_distances.plot_single_dataset",
         return_value=mock_fig,
     )
 
@@ -168,7 +167,7 @@ def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
         "test": pd.DataFrame({"1": [1], "2": [1], "3": [1], ">3": [1]}, index=["ds"]),
     }
 
-    plot_nearest_neighbor_counts(sample_analysis_config, plotting_dfs)
+    plot_nn_counts_across_datasets(sample_analysis_config, plotting_dfs)
 
     assert mock_fig.write_image.call_count == 2
     first_path = mock_fig.write_image.call_args_list[0].args[0]
@@ -202,7 +201,7 @@ def test_make_distance_figure(mocker):
 
     mock_go_Scatter.side_effect = scatter_side_effect
 
-    out = make_distance_figure(
+    out = plot_single_dataset(
         dfs,
         title="t",
         xtitle="x",
@@ -261,7 +260,7 @@ def test_cluster_innovation_sequences(mocker, sample_analysis_config):
 def test_plot_cluster_counts(mocker, sample_analysis_config):
     mock_fig = mocker.Mock()
     mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_distances.make_distance_figure",
+        "gen_airr_bm.analysis.analyse_innovation_distances.plot_single_dataset",
         return_value=mock_fig,
     )
 
