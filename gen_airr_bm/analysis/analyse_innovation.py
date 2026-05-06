@@ -4,7 +4,7 @@ import pandas as pd
 from dataclasses import dataclass, field
 
 from gen_airr_bm.analysis.analyse_innovation_umi import preprocess_gen_for_innovation_precision, \
-    plot_innovation_scores_by_n_gen_novel, plot_innovation_precision_recall
+    plot_innovation_scores_by_n_gen_novel, plot_innovation_precision_sensitivity
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
@@ -12,14 +12,14 @@ from gen_airr_bm.utils.compairr_utils import run_compairr_existence
 
 @dataclass
 class InnovationScores:
-    """ Class to store precision and recall scores for different models and datasets. """
+    """ Class to store precision and sensitivity scores for different models and datasets. """
     innovation_df: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(
-        columns=["dataset", "model", "precision_innovation", "recall_innovation", "n_gen_novel", "n_test_only"]
+        columns=["dataset", "model", "precision_innovation", "sensitivity_innovation", "n_gen_novel", "n_test_only"]
     ))
 
 
 def run_innovation_analysis(analysis_config: AnalysisConfig) -> None:
-    """ Runs precision recall analysis on the generated and reference sequences.
+    """ Runs precision sensitivity analysis on the generated and reference sequences.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
@@ -37,7 +37,7 @@ def run_innovation_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr_output_dir: str) -> None:
-    """ Compute precision and recall scores and plot them.
+    """ Compute precision and sensitivity scores and plot them.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -52,20 +52,20 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
         collect_innovation_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
 
     plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
-    plot_innovation_precision_recall(analysis_config, scores)
+    plot_innovation_precision_sensitivity(analysis_config, scores)
     scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
 
 
 def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_reference: str,
                               compairr_output_dir: str,
                               scores: InnovationScores) -> None:
-    """ Collect precision and recall scores for a given model.
+    """ Collect precision and sensitivity scores for a given model.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         model (str): Name of the model to analyze.
         test_reference (str): Reference dataset for testing.
         compairr_output_dir (str): Directory to store CompAIRR output files.
-        scores (PrecisionRecallScores): Storage for precision and recall scores.
+        scores (InnovationScores): Storage for precision and sensitivity scores.
     Returns:
         None
     """
@@ -79,14 +79,14 @@ def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_
 def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, ref_file: str, gen_file: str,
                                    compairr_output_dir: str, name: str, scores: InnovationScores) \
         -> float:
-    """ Compute the overlap ratio between two sequence sets using CompAIRR for precision or recall.
+    """ Compute the overlap ratio between two sequence sets using CompAIRR for precision or sensitivity.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         search_for_file (str): Path to the file of sequences for which to search for existence in another sequence set.
         search_in_file (str): Path to the file to search for existence in.
         compairr_output_dir (str): Directory to store CompAIRR output files.
         name (str): Name of the model used for generation, or "upper_reference" for the upper reference.
-        metric (str): Metric type, either "precision" or "recall".
+        metric (str): Metric type, either "precision" or "sensitivity".
     Returns:
         float: Ratio of non-zero overlap counts to total counts.
     """
@@ -99,10 +99,10 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, ref_file: st
     gen_file_df = pd.read_csv(gen_file, sep='\t')
     ref_file_df = pd.read_csv(ref_file, sep='\t')
     innovation_precision = n_nonzero_rows / len(gen_file_df)
-    innovation_recall = n_nonzero_rows / len(ref_file_df)
+    innovation_sensitivity = n_nonzero_rows / len(ref_file_df)
 
     dataset_name = os.path.splitext(os.path.basename(gen_file))[0]
     scores.innovation_df.loc[len(scores.innovation_df)] = [
-        dataset_name, name, innovation_precision, innovation_recall, len(gen_file_df),
+        dataset_name, name, innovation_precision, innovation_sensitivity, len(gen_file_df),
         len(ref_file_df)
     ]

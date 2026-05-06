@@ -414,20 +414,26 @@ def plot_degree_distribution_by_dataset(analysis_config: AnalysisConfig, connect
                 ticktext=[str(10 ** i) for i in range(-6, 3)],
             )
 
+            distance_type = "Levenshtein" if analysis_config.indels else "Hamming"
             dataset_name_clean = dataset_name.rsplit("_", 1)[0]
             fig.update_layout(
-                width=1800,
-                height=900,
+                width=1600,
+                height=800,
                 title={"text": f"Connectivity Distribution: Generated vs. Train and Test "
-                      f"{analysis_config.receptor_type} Sets (Dataset {dataset_name_clean})",
-                      "font": {"size": 20}},
-                xaxis_title=f"Neighbor Count (Hamming Distance: {analysis_config.allowed_mismatches})",
-                yaxis_title="Frequency (log scale)",
+                          f"{analysis_config.receptor_type} Sets <br> (Dataset {dataset_name_clean})",
+                          "font": {"size": 40}},
+                xaxis_title={"text": f"Neighbor Count ({distance_type} Distance: {analysis_config.allowed_mismatches})",
+                             "font": {"size": 30}},
+                yaxis_title={"text": "Frequency (log scale)",
+                             "font": {"size": 30}},
                 yaxis_type="log",
                 barmode="group",
                 template="plotly_white",
                 colorway=px.colors.qualitative.Safe[:2] + px.colors.qualitative.Safe[7:],  # skip colors to avoid confusion
-                bargroupgap=0.15
+                bargroupgap=0.15,
+                xaxis=dict(tickfont=dict(size=25)),
+                yaxis=dict(tickfont=dict(size=25)),
+                legend=dict(font=dict(size=25))
             )
 
             fig.write_image(png_path)
