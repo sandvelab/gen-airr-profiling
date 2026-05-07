@@ -38,7 +38,7 @@ def test_run_innovation_diversity_analysis(mocker, sample_analysis_config):
     )
     mock_count = mocker.patch(
         "gen_airr_bm.analysis.analyse_innovation_diversity.count_nearest_neighbors",
-        return_value={"model1": mocker.Mock(), "test": mocker.Mock()},
+        return_value={"model1": mocker.Mock(), "model2": mocker.Mock()},
     )
     mock_plot_nn = mocker.patch(
         "gen_airr_bm.analysis.analyse_innovation_diversity.plot_nn_counts_across_datasets"
@@ -54,8 +54,22 @@ def test_run_innovation_diversity_analysis(mocker, sample_analysis_config):
     run_innovation_diversity_analysis(sample_analysis_config)
 
     mock_save.assert_called_once_with(sample_analysis_config)
-    mock_count.assert_called_once_with(sample_analysis_config, "/tmp/test_output/innov_dir")
-    mock_plot_nn.assert_called_once()
+
+    assert mock_count.call_count == 2
+    # First call: innovation sequences
+    assert mock_count.call_args_list[0].args == (
+        sample_analysis_config,
+        "/tmp/test_output/innov_dir",
+        "/tmp/test_output/analysis_innov/nn_counts_innovation",
+    )
+    # Second call: full generated sequences
+    assert mock_count.call_args_list[1].args == (
+        sample_analysis_config,
+        "/tmp/test_output/novel_generated_compairr_sequences_split",
+        "/tmp/test_output/analysis_innov/nn_counts_full_gen",
+    )
+
+    assert mock_plot_nn.call_count == 2
     mock_cluster.assert_called_once_with(sample_analysis_config, "/tmp/test_output/innov_dir")
     mock_plot_cluster.assert_called_once()
 
@@ -119,15 +133,18 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
             {"1": 1, "2": 2, "3": 3, ">3": 4, "n_sequences": 10},
             {"1": 2, "2": 1, "3": 0, ">3": 7, "n_sequences": 10},
             {"1": 0, "2": 0, "3": 1, ">3": 9, "n_sequences": 10},
-            {"1": 3, "2": 2, "3": 1, ">3": 4, "n_sequences": 10},
-            {"1": 2, "2": 2, "3": 2, ">3": 4, "n_sequences": 10},
         ],
     )
 
-    result = count_nearest_neighbors(sample_analysis_config, "/tmp/test_output/innov_dir")
+    result = count_nearest_neighbors(
+        sample_analysis_config,
+        "/tmp/test_output/innov_dir",
+        "/tmp/test_output/analysis_innov/nn_counts_innovation",
+    )
 
-    assert set(result.keys()) >= {"model1", "model2", "test"}
-    assert mock_compute.call_count == 5
+    assert set(result.keys()) == {"model1", "model2"}
+    # model1: 2 gen splits => 2 calls; model2: 1 gen split => 1 call
+    assert mock_compute.call_count == 3
 
     for _, df in result.items():
         assert all(col in df.columns for col in ["1", "2", "3", ">3", "n_sequences"])
@@ -167,7 +184,10 @@ def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
         "test": pd.DataFrame({"1": [1], "2": [1], "3": [1], ">3": [1]}, index=["ds"]),
     }
 
-    plot_nn_counts_across_datasets(sample_analysis_config, plotting_dfs)
+    plot_nn_counts_across_datasets(
+        plotting_dfs,
+        f"{sample_analysis_config.analysis_output_dir}/nearest_neighbor_counts",
+    )
 
     assert mock_fig.write_image.call_count == 2
     first_path = mock_fig.write_image.call_args_list[0].args[0]

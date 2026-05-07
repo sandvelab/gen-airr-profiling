@@ -18,10 +18,20 @@ def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
     print("Running innovation sequence diversity analysis")
 
     innovation_sequences_dir = save_innovative_sequences_for_compairr(analysis_config)
-    nearest_neighbor_plotting_data = count_nearest_neighbors(analysis_config, innovation_sequences_dir)
-    plot_nn_counts_across_datasets(analysis_config, nearest_neighbor_plotting_data)
+    nn_counts_innovation_dir = f"{analysis_config.analysis_output_dir}/nn_counts_innovation"
+    os.makedirs(nn_counts_innovation_dir, exist_ok=True)
+    innovation_nn_plotting_data = count_nearest_neighbors(analysis_config, innovation_sequences_dir,
+                                                          nn_counts_innovation_dir)
+    plot_nn_counts_across_datasets(innovation_nn_plotting_data, nn_counts_innovation_dir,
+                                   innovation=True)
     cluster_counts_plotting_data = cluster_innovation_sequences(analysis_config, innovation_sequences_dir)
     plot_cluster_counts(analysis_config, cluster_counts_plotting_data)
+
+    full_gen_sequences_dir = f"{analysis_config.root_output_dir}/novel_generated_compairr_sequences_split"
+    nn_counts_full_gen_dir = f"{analysis_config.analysis_output_dir}/nn_counts_full_gen"
+    os.makedirs(nn_counts_full_gen_dir, exist_ok=True)
+    full_gen_nn_plotting_data = count_nearest_neighbors(analysis_config, full_gen_sequences_dir, nn_counts_full_gen_dir)
+    plot_nn_counts_across_datasets(full_gen_nn_plotting_data, nn_counts_full_gen_dir, innovation=False)
 
 
 def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> str:
@@ -52,33 +62,32 @@ def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> s
     return innovative_sequences_dir
 
 
-def count_nearest_neighbors(analysis_config: AnalysisConfig, innovation_sequences_dir: str) -> dict:
+def count_nearest_neighbors(analysis_config: AnalysisConfig, sequences_dir: str,
+                            output_dir: str) -> dict:
     """
-    Computes the distances from the innovative model sequences and test sequences to the training sequences
+    Computes the distances from the model sequences and test sequences to the training sequences
     at distances 1-3 using CompAIRR.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
-        innovation_sequences_dir (str): Directory where the innovative sequences are saved for CompAIRR analysis.
+        sequences_dir (str): Directory where the generated sequences are saved for CompAIRR analysis.
+        output_dir (str): Directory to store CompAIRR output dir.
     Returns:
         all_distance_dfs (dict): Dict of DataFrames per model and test containing counts of innovative sequences
                                   at each distance to the training set.
     """
     all_distance_dfs = {}
-    nearest_neighbor_counts_dir = f"{analysis_config.analysis_output_dir}/nearest_neighbor_counts"
-    os.makedirs(nearest_neighbor_counts_dir, exist_ok=True)
-
     for model in analysis_config.model_names:
-        compairr_output_dir = f"{nearest_neighbor_counts_dir}/compairr_output/{model}"
+        compairr_output_dir = f"{output_dir}/compairr_output/{model}"
         os.makedirs(compairr_output_dir, exist_ok=True)
 
         gen_train_overlap_counts = {}
         test_train_overlap_counts = {}
 
-        for innovation_gen_file_split in os.listdir(f"{innovation_sequences_dir}/{model}"):
+        for innovation_gen_file_split in os.listdir(f"{sequences_dir}/{model}"):
             dataset_split_name = os.path.splitext(innovation_gen_file_split)[0]
             dataset_name = dataset_split_name.rsplit('_', 1)[0]
 
-            gen_file = f"{innovation_sequences_dir}/{model}/{innovation_gen_file_split}"
+            gen_file = f"{sequences_dir}/{model}/{innovation_gen_file_split}"
             train_file = f"{analysis_config.root_output_dir}/train_compairr_sequences/{dataset_name}.tsv"
             test_file = f"{analysis_config.root_output_dir}/test_compairr_sequences/{dataset_name}.tsv"
 
@@ -154,20 +163,23 @@ def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: s
     return counts
 
 
-def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs: dict) -> None:
+def plot_nn_counts_across_datasets(plotting_dfs: dict, output_dir: str,
+                                   innovation: bool=False) -> None:
     """
     Plot number of sequences with distance 1, 2, 3, and >3 to the nearest training sequence for each model and test.
     Args:
-        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         plotting_dfs (dict): Dict of dataFrames containing counts of sequences at each distance to the training set.
+        output_dir (str): Directory to save the plots.
+        innovation (bool): Whether the plot is for the innovation analysis (True) or the full generated sequences (False).
+        Default is False. Used for the plot title.
     Returns:
         None
     """
-    nearest_neighbor_counts_dir = f"{analysis_config.analysis_output_dir}/nearest_neighbor_counts"
-    fig = plot_single_dataset(plotting_dfs, title='Average sequence counts by distance to nearest <br> train sequence',
+    innovation_title_part = "innovative " if innovation else ""
+    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to <br> nearest train sequence',
                               xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                               distance_cols=['1', '2', '3', '>3'])
-    png_path = f"{nearest_neighbor_counts_dir}/innovation_distances_plot.png"
+    png_path = f"{output_dir}/distances_plot.png"
     fig.write_image(png_path)
     print(f"Plot saved at: {png_path}")
 
@@ -180,11 +192,11 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
         fig = plot_single_dataset(plotting_dfs,
-                                  title=f'Average sequence counts by distance to nearest <br> train sequence ({dataset})',
+                                  title=f'Number of {innovation_title_part}model sequences by distance to <br> nearest train sequence ({dataset})',
                                   xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                                   distance_cols=['1', '2', '3', '>3'],
                                   subset_mask=subset_mask)
-        png_path = f"{nearest_neighbor_counts_dir}/innovation_distances_{dataset}_plot.png"
+        png_path = f"{output_dir}/distances_{dataset}_plot.png"
         fig.write_image(png_path)
         print(f"Plot saved at: {png_path}")
 
