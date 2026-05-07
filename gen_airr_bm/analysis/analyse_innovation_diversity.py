@@ -6,6 +6,7 @@ from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_compair
 from gen_airr_bm.utils.file_utils import get_sequence_files
 
 import plotly.graph_objects as go
+import plotly.express as px
 
 
 def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
@@ -22,7 +23,7 @@ def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
     os.makedirs(nn_counts_innovation_dir, exist_ok=True)
     innovation_nn_plotting_data = count_nearest_neighbors(analysis_config, innovation_sequences_dir,
                                                           nn_counts_innovation_dir)
-    plot_nn_counts_across_datasets(innovation_nn_plotting_data, nn_counts_innovation_dir,
+    plot_nn_counts_across_datasets(analysis_config, innovation_nn_plotting_data, nn_counts_innovation_dir,
                                    innovation=True)
     cluster_counts_plotting_data = cluster_innovation_sequences(analysis_config, innovation_sequences_dir)
     plot_cluster_counts(analysis_config, cluster_counts_plotting_data)
@@ -31,7 +32,7 @@ def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
     nn_counts_full_gen_dir = f"{analysis_config.analysis_output_dir}/nn_counts_full_gen"
     os.makedirs(nn_counts_full_gen_dir, exist_ok=True)
     full_gen_nn_plotting_data = count_nearest_neighbors(analysis_config, full_gen_sequences_dir, nn_counts_full_gen_dir)
-    plot_nn_counts_across_datasets(full_gen_nn_plotting_data, nn_counts_full_gen_dir, innovation=False)
+    plot_nn_counts_across_datasets(analysis_config, full_gen_nn_plotting_data, nn_counts_full_gen_dir, innovation=False)
 
 
 def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> str:
@@ -100,21 +101,21 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, sequences_dir: str,
             )
             gen_train_overlap_counts[dataset_split_name] = gen_train_counts
 
-            # if dataset_name not in test_train_overlap_counts:
-            #     test_train_counts = compute_nearest_neighbor_counts(
-            #         compairr_output_dir=compairr_output_dir,
-            #         search_for_file=test_file,
-            #         search_in_file=train_file,
-            #         identifier_prefix=f"{dataset_name}_test",
-            #         distances=[1, 2, 3]
-            #     )
-            #     test_train_overlap_counts[dataset_name] = test_train_counts
+            if dataset_name not in test_train_overlap_counts:
+                test_train_counts = compute_nearest_neighbor_counts(
+                    compairr_output_dir=compairr_output_dir,
+                    search_for_file=test_file,
+                    search_in_file=train_file,
+                    identifier_prefix=f"{dataset_name}_test",
+                    distances=[1, 2, 3]
+                )
+                test_train_overlap_counts[dataset_name] = test_train_counts
 
         gen_train_df = pd.DataFrame.from_dict(gen_train_overlap_counts, orient='index')
-        # test_train_df = pd.DataFrame.from_dict(test_train_overlap_counts, orient='index')
+        test_train_df = pd.DataFrame.from_dict(test_train_overlap_counts, orient='index')
 
         all_distance_dfs[model] = gen_train_df
-        # all_distance_dfs["test"] = test_train_df
+        all_distance_dfs["test"] = test_train_df
 
     return all_distance_dfs
 
@@ -163,11 +164,12 @@ def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: s
     return counts
 
 
-def plot_nn_counts_across_datasets(plotting_dfs: dict, output_dir: str,
+def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs: dict, output_dir: str,
                                    innovation: bool=False) -> None:
     """
     Plot number of sequences with distance 1, 2, 3, and >3 to the nearest training sequence for each model and test.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         plotting_dfs (dict): Dict of dataFrames containing counts of sequences at each distance to the training set.
         output_dir (str): Directory to save the plots.
         innovation (bool): Whether the plot is for the innovation analysis (True) or the full generated sequences (False).
@@ -175,8 +177,13 @@ def plot_nn_counts_across_datasets(plotting_dfs: dict, output_dir: str,
     Returns:
         None
     """
-    innovation_title_part = "innovative " if innovation else ""
-    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to <br>nearest train sequence',
+    if innovation:
+        innovation_title_part = "innovative "
+        plotting_dfs = {model: df for model, df in plotting_dfs.items() if model != "test"}
+    else:
+        innovation_title_part = ""
+
+    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {analysis_config.receptor_type} sets',
                               xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                               distance_cols=['1', '2', '3', '>3'])
     png_path = f"{output_dir}/distances_plot.png"
@@ -192,7 +199,7 @@ def plot_nn_counts_across_datasets(plotting_dfs: dict, output_dir: str,
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
         fig = plot_single_dataset(plotting_dfs,
-                                  title=f'Number of {innovation_title_part}model sequences by distance to <br>nearest train sequence ({dataset})',
+                                  title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {analysis_config.receptor_type} sets ({dataset})',
                                   xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                                   distance_cols=['1', '2', '3', '>3'],
                                   subset_mask=subset_mask)
@@ -218,6 +225,8 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
         go.Figure: Plotly figure object ready for display or saving.
     """
     fig = go.Figure()
+    colors = px.colors.qualitative.Dark24_r
+    color_map = {model: colors[hash(model) % len(colors)] for model in plotting_dfs}
     for model, df in plotting_dfs.items():
         subset_df = df[subset_mask[model]] if subset_mask else df
         means = subset_df[distance_cols].mean()
@@ -226,16 +235,20 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
         fig.add_trace(go.Scatter(
             x=distance_cols,
             y=means,
-            error_y=dict(type='data', array=stds, visible=True),
+            # error_y=dict(type='data', array=stds, visible=True),
             mode='lines+markers',
-            name=model
+            name=model,
+            line=dict(color=color_map[model]),
+            marker=dict(color=color_map[model], size=8)
         ))
     fig.update_traces(marker=dict(size=8))
 
     fig.data = sorted(fig.data, key=lambda trace: (0 if trace.name == "test" else 1, trace.name))
     fig.update_layout(
+        width=700,
+        height=500,
         title={"text": title,
-                  "font": {"size": 22}},
+                  "font": {"size": 20}},
         xaxis_title={'text': xtitle, 'font': {'size': 18}},
         yaxis_title={'text': ytitle, 'font': {'size': 18}},
         xaxis=dict(tickfont=dict(size=14)),
@@ -301,7 +314,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
 
     fig = plot_single_dataset(
         cluster_dfs,
-        title='Average number of clusters by distance threshold',
+        title=f"Average number of clusters by distance threshold <br>for {analysis_config.receptor_type} sets",
         xtitle='Distance',
         ytitle='Avg. number of clusters',
         distance_cols=['1', '2', '3']
@@ -319,7 +332,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
                        for model, df in cluster_dfs.items()}
         fig = plot_single_dataset(
             cluster_dfs,
-            title=f'Average number of clusters by distance threshold <br>({dataset})',
+            title=f'Average number of clusters by distance threshold <br>for {analysis_config.receptor_type} sets ({dataset})',
             xtitle='Distance',
             ytitle='Avg. number of clusters',
             distance_cols=['1', '2', '3'],

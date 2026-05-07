@@ -133,6 +133,8 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
             {"1": 1, "2": 2, "3": 3, ">3": 4, "n_sequences": 10},
             {"1": 2, "2": 1, "3": 0, ">3": 7, "n_sequences": 10},
             {"1": 0, "2": 0, "3": 1, ">3": 9, "n_sequences": 10},
+            {"1": 3, "2": 2, "3": 1, ">3": 4, "n_sequences": 10},
+            {"1": 2, "2": 2, "3": 2, ">3": 4, "n_sequences": 10},
         ],
     )
 
@@ -142,9 +144,9 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
         "/tmp/test_output/analysis_innov/nn_counts_innovation",
     )
 
-    assert set(result.keys()) == {"model1", "model2"}
-    # model1: 2 gen splits => 2 calls; model2: 1 gen split => 1 call
-    assert mock_compute.call_count == 3
+    assert set(result.keys()) == {"model1", "model2", "test"}
+    # model1: 2 gen splits + 1 test => 3 calls; model2: 1 gen split + 1 test => 2 calls
+    assert mock_compute.call_count == 5
 
     for _, df in result.items():
         assert all(col in df.columns for col in ["1", "2", "3", ">3", "n_sequences"])
@@ -185,6 +187,7 @@ def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
     }
 
     plot_nn_counts_across_datasets(
+        sample_analysis_config,
         plotting_dfs,
         f"{sample_analysis_config.analysis_output_dir}/nearest_neighbor_counts",
     )
