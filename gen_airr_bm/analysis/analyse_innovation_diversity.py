@@ -176,7 +176,7 @@ def plot_nn_counts_across_datasets(plotting_dfs: dict, output_dir: str,
         None
     """
     innovation_title_part = "innovative " if innovation else ""
-    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to <br> nearest train sequence',
+    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to <br>nearest train sequence',
                               xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                               distance_cols=['1', '2', '3', '>3'])
     png_path = f"{output_dir}/distances_plot.png"
@@ -192,7 +192,7 @@ def plot_nn_counts_across_datasets(plotting_dfs: dict, output_dir: str,
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
         fig = plot_single_dataset(plotting_dfs,
-                                  title=f'Number of {innovation_title_part}model sequences by distance to <br> nearest train sequence ({dataset})',
+                                  title=f'Number of {innovation_title_part}model sequences by distance to <br>nearest train sequence ({dataset})',
                                   xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                                   distance_cols=['1', '2', '3', '>3'],
                                   subset_mask=subset_mask)
@@ -319,7 +319,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
                        for model, df in cluster_dfs.items()}
         fig = plot_single_dataset(
             cluster_dfs,
-            title=f'Average number of clusters by distance threshold <br> ({dataset})',
+            title=f'Average number of clusters by distance threshold <br>({dataset})',
             xtitle='Distance',
             ytitle='Avg. number of clusters',
             distance_cols=['1', '2', '3'],
