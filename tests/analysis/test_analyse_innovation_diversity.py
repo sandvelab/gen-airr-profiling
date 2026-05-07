@@ -144,7 +144,7 @@ def test_count_nearest_neighbors(mocker, sample_analysis_config):
         "/tmp/test_output/analysis_innov/nn_counts_innovation",
     )
 
-    assert set(result.keys()) == {"model1", "model2"}
+    assert set(result.keys()) == {"model1", "model2", "test"}
     # model1: 2 gen splits + 1 test => 3 calls; model2: 1 gen split + 1 test => 2 calls
     assert mock_compute.call_count == 5
 
@@ -187,6 +187,7 @@ def test_plot_nearest_neighbor_counts(mocker, sample_analysis_config):
     }
 
     plot_nn_counts_across_datasets(
+        sample_analysis_config,
         plotting_dfs,
         f"{sample_analysis_config.analysis_output_dir}/nearest_neighbor_counts",
     )
