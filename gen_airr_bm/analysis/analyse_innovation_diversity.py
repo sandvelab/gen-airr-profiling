@@ -225,7 +225,7 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
         go.Figure: Plotly figure object ready for display or saving.
     """
     fig = go.Figure()
-    colors = px.colors.qualitative.Dark24_r
+    colors = px.colors.qualitative.Dark24
     color_map = {model: colors[hash(model) % len(colors)] for model in plotting_dfs}
     for model, df in plotting_dfs.items():
         subset_df = df[subset_mask[model]] if subset_mask else df
@@ -239,7 +239,8 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
             mode='lines+markers',
             name=model,
             line=dict(color=color_map[model]),
-            marker=dict(color=color_map[model], size=8)
+            marker=dict(color=color_map[model], size=8),
+            opacity=0.6,
         ))
     fig.update_traces(marker=dict(size=8))
 
