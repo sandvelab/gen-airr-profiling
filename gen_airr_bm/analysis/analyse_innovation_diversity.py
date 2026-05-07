@@ -226,7 +226,10 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
     """
     fig = go.Figure()
     colors = px.colors.qualitative.Dark24
-    color_map = {model: colors[hash(model) % len(colors)] for model in plotting_dfs}
+    model_names_sorted = sorted(plotting_dfs.keys())
+    if "test" in model_names_sorted:
+        model_names_sorted = [m for m in model_names_sorted if m != "test"] + ["test"]
+    color_map = {model: colors[i % len(colors)] for i, model in enumerate(model_names_sorted)}
     for model, df in plotting_dfs.items():
         subset_df = df[subset_mask[model]] if subset_mask else df
         means = subset_df[distance_cols].mean()
