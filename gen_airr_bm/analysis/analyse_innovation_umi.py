@@ -259,6 +259,10 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
     threshold = 1e-5
     df["precision_innovation_pseudolog"] = symlog_transform(df["precision_innovation"], linthresh=threshold, base=10)
 
+    colors = px.colors.qualitative.Dark24
+    model_names_sorted = sorted(df["model"].unique())
+    color_map = {model: colors[i % len(colors)] for i, model in enumerate(model_names_sorted)}
+
     fig = px.scatter(
         df,
         x="sensitivity_innovation",
@@ -266,7 +270,7 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
         color="model",
         hover_data=["dataset"],
         opacity=0.6,
-        color_discrete_sequence=px.colors.qualitative.Dark24
+        color_discrete_map=color_map
     )
 
     fig.update_traces(marker=dict(size=11))
