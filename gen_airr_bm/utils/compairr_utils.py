@@ -77,10 +77,13 @@ def run_compairr_cluster(compairr_output_dir: str, sequences_path: str, output_f
     Returns:
         str: Path to the CompAIRR output file containing clustered sequences.
     """
+    compairr_binary_path = "compairr-1.13.0-linux-x86_64"
+    compairr_call = "./" + compairr_binary_path if os.path.exists(compairr_binary_path) else "compairr"
+
     os.makedirs(compairr_output_dir, exist_ok=True)
     # TODO: Maybe replace -u method ignoring illegal characters in sequences
     output_file_name = f"{compairr_output_dir}/{output_file_identifier}"
-    compairr_command = (f"compairr -c {sequences_path} -o {output_file_name}.tsv -g -d {distance} -u "
+    compairr_command = (f"{compairr_call} -c {sequences_path} -o {output_file_name}.tsv -g -d {distance} -u "
                         f"--log {output_file_name}_log.txt")
 
     if os.path.exists(f"{output_file_name}.tsv"):
