@@ -230,7 +230,9 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
     if "test" in model_names_sorted:
         model_names_sorted = [m for m in model_names_sorted if m != "test"] + ["test"]
     color_map = {model: colors[i % len(colors)] for i, model in enumerate(model_names_sorted)}
-    for model, df in plotting_dfs.items():
+
+    for model in model_names_sorted:
+        df = plotting_dfs[model]
         subset_df = df[subset_mask[model]] if subset_mask else df
         means = subset_df[distance_cols].mean()
         stds = subset_df[distance_cols].std()
@@ -245,7 +247,6 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
             marker=dict(color=color_map[model], size=8),
             opacity=0.6,
         ))
-    fig.update_traces(marker=dict(size=8))
 
     fig.data = sorted(fig.data, key=lambda trace: (0 if trace.name == "test" else 1, trace.name))
     fig.update_layout(
