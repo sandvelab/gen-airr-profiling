@@ -168,7 +168,7 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
         x=models,
         y=scores,
         error_y=dict(type='data', array=errors, visible=True),
-        marker=dict(color='skyblue'),
+        marker=dict(color=px.colors.qualitative.Safe[0]),
     ))
 
     fig.update_layout(
