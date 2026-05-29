@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 from dataclasses import dataclass, field
 
@@ -53,6 +55,8 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
 
     plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
     plot_innovation_precision_sensitivity(analysis_config, scores)
+    if analysis_config.receptor_type != "UMI":
+        plot_innovation_sensitivity_by_model(analysis_config, scores)
     scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
 
 
@@ -106,3 +110,71 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, ref_file: st
         dataset_name, name, innovation_precision, innovation_sensitivity, len(gen_file_df),
         len(ref_file_df)
     ]
+
+
+def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
+    """ Plot innovation sensitivity per model, with one dot per dataset and a mean marker.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores (InnovationScores): Storage class for innovation scores.
+    Returns:
+        None
+    """
+    df = scores.innovation_df.copy()
+
+    colors = px.colors.qualitative.Dark24
+    model_names_sorted = sorted(analysis_config.model_names)
+    color_map = {model: colors[i % len(colors)] for i, model in enumerate(model_names_sorted)}
+
+    fig = px.strip(
+        df,
+        x="model",
+        y="sensitivity_innovation",
+        color="model",
+        hover_data=["dataset"],
+        category_orders={"model": model_names_sorted},
+        color_discrete_map=color_map,
+        stripmode="overlay",
+    )
+
+    fig.update_traces(marker=dict(size=11, opacity=0.6), jitter=0.3)
+
+    # Mean per model, drawn as a horizontal tick over each column
+    mean_per_model = (
+        df.groupby("model", as_index=False)["sensitivity_innovation"]
+        .mean()
+        .set_index("model")
+        .loc[model_names_sorted]
+        .reset_index()
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=mean_per_model["model"],
+            y=mean_per_model["sensitivity_innovation"],
+            mode="markers",
+            marker=dict(symbol="line-ew", size=28, line=dict(width=3, color="black")),
+            name="Mean",
+            hovertemplate="Mean: %{y:.3g}<extra></extra>",
+            showlegend=True,
+        )
+    )
+
+    fig.update_layout(
+        title={'text': f"Innovation by model for {analysis_config.receptor_type}",
+               'font': {'size': 28}},
+        template="plotly_white",
+        colorway=px.colors.qualitative.Dark24,
+        xaxis_title={'text': "Model", 'font': {'size': 24}},
+        yaxis_title={'text': "Innovation ratio", 'font': {'size': 24}},
+        xaxis=dict(tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
+        legend=dict(font=dict(size=18)),
+    )
+
+    output_path = (
+        f"{analysis_config.analysis_output_dir}/"
+        "innovation_sensitivity_by_model.png"
+    )
+
+    fig.write_image(output_path, width=900, height=600, scale=2)
