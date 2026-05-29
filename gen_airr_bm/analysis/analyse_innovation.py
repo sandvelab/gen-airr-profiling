@@ -153,7 +153,7 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
             x=mean_per_model["model"],
             y=mean_per_model["sensitivity_innovation"],
             mode="markers",
-            marker=dict(symbol="line-ew", size=24, line=dict(width=1.5, color="rgba(80,80,80,0.7)")),
+            marker=dict(symbol="line-ew", size=26, line=dict(width=2.0, color="rgba(50,50,50,0.9)")),
             name="Mean",
             hovertemplate="Mean: %{y:.3g}<extra></extra>",
             showlegend=False,
