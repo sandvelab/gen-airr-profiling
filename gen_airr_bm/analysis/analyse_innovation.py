@@ -153,23 +153,23 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
             x=mean_per_model["model"],
             y=mean_per_model["sensitivity_innovation"],
             mode="markers",
-            marker=dict(symbol="line-ew", size=28, line=dict(width=3, color="black")),
+            marker=dict(symbol="line-ew", size=24, line=dict(width=1.5, color="rgba(80,80,80,0.7)")),
             name="Mean",
             hovertemplate="Mean: %{y:.3g}<extra></extra>",
-            showlegend=True,
+            showlegend=False,
         )
     )
 
     fig.update_layout(
-        title={'text': f"Innovation by model for {analysis_config.receptor_type}",
+        title={'text': f"Innovation Scores for {analysis_config.receptor_type}",
                'font': {'size': 28}},
         template="plotly_white",
         colorway=px.colors.qualitative.Dark24,
         xaxis_title={'text': "Model", 'font': {'size': 24}},
-        yaxis_title={'text': "Innovation ratio", 'font': {'size': 24}},
+        yaxis_title={'text': "Innovation score", 'font': {'size': 24}},
         xaxis=dict(tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
-        legend=dict(font=dict(size=18)),
+        showlegend=False
     )
 
     output_path = (
