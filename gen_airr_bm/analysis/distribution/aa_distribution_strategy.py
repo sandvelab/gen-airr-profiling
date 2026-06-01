@@ -111,4 +111,4 @@ def compute_jsd_aa(dist1, dist2, smooth=1e-10):
     p = [flat1[aa] / total1 if total1 > 0 else smooth for aa in 'ACDEFGHIKLMNPQRSTVWY']
     q = [flat2[aa] / total2 if total2 > 0 else smooth for aa in 'ACDEFGHIKLMNPQRSTVWY']
 
-    return jensenshannon(np.array(p), np.array(q), base=2)
+    return jensenshannon(np.array(p), np.array(q), base=2) ** 2

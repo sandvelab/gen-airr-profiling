@@ -260,7 +260,7 @@ def calculate_jsd(node_degree_dist1: pd.Series, node_degree_dist2: pd.Series, di
     p = merged_df[f'count{suffixes[0]}'] / merged_df[f'count{suffixes[0]}'].sum()
     q = merged_df[f'count{suffixes[1]}'] / merged_df[f'count{suffixes[1]}'].sum()
 
-    jsd = jensenshannon(p, q, base=2)
+    jsd = jensenshannon(p, q, base=2) ** 2
 
     return [jsd]
 

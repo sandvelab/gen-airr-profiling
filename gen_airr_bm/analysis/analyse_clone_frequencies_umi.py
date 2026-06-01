@@ -257,7 +257,7 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
         df_copy[f"pseudo_freq_{name1}"] = pseudo_log_transform(df_copy[f"freq_{name1}"])
         df_copy['sequence'] = df_copy.index
 
-        jsd = distance.jensenshannon(df_copy[f"freq_{name1}"], df_copy[f"freq_{name2}"])
+        jsd = distance.jensenshannon(df_copy[f"freq_{name1}"], df_copy[f"freq_{name2}"]) ** 2
 
         if '_all' not in dataset_name:
             jsd_scores.append(jsd)

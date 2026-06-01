@@ -30,4 +30,4 @@ def compute_jsd_kmers(dist1, dist2, smooth=1e-10):
     keys = set(dist1) | set(dist2)
     p = np.array([dist1.get(k, smooth) for k in keys])
     q = np.array([dist2.get(k, smooth) for k in keys])
-    return jensenshannon(p, q, base=2)
+    return jensenshannon(p, q, base=2) ** 2

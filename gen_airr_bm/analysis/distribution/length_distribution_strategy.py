@@ -86,4 +86,4 @@ def compute_jsd_length(dist1, dist2):
     all_lengths = set(dist1.keys()).union(set(dist2.keys()))
     p = [dist1.get(k, 0) for k in all_lengths]
     q = [dist2.get(k, 0) for k in all_lengths]
-    return jensenshannon(p, q, base=2)
+    return jensenshannon(p, q, base=2) ** 2
