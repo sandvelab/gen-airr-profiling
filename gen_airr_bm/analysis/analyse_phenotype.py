@@ -226,7 +226,10 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     leaf_order = leaves_list(Z)
 
     clustered = similarities_matrix.iloc[leaf_order, :].iloc[:, leaf_order]
-    annotation_text = np.round(clustered.values, 4).astype(str)
+    if analysis_config.receptor_type == 'BCR':
+        annotation_text = np.round(clustered.values, 4).astype(str)
+    else:
+        annotation_text = np.round(clustered.values, 3).astype(str)
     clustered.index = [name.rsplit('_', 1)[0] for name in clustered.index]
     clustered.columns = [name.rsplit('_', 1)[0] for name in clustered.columns]
 
