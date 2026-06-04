@@ -155,8 +155,7 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
                                 for ref in all_refs
                                 for model in all_models])
 
-    if not os.path.exists(plotting_data_file):
-        plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
+    plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
 
     data = [
         go.Bar(
