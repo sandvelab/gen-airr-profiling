@@ -253,7 +253,7 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
             ),
             text=annotation_text,
             texttemplate="%{text}",
-            textfont=dict(color="black", size=20),
+            textfont=dict(color="black", size=17),
         )
     )
 
