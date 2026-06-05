@@ -227,11 +227,11 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
                       colorway=px.colors.qualitative.Safe
                       )
 
-    if unique_set_ref_value:
+    if unique_set_ref_value is not None:
         fig.add_hline(
             y=unique_set_ref_value,
             line=dict(color="black", dash="dash"),
-            annotation_text=f"All Unique = {unique_set_ref_value:.3f}",
+            annotation_text=f"All Unique = {unique_set_ref_value:.6g}",
             annotation_position="top right"
         )
 
