@@ -7,7 +7,7 @@ import plotly.express as px
 from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
-from gen_airr_bm.utils.plotting_utils import wrap_title
+from gen_airr_bm.utils.plotting_utils import wrap_title, get_collection_specification_for_title
 
 
 class LengthDistributionStrategy(BaseDistributionStrategy):
@@ -59,7 +59,8 @@ class LengthDistributionStrategy(BaseDistributionStrategy):
             name=f"{ref_label}"
         ))
 
-        title_text = (f"Length Distribution: Generated vs. {ref_label.capitalize()} {analysis_config.receptor_type} "
+        collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+        title_text = (f"Length Distribution: Generated vs. {ref_label.capitalize()} {collection_specification} Repertoires"
                       f"Sets (Dataset {dataset_label})")
         fig.update_layout(
             barmode="group",

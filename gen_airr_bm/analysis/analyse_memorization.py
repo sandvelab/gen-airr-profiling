@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title
 
 
 def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
@@ -171,8 +172,9 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
         marker=dict(color=px.colors.qualitative.Safe[0]),
     ))
 
+    collection_specification = get_collection_specification_for_title(receptor_type)
     fig.update_layout(
-        title=f"Mean Memorization Score for Generated {receptor_type} Sets",
+        title=f"Mean Memorization Score for Generated {collection_specification} Repertoires",
         xaxis_title="Model",
         yaxis_title=f"Mean Memorization Ratio",
         xaxis_tickangle=-45,

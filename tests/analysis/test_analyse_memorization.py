@@ -224,12 +224,12 @@ def test_plot_results(mocker):
     assert bar_kwargs["error_y"]["type"] == "data"
     assert bar_kwargs["error_y"]["visible"] is True
     assert pytest.approx(bar_kwargs["error_y"]["array"], rel=1e-9) == expected_errors
-    assert bar_kwargs["marker"]["color"] == "skyblue"
+    assert bar_kwargs["marker"]["color"] == "rgb(136, 204, 238)"
 
     # Layout updated with expected labels and title
     assert mock_fig.update_layout.call_count == 1
     layout_kwargs = mock_fig.update_layout.call_args.kwargs
-    assert f"Mean Memorization Score for Generated {receptor_type} Sets" in layout_kwargs["title"]
+    assert f"Mean Memorization Score for Generated Collection B (TCR) Repertoires" in layout_kwargs["title"]
     assert layout_kwargs["xaxis_title"] == "Model"
     assert layout_kwargs["yaxis_title"] == "Mean Memorization Ratio"
     assert layout_kwargs["xaxis_tickangle"] == -45

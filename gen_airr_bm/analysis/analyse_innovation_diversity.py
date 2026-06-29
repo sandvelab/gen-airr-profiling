@@ -8,6 +8,8 @@ from gen_airr_bm.utils.file_utils import get_sequence_files
 import plotly.graph_objects as go
 import plotly.express as px
 
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title
+
 
 def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
     """ Runs innovation sequence diversity analysis on the generated innovative and reference sequences.
@@ -183,7 +185,8 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
     else:
         innovation_title_part = ""
 
-    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {analysis_config.receptor_type} sets',
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    fig = plot_single_dataset(plotting_dfs, title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {collection_specification} Repertoires',
                               xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                               distance_cols=['1', '2', '3', '>3'])
     png_path = f"{output_dir}/distances_plot.png"
@@ -199,7 +202,7 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
         fig = plot_single_dataset(plotting_dfs,
-                                  title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {analysis_config.receptor_type} sets ({dataset})',
+                                  title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {collection_specification} Repertoires <br>({dataset})',
                                   xtitle='Distance to nearest training sequence', ytitle='Avg. sequence count',
                                   distance_cols=['1', '2', '3', '>3'],
                                   subset_mask=subset_mask)
@@ -253,7 +256,11 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
         width=700,
         height=500,
         title={"text": title,
-                  "font": {"size": 20}},
+                  "font": {"size": 20},
+               'y': 0.93,
+               'yanchor': 'top'
+               },
+        margin=dict(t=100),
         xaxis_title={'text': xtitle, 'font': {'size': 18}},
         yaxis_title={'text': ytitle, 'font': {'size': 18}},
         xaxis=dict(tickfont=dict(size=14)),
@@ -317,9 +324,10 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
         for model, dataset_dict in num_clusters_by_model.items()
     }
 
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
     fig = plot_single_dataset(
         cluster_dfs,
-        title=f"Average number of clusters by distance threshold <br>for {analysis_config.receptor_type} sets",
+        title=f"Average number of clusters by distance threshold <br>for {collection_specification} Repertoires",
         xtitle='Distance',
         ytitle='Avg. number of clusters',
         distance_cols=['1', '2', '3']
@@ -337,7 +345,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
                        for model, df in cluster_dfs.items()}
         fig = plot_single_dataset(
             cluster_dfs,
-            title=f'Average number of clusters by distance threshold <br>for {analysis_config.receptor_type} sets ({dataset})',
+            title=f'Average number of clusters by distance threshold <br>for {collection_specification} Repertoires ({dataset})',
             xtitle='Distance',
             ytitle='Avg. number of clusters',
             distance_cols=['1', '2', '3'],

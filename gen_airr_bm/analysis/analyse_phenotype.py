@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib
 from scipy.spatial.distance import squareform
 
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, wrap_title
+
 matplotlib.use('Agg')
 import plotly.graph_objects as go
 import plotly.express as px
@@ -257,16 +259,19 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         )
     )
 
-    title_text = (
-        f"Pairwise Jaccard Similarity Between {model_name.upper()} {analysis_config.receptor_type} Sets"
-        f"<br><sub>MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</sub>"
-    )
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    title_text = wrap_title(f"Pairwise Jaccard Similarity Between {model_name.upper()} {collection_specification} "
+                            f"Repertoires", width=55) + f"<br><sub>MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</sub>"
+
 
     fig.update_layout(
         title={
             "text": title_text,
             "font": {"size": 30},
+            'y': 0.95,
+            'yanchor': 'top'
         },
+        margin=dict(t=140),
         plot_bgcolor="white",
         width=1000,
         height=900,
