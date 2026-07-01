@@ -206,10 +206,16 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
         template="plotly_white",
         width=width,
         height=height,
-        title={'text': wrap_title(title_text), 'font': {'size': 22}},
-        xaxis_title={'text': f"{name2} frequency (pseudo-log scale)", 'font': {'size': 18}},
-        yaxis_title={'text': f"{name1.capitalize()} frequency (pseudo-log scale)", 'font': {'size': 18}},
+        title={'text': wrap_title(title_text), 'font': {'size': 24}},
+        xaxis_title={'text': f"{name2} Frequency (pseudo-log scale)", 'font': {'size': 20}},
+        yaxis_title={'text': f"{name1.capitalize()} Frequency (pseudo-log scale)", 'font': {'size': 20}},
+        xaxis=dict(tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
         legend_title="Repertoire" if color_by else None,
+        legend=dict(
+            title=dict(font=dict(size=18)),
+            font=dict(size=18)
+        ),
         colorway=color_palette,
     )
 
