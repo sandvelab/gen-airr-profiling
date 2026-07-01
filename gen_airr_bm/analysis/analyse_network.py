@@ -313,7 +313,7 @@ def summarize_and_plot_all(analysis_config: AnalysisConfig, divergence_scores_al
         std_scores_by_ref=std_scores,
         distribution_type="connectivity",
         file_name="all_datasets_connectivity",
-        scoring_method="Jensen-Shannon Divergence",
+        scoring_method="JSD",
         reference_score=mean_reference_score
     )
 

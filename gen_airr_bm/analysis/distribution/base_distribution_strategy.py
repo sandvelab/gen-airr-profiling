@@ -68,5 +68,5 @@ class BaseDistributionStrategy(ABC):
         """
         file_name = distribution_type.replace(" ", "") + "_grouped"
         plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
-                                file_name, distribution_type, "Jensen-Shannon Divergence",
+                                file_name, distribution_type, "JSD",
                                 mean_reference_score)

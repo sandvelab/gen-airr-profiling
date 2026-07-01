@@ -10,7 +10,8 @@ from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
-from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores, wrap_title
+from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores, wrap_title, \
+    get_collection_specification_for_title
 
 
 @dataclass
@@ -287,13 +288,18 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
             ticktext=ticktext
         )
 
-    y_axis_text = "Innovation precision (pseudo-log)" if pseudolog else "Innovation precision"
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    y_axis_text = "Innovation Precision (pseudo-log)" if pseudolog else "Innovation Precision"
     fig.update_layout(
-        title={'text': f"Innovation precision vs sensitivity for {analysis_config.receptor_type}",
-               'font': {'size': 28}},
+        title={'text': wrap_title(f"Innovation Precision vs Sensitivity for {collection_specification} Repertoires", width=50),
+               'font': {'size': 28},
+               'y': 0.95,
+               'yanchor': 'top'
+               },
+        margin=dict(t=100),
         template="plotly_white",
         colorway=px.colors.qualitative.Dark24,
-        xaxis_title={'text': "Innovation sensitivity", 'font': {'size': 24}},
+        xaxis_title={'text': "Innovation Sensitivity", 'font': {'size': 24}},
         yaxis_title={'text': y_axis_text, 'font': {'size': 24}},
         xaxis=dict(tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
@@ -324,11 +330,11 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
     )
 
     fig_mean.update_layout(
-        title={'text': f"Mean innovation precision vs sensitivity for {analysis_config.receptor_type}",
+        title={'text': f"Mean Innovation Precision vs Sensitivity for {collection_specification} Repertoires",
                'font': {'size': 22}},
         template="plotly_white",
-        xaxis_title={'text': "Mean innovation precision", 'font': {'size': 18}},
-        yaxis_title={'text': "Mean innovation sensitivity", 'font': {'size': 18}}
+        xaxis_title={'text': "Mean Innovation Precision", 'font': {'size': 20}},
+        yaxis_title={'text': "Mean Innovation Sensitivity", 'font': {'size': 20}}
     )
 
     output_path_mean = (
@@ -359,12 +365,17 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
 
     fig.update_traces(marker=dict(size=11))
 
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
     fig.update_layout(
-        title={'text': wrap_title(f"Innovation precision by number of generated novel sequences for "
-                       f"{analysis_config.receptor_type}", width=50), 'font': {'size': 28}},
+        title={'text': wrap_title(f"Innovation Precision by Number of Generated Novel Sequences for "
+                       f"{collection_specification} Repertoires", width=50), 'font': {'size': 28},
+               'y': 0.95,
+               'yanchor': 'top'
+               },
+        margin=dict(t=100),
         template="plotly_white",
-        xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 24}},
-        yaxis_title={'text': "Innovation precision", 'font': {'size': 24}},
+        xaxis_title={'text': "Unique Generated Sequences Not in Train", 'font': {'size': 24}},
+        yaxis_title={'text': "Innovation Precision", 'font': {'size': 24}},
         xaxis=dict(tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
         legend=dict(font=dict(size=18))
@@ -417,10 +428,15 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
 
     fig_pseudo.update_traces(marker=dict(size=12))
 
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
     fig_pseudo.update_layout(
-        title={'text': wrap_title(f"Innovation precision (pseudo-log) by number of generated novel sequences for "
-                       f"{analysis_config.receptor_type}", width=50),
-               'font': {'size': 28}},
+        title={'text': wrap_title(f"Innovation Precision (Pseudo-log) by Number of Generated Novel Sequences for "
+                       f"{collection_specification} Repertoires", width=50),
+               'font': {'size': 28},
+               'y': 0.95,
+               'yanchor': 'top'
+               },
+        margin=dict(t=100),
         template="plotly_white",
         xaxis_title={'text': "Unique generated sequences not in train", 'font': {'size': 24}},
         yaxis_title={'text': "Innovation precision (pseudo-log)", 'font': {'size': 24}},

@@ -236,7 +236,6 @@ def test_make_distance_figure(mocker):
     assert mock_go_Scatter.call_count == len(dfs)
     assert fig.add_trace.call_count == len(dfs)
     fig.update_layout.assert_called_once()
-    fig.update_traces.assert_called_once()
 
 
 def test_cluster_innovation_sequences(mocker, sample_analysis_config):

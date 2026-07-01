@@ -10,6 +10,17 @@ import plotly.colors as pc
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
+def get_collection_specification_for_title(receptor_type):
+    if receptor_type == "TCR":
+        return "Collection B (TCR)"
+    elif receptor_type == "BCR":
+        return "Collection C (BCR)"
+    elif receptor_type == "BCR UMI":
+        return "Collection A (BCR)"
+    else:
+        raise ValueError(f"Unknown receptor type: {receptor_type}")
+
+
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
                     distribution_type, scoring_method="JSD"):
     """ Plots a bar chart for mean scores across models.
@@ -100,8 +111,9 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         )
     )
 
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
     fig.update_layout(
-        title=wrap_title(f"Mean Unique Innovation Score for Generated {analysis_config.receptor_type} Sets"),
+        title=wrap_title(f"Mean Unique Innovation Score for Generated {collection_specification} Repertoires"),
         xaxis_title="Models",
         yaxis_title=f"Mean Unique Innovation Score",
         xaxis_tickangle=-45,
@@ -173,14 +185,21 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
 
     fig = go.Figure(data=data)
     color_palette = px.colors.qualitative.Safe
-    title_text = f"{distribution_type.title()} Distribution Comparison: Generated vs. Train and Test {receptor_type} Sets"
+    title_text = (f"{distribution_type.title()} Distribution Comparison: Generated vs. Train and "
+                  f"Test for {get_collection_specification_for_title(receptor_type)} Repertoires")
     fig.update_layout(
         barmode='group',
         title={'text': wrap_title(title_text),
-               'font': {'size': 18}},
-        xaxis_title="Model",
-        yaxis_title=f"Mean {scoring_method}",
-        xaxis_tickangle=-45,
+               'font': {'size': 20}},
+        xaxis=dict(
+            title=dict(text="Model", font=dict(size=20)),
+            tickangle=-45,
+            tickfont=dict(size=18)
+        ),
+        yaxis=dict(
+            title=dict(text=f"Mean {scoring_method}", font=dict(size=20)),
+            tickfont=dict(size=18)
+        ),
         template="plotly_white",
         colorway=color_palette,
         showlegend=True,
@@ -191,7 +210,8 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
             y=reference_score,
             line=dict(color="black", dash="dash"),
             annotation_text=f"Train vs. Test = {reference_score:.3f}",
-            annotation_position="top right"
+            annotation_position="top right",
+            annotation_font=dict(size=16, color="black")
         )
 
     fig.write_image(png_path)
@@ -415,12 +435,17 @@ def plot_degree_distribution_by_dataset(analysis_config: AnalysisConfig, connect
 
             distance_type = "Levenshtein" if analysis_config.indels else "Hamming"
             dataset_name_clean = dataset_name.rsplit("_", 1)[0]
+            collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
             fig.update_layout(
                 width=1600,
                 height=800,
-                title={"text": f"Connectivity Distribution: Generated vs. Train and Test "
-                          f"{analysis_config.receptor_type} Sets <br> (Dataset {dataset_name_clean})",
-                          "font": {"size": 40}},
+                title={"text": wrap_title(f"Connectivity Distribution: Generated vs. Train and Test "
+                          f"{collection_specification} Repertoire (Dataset: {dataset_name_clean})", width=60),
+                          "font": {"size": 40},
+                           'y': 0.95,
+                           'yanchor': 'top'
+                           },
+                margin=dict(t=100),
                 xaxis_title={"text": f"Neighbor Count ({distance_type} Distance: {analysis_config.allowed_mismatches})",
                              "font": {"size": 30}},
                 yaxis_title={"text": "Frequency (log scale)",

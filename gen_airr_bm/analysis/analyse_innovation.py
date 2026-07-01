@@ -10,6 +10,7 @@ from gen_airr_bm.analysis.analyse_innovation_umi import preprocess_gen_for_innov
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, wrap_title
 
 
 @dataclass
@@ -160,13 +161,18 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
         )
     )
 
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
     fig.update_layout(
-        title={'text': f"Innovation Scores for {analysis_config.receptor_type}",
-               'font': {'size': 28}},
+        title={'text': wrap_title(f"Innovation Scores for Generated {collection_specification} Repertoires", width=50),
+               'font': {'size': 28},
+               'y': 0.95,
+               'yanchor': 'top'
+               },
+        margin=dict(t=100),
         template="plotly_white",
         colorway=px.colors.qualitative.Dark24,
         xaxis_title={'text': "Model", 'font': {'size': 24}},
-        yaxis_title={'text': "Innovation score", 'font': {'size': 24}},
+        yaxis_title={'text': "Innovation Score", 'font': {'size': 24}},
         xaxis=dict(tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
         showlegend=False

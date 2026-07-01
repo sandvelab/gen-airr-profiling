@@ -8,6 +8,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, wrap_title
 
 
 def run_diversity_analysis(analysis_config: AnalysisConfig) -> None:
@@ -209,22 +210,34 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     if not os.path.exists(output_path + ".tsv"):
         df.to_csv(os.path.join(output_path) + ".tsv", sep="\t", index=False)
 
+    collection_specification = get_collection_specification_for_title(receptor_type)
+    title = f"{metric_name} for Generated {collection_specification} Repertoires"
     fig = px.scatter(
         df,
         x="source",
         y=metric_name.lower(),
         color="dataset",
         hover_data=["dataset", metric_name.lower()],
-        title=f"{metric_name} for Generated {receptor_type} Sets",
         labels={"source": "Source", metric_name.lower(): f"{metric_name} Score"},
     )
 
     fig.update_traces(marker=dict(size=10, opacity=0.8), selector=dict(mode='markers'))
     fig.update_layout(legend_title_text="Dataset",
-                      xaxis_title="Data Origin",
-                      yaxis_title=metric_name,
+                      title={'text': wrap_title(title, width=50),
+                             'font': {'size': 24},
+                             'y': 0.93,
+                             'yanchor': 'top'
+                             },
+                      margin=dict(t=100),
+                      xaxis_title={'text': "Data Origin",
+                                           'font': {'size': 20}},
+                      yaxis_title={'text': metric_name,
+                                   'font': {'size': 20}},
                       template="plotly_white",
-                      colorway=px.colors.qualitative.Safe
+                      colorway=px.colors.qualitative.Safe,
+                      xaxis=dict(tickfont=dict(size=18)),
+                      yaxis=dict(tickfont=dict(size=18)),
+                      legend=dict(font=dict(size=18))
                       )
 
     if unique_set_ref_value is not None:
@@ -232,7 +245,8 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
             y=unique_set_ref_value,
             line=dict(color="black", dash="dash"),
             annotation_text=f"All Unique = {unique_set_ref_value:.6g}",
-            annotation_position="top right"
+            annotation_position="top right",
+            annotation_font=dict(size=18, color="black")
         )
 
     fig.write_image(output_path + ".png")
