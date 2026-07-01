@@ -235,9 +235,9 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
                                    'font': {'size': 20}},
                       template="plotly_white",
                       colorway=px.colors.qualitative.Safe,
-                      xaxis=dict(tickfont=dict(size=16)),
-                      yaxis=dict(tickfont=dict(size=16)),
-                      legend=dict(font=dict(size=16))
+                      xaxis=dict(tickfont=dict(size=18)),
+                      yaxis=dict(tickfont=dict(size=18)),
+                      legend=dict(font=dict(size=18))
                       )
 
     if unique_set_ref_value is not None:
@@ -245,7 +245,8 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
             y=unique_set_ref_value,
             line=dict(color="black", dash="dash"),
             annotation_text=f"All Unique = {unique_set_ref_value:.6g}",
-            annotation_position="top right"
+            annotation_position="top right",
+            annotation_font=dict(size=18, color="black")
         )
 
     fig.write_image(output_path + ".png")

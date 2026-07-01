@@ -260,14 +260,13 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
     )
 
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
-    title_text = wrap_title(f"Pairwise Jaccard Similarity Between {model_name.upper()} {collection_specification} "
-                            f"Repertoires", width=55) + f"<br><sub>MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</sub>"
+    title_text = f"Pairwise Jaccard Similarity Between {model_name.upper()} <br>{collection_specification} Repertoires" + f'<br><span style="font-size:22px">MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</span>'
 
 
     fig.update_layout(
         title={
             "text": title_text,
-            "font": {"size": 30},
+            "font": {"size": 28},
             'y': 0.95,
             'yanchor': 'top'
         },
@@ -275,8 +274,9 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         plot_bgcolor="white",
         width=1000,
         height=900,
-        xaxis=dict(tickangle=45),
-        font=dict(size=16),
+        xaxis=dict(tickangle=45, tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
+        font=dict(size=18),
         template="plotly_white",
     )
 

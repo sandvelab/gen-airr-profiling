@@ -61,21 +61,26 @@ class LengthDistributionStrategy(BaseDistributionStrategy):
 
         collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
         title_text = (f"Length Distribution: Generated vs. {ref_label.capitalize()} {collection_specification} Repertoires"
-                      f"Sets (Dataset {dataset_label})")
+                      f" (Dataset {dataset_label})")
         fig.update_layout(
             barmode="group",
             title={
                 'text': wrap_title(title_text),
-                'font': {'size': 18}
+                'font': {'size': 20}
             },
-            xaxis_title="Sequence Length",
-            yaxis_title="Count",
+            xaxis=dict(
+                title=dict(text="Sequence Length", font=dict(size=20)),
+                tickvals=list(range(min(all_lengths), max(all_lengths) + 1)),
+                tickangle=-45,
+                tickfont=dict(size=18)
+            ),
+            yaxis=dict(
+                title=dict(text="Count", font=dict(size=20)),
+                tickfont=dict(size=18)
+            ),
             template="plotly_white",
             colorway=color_palette,
-            showlegend=True,
-            xaxis=dict(
-                tickvals=list(range(min(all_lengths), max(all_lengths) + 1))
-            )
+            showlegend=True
         )
 
         plot_path = Path(analysis_config.analysis_output_dir) / f"length_dist_{dataset_label}_{gen_label}_{ref_label}.png"

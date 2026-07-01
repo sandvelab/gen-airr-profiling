@@ -174,9 +174,19 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
 
     collection_specification = get_collection_specification_for_title(receptor_type)
     fig.update_layout(
-        title=f"Mean Memorization Score for Generated {collection_specification} Repertoires",
-        xaxis_title="Model",
-        yaxis_title=f"Mean Memorization Ratio",
+        title=dict(
+            text=f"Mean Memorization Score for Generated <br>{collection_specification} Repertoires",
+            font=dict(size=24)
+        ),
+        xaxis=dict(
+            title=dict(text="Model", font=dict(size=20)),
+            tickangle=-45,
+            tickfont=dict(size=18)
+        ),
+        yaxis=dict(
+            title=dict(text="Mean Memorization Ratio", font=dict(size=20)),
+            tickfont=dict(size=18)
+        ),
         xaxis_tickangle=-45,
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
@@ -187,7 +197,8 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
             y=mean_reference_score,
             line=dict(color="black", dash="dash"),
             annotation_text=f"Train vs. Test = {mean_reference_score:.3f}",
-            annotation_position="top right"
+            annotation_position="top right",
+            annotation_font=dict(size=18, color="black")
         )
 
     fig.write_image(png_path)

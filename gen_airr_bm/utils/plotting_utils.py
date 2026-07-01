@@ -190,10 +190,16 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
     fig.update_layout(
         barmode='group',
         title={'text': wrap_title(title_text),
-               'font': {'size': 18}},
-        xaxis_title="Model",
-        yaxis_title=f"Mean {scoring_method}",
-        xaxis_tickangle=-45,
+               'font': {'size': 20}},
+        xaxis=dict(
+            title=dict(text="Model", font=dict(size=20)),
+            tickangle=-45,
+            tickfont=dict(size=18)
+        ),
+        yaxis=dict(
+            title=dict(text=f"Mean {scoring_method}", font=dict(size=20)),
+            tickfont=dict(size=18)
+        ),
         template="plotly_white",
         colorway=color_palette,
         showlegend=True,
@@ -204,7 +210,8 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
             y=reference_score,
             line=dict(color="black", dash="dash"),
             annotation_text=f"Train vs. Test = {reference_score:.3f}",
-            annotation_position="top right"
+            annotation_position="top right",
+            annotation_font=dict(size=16, color="black")
         )
 
     fig.write_image(png_path)
