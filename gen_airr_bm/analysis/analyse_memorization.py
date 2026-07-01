@@ -175,8 +175,8 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
     collection_specification = get_collection_specification_for_title(receptor_type)
     fig.update_layout(
         title=dict(
-            text=f"Mean Memorization Score for Generated <br>{collection_specification} Repertoires",
-            font=dict(size=24)
+            text=f"Mean Memorization Score for Generated {collection_specification}<br>Repertoires",
+            font=dict(size=20)
         ),
         xaxis=dict(
             title=dict(text="Model", font=dict(size=20)),
