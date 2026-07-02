@@ -180,7 +180,7 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
 
     output_path = (
         f"{analysis_config.analysis_output_dir}/"
-        "innovation_sensitivity_by_model.png"
+        "innovation_sensitivity_by_model.svg"
     )
 
-    fig.write_image(output_path, width=900, height=600, scale=2)
+    fig.write_image(output_path)

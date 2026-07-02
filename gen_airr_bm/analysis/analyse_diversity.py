@@ -221,6 +221,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
         labels={"source": "Source", metric_name.lower(): f"{metric_name} Score"},
     )
 
+    legend_size = 16 if len(df['dataset'].unique()) <= 10 else 12
     fig.update_traces(marker=dict(size=10, opacity=0.8), selector=dict(mode='markers'))
     fig.update_layout(legend_title_text="Dataset",
                       title={'text': wrap_title(title, width=50),
@@ -237,7 +238,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
                       colorway=px.colors.qualitative.Safe,
                       xaxis=dict(tickfont=dict(size=18), tickangle=-45),
                       yaxis=dict(tickfont=dict(size=18)),
-                      legend=dict(font=dict(size=12))
+                      legend=dict(font=dict(size=legend_size))
                       )
 
     if unique_set_ref_value is not None:
@@ -249,4 +250,4 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
             annotation_font=dict(size=18, color="black")
         )
 
-    fig.write_image(output_path + ".png")
+    fig.write_image(output_path + ".svg")

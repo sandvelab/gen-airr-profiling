@@ -190,9 +190,9 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
                               title=f'Number of {innovation_title_part}Model Sequences by Distance to Nearest <br>Train Sequence for {collection_specification} Repertoires',
                               xtitle='Distance to nearest training sequence', ytitle='Mean Sequence Count',
                               distance_cols=['1', '2', '3', '>3'])
-    png_path = f"{output_dir}/distances_plot.png"
-    fig.write_image(png_path)
-    print(f"Plot saved at: {png_path}")
+    svg_path = f"{output_dir}/distances_plot.svg"
+    fig.write_image(svg_path)
+    print(f"Plot saved at: {svg_path}")
 
     dataset_base_names = set()
     for key, df in plotting_dfs.items():
@@ -207,9 +207,9 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
                                   xtitle='Distance to nearest training sequence', ytitle='Mean Sequence Count',
                                   distance_cols=['1', '2', '3', '>3'],
                                   subset_mask=subset_mask)
-        png_path = f"{output_dir}/distances_{dataset}_plot.png"
-        fig.write_image(png_path)
-        print(f"Plot saved at: {png_path}")
+        svg_path = f"{output_dir}/distances_{dataset}_plot.svg"
+        fig.write_image(svg_path)
+        print(f"Plot saved at: {svg_path}")
 
 
 def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, distance_cols: list,
@@ -334,9 +334,9 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
         ytitle='Mean Number of Clusters',
         distance_cols=['1', '2', '3']
     )
-    png_path = f"{clustering_dir}/cluster_counts_plot.png"
-    fig.write_image(png_path)
-    print(f"Plot saved at: {png_path}")
+    svg_path = f"{clustering_dir}/cluster_counts_plot.svg"
+    fig.write_image(svg_path)
+    print(f"Plot saved at: {svg_path}")
 
     dataset_base_names = set()
     for model, df in cluster_dfs.items():
@@ -353,6 +353,6 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
             distance_cols=['1', '2', '3'],
             subset_mask=subset_mask
         )
-        png_path = f"{clustering_dir}/cluster_counts_{dataset}_plot.png"
-        fig.write_image(png_path)
-        print(f"Plot saved at: {png_path}")
+        svg_path = f"{clustering_dir}/cluster_counts_{dataset}_plot.svg"
+        fig.write_image(svg_path)
+        print(f"Plot saved at: {svg_path}")

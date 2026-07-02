@@ -278,9 +278,9 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         template="plotly_white",
     )
 
-    png_path = f"{output_dir}/cluster_heatmap.png"
-    fig.write_image(png_path)
-    print(f"Saved clustered heatmap: {png_path}")
+    svg_path = f"{output_dir}/cluster_heatmap.svg"
+    fig.write_image(svg_path)
+    print(f"Saved clustered heatmap: {svg_path}")
 
 
 def save_ranking_analysis(similarities_df, phenotypes, subjects, output_dir):

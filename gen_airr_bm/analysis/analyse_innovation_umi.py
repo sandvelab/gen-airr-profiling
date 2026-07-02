@@ -308,7 +308,7 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
 
     output_path = (
         f"{analysis_config.analysis_output_dir}/"
-        "innovation_precision_vs_sensitivity.png"
+        "innovation_precision_vs_sensitivity.svg"
     )
 
     fig.write_image(output_path, width=900, height=600, scale=2)
@@ -339,10 +339,10 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
 
     output_path_mean = (
         f"{analysis_config.analysis_output_dir}/"
-        "mean_innovation_precision_vs_sensitivity.png"
+        "mean_innovation_precision_vs_sensitivity.svg"
     )
 
-    fig_mean.write_image(output_path_mean, width=900, height=600, scale=2)
+    fig_mean.write_image(output_path_mean)
 
 
 def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
@@ -383,7 +383,7 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
 
     output_path = (
         f"{analysis_config.analysis_output_dir}/"
-        "innovation_precision_by_n_gen_novel.png"
+        "innovation_precision_by_n_gen_novel.svg"
     )
 
     fig.write_image(output_path, width=900, height=600, scale=2)
@@ -457,7 +457,7 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
     )
 
     fig_pseudo.write_image(
-        f"{analysis_config.analysis_output_dir}/innovation_precision_by_n_gen_novel_pseudolog.png",
+        f"{analysis_config.analysis_output_dir}/innovation_precision_by_n_gen_novel_pseudolog.svg",
         width=900,
         height=600,
         scale=2
