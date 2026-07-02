@@ -255,8 +255,6 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
 
     fig.data = sorted(fig.data, key=lambda trace: (0 if trace.name == "test" else 1, trace.name))
     fig.update_layout(
-        width=700,
-        height=500,
         title={"text": title,
                "font": {"size": 20},
                'y': 0.93,

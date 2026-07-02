@@ -165,7 +165,7 @@ def wrap_title(text, width=60):
 
 
 def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title_text: str,
-                        color_by: str = None, width: int = 600, height: int = 600) -> px.scatter:
+                        color_by: str = None) -> px.scatter:
     """ Creates a scatter plot for clone frequencies.
 
     Args:
@@ -204,8 +204,6 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
     color_palette = px.colors.qualitative.Safe
     fig.update_layout(
         template="plotly_white",
-        width=width,
-        height=height,
         title={'text': wrap_title(title_text), 'font': {'size': 24}},
         xaxis_title={'text': f"{name2} Frequency (pseudo-log scale)", 'font': {'size': 20}},
         yaxis_title={'text': f"{name1.capitalize()} Frequency (pseudo-log scale)", 'font': {'size': 20}},
@@ -342,6 +340,6 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
 
 
 def save_scatter_with_metric(combined_df, name1, name2, output_dir, svg_path, title_text):
-    fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire', width=800, height=600)
+    fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire')
     fig.write_image(svg_path)
     print(f"Combined plot saved as SVG at: {svg_path}")
