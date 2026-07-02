@@ -272,7 +272,7 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         plot_bgcolor="white",
         width=1000,
         height=900,
-        xaxis=dict(tickangle=45, tickfont=dict(size=18)),
+        xaxis=dict(tickangle=-45, tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
         font=dict(size=18),
         template="plotly_white",
