@@ -186,7 +186,7 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
     fig = go.Figure(data=data)
     color_palette = px.colors.qualitative.Safe
     title_text = (f"{distribution_type.title()} Distribution Comparison:<br>Generated vs. Train and "
-                  f"Test for {get_collection_specification_for_title(receptor_type)} Repertoires")
+                  f"Test {get_collection_specification_for_title(receptor_type)} Repertoires")
     fig.update_layout(
         barmode='group',
         title={'text': title_text,
