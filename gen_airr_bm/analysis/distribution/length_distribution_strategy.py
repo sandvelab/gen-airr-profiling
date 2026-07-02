@@ -72,7 +72,7 @@ class LengthDistributionStrategy(BaseDistributionStrategy):
                 title=dict(text="Sequence Length", font=dict(size=20)),
                 tickvals=list(range(min(all_lengths), max(all_lengths) + 1)),
                 tickangle=-45,
-                tickfont=dict(size=18)
+                tickfont=dict(size=14)
             ),
             yaxis=dict(
                 title=dict(text="Count", font=dict(size=20)),
