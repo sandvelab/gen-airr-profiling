@@ -74,8 +74,6 @@ def extract_phenotype(analysis_config: AnalysisConfig, name: str):
     if receptor_type == 'TCR':
         return parts[2]
     elif receptor_type == 'BCR':
-        if parts[1].lower() in ['pln', 'iln']:
-            return 'LN'
         return parts[1]
     elif receptor_type == 'BCR UMI':
         return parts[0]

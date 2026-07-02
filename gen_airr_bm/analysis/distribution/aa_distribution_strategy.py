@@ -70,8 +70,8 @@ class AADistributionStrategy(BaseDistributionStrategy):
             file_name = distribution_type.replace(" ", "") + f"_{length}_grouped"
             mean_reference_score = mean_reference_scores[length-10] if mean_reference_scores else None
             plot_grouped_avg_scores(analysis_config, mean_by_ref, std_by_ref,
-                                    file_name, f"{distribution_type} (sequence length: {length})",
-                                    "Jensen-Shannon Divergence", mean_reference_score)
+                                    file_name, f"{distribution_type} (Seq. Len.: {length})",
+                                    "JSD", mean_reference_score)
 
 
 def compute_positional_aa_dist(sequences):

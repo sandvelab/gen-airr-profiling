@@ -7,6 +7,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title
+
 
 def aggregate_map_metrics(root_dir=".", output_path="all_map_metrics.csv"):
     """Find all map_metrics.tsv files under root_dir and combine them into one CSV.
@@ -67,14 +69,16 @@ def plot_map_metrics_per_receptor(df, output_dir="."):
             ]
         )
         color_palette = px.colors.qualitative.Safe
-        title_text = (f"Mean Average Precision for Jaccard-based Ranking <br> of Repertoire Labels for "
-                      f"{receptor_type.upper()} Sets")
+        collection_specification = get_collection_specification_for_title(receptor_type.upper())
+        title_text = (f"Mean Average Precision for Jaccard-Based Ranking <br>of Repertoire Labels for "
+                      f"{collection_specification} Repertoires")
         fig.update_layout(
             title={'text': title_text,
                    'font': {'size': 20}},
-            xaxis_title="Model",
-            yaxis_title="MAP score",
-            xaxis_tickangle=-45,
+            xaxis_title={'text': "Model", 'font': {'size': 20}},
+            yaxis_title={'text': "MAP Score", 'font': {'size': 20}},
+            xaxis=dict(tickangle=-45, tickfont=dict(size=18)),
+            yaxis=dict(tickfont=dict(size=18)),
             barmode="group",
             template="plotly_white",
             colorway=color_palette
