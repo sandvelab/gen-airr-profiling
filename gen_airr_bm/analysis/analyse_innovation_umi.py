@@ -79,7 +79,7 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
     """
     comparison_files_dir = get_sequence_files(analysis_config, model, test_reference)
 
-    for ref_file, gen_files in comparison_files_dir.items():
+    for ref_file, gen_files in sorted(comparison_files_dir.items()):
         dataset_name = os.path.splitext(os.path.basename(ref_file))[0]
 
         innovation_sensitivity_scores, innovation_precision_scores = get_innovation_scores(analysis_config, ref_file,

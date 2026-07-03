@@ -85,7 +85,7 @@ def plot_map_metrics_per_receptor(df, output_dir="."):
         )
 
         out_path = os.path.join(output_dir, f"map_metrics_{receptor_type}.png")
-        fig.write_image(out_path, scale=2)
+        fig.write_image(out_path, scale=3)
         print(f"Plot saved: {out_path}")
 
 
