@@ -67,8 +67,8 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
         template="plotly_white"
     )
 
-    fig.write_image(png_path)
-    print(f"Plot saved as PNG at: {png_path}.png")
+    fig.write_image(png_path, scale=3)
+    print(f"Plot saved as png at: {png_path}.png")
 
 
 #TODO: Refactor this function (Dirty coding)
@@ -121,8 +121,8 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         colorway=color_palette
     )
 
-    fig.write_image(png_path)
-    print(f"Plot saved as PNG at: {png_path}.png")
+    fig.write_image(png_path, scale=3)
+    print(f"Plot saved as png at: {png_path}.png")
 
 
 def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref, std_scores_by_ref,  file_name,
@@ -214,8 +214,8 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
             annotation_font=dict(size=16, color="black")
         )
 
-    fig.write_image(png_path)
-    print(f"Plot saved as PNG at: {png_path}")
+    fig.write_image(png_path, scale=3)
+    print(f"Plot saved as png at: {png_path}")
 
 
 def wrap_title(text, width=60):
@@ -246,7 +246,7 @@ def plot_diversity_bar_chart(mean_diversity, std_diversity, output_path):
         template="plotly_white"
     )
 
-    fig.write_image(output_path)
+    fig.write_image(output_path, scale=3)
 
 
 def _plot_grouped_bar(df, all_models, title, output_path):
@@ -293,8 +293,8 @@ def _plot_grouped_bar(df, all_models, title, output_path):
         legend_title_text="Metric"
     )
 
-    fig.write_image(output_path, scale=2)
-    print(f"Grouped Precision/Recall bar chart saved as PNG at: {output_path}")
+    fig.write_image(output_path, scale=3)
+    print(f"Grouped Precision/Recall bar chart saved as png at: {output_path}")
 
 
 def sort_names_ignore_prefix(names):
@@ -460,5 +460,5 @@ def plot_degree_distribution_by_dataset(analysis_config: AnalysisConfig, connect
                 legend=dict(font=dict(size=25))
             )
 
-            fig.write_image(png_path)
-            print(f"Plot saved as PNG at: {png_path}")
+            fig.write_image(png_path, scale=3)
+            print(f"Plot saved as png at: {png_path}")

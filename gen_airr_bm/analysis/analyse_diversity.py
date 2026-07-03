@@ -250,4 +250,4 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
             annotation_font=dict(size=18, color="black")
         )
 
-    fig.write_image(output_path + ".svg")
+    fig.write_image(output_path + ".png", scale=3)

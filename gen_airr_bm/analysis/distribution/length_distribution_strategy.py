@@ -83,9 +83,9 @@ class LengthDistributionStrategy(BaseDistributionStrategy):
             showlegend=True
         )
 
-        plot_path = Path(analysis_config.analysis_output_dir) / f"length_dist_{dataset_label}_{gen_label}_{ref_label}.svg"
-        fig.write_image(plot_path)
-        print(f"Plot saved as SVG at: {plot_path}")
+        plot_path = Path(analysis_config.analysis_output_dir) / f"length_dist_{dataset_label}_{gen_label}_{ref_label}.png"
+        fig.write_image(plot_path, scale=3)
+        print(f"Plot saved as png at: {plot_path}")
 
 
 def compute_jsd_length(dist1, dist2):

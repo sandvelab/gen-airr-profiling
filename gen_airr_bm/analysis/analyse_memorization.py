@@ -148,7 +148,7 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
         None
     """
     os.makedirs(fig_dir, exist_ok=True)
-    svg_path = os.path.join(fig_dir, file_name) + ".svg"
+    png_path = os.path.join(fig_dir, file_name) + ".png"
     tsv_path = os.path.join(fig_dir, file_name) + ".tsv"
 
     means = {k: np.mean(v) for k, v in model_scores.items()}
@@ -201,6 +201,6 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
             annotation_font=dict(size=18, color="black")
         )
 
-    fig.write_image(svg_path)
+    fig.write_image(png_path, scale=3)
 
-    print(f"Plot saved as SVG at: {svg_path}")
+    print(f"Plot saved as png at: {png_path}")

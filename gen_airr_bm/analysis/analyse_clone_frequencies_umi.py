@@ -269,9 +269,9 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
         rho, p = spearmanr(df_copy[f"pseudo_freq_{name1}"], df_copy[f"pseudo_freq_{name2}"])
         title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), ρ = {rho:.3f}"
         fig = create_scatter_plot(df_copy, name1, name2, title_text)
-        svg_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}_symlog.svg")
-        fig.write_image(svg_path)
-        print(f"Plot saved as SVG at: {svg_path}.")
+        png_path = os.path.join(output_dir, f"{dataset_name}_{name2}_{name1}_symlog.png")
+        fig.write_image(png_path, scale=3)
+        print(f"Plot saved as png at: {png_path}.")
 
     return jsd_scores
 
@@ -330,16 +330,16 @@ def plot_frequencies_combined(frequencies: dict, output_dir: str, name1: str, na
     spearman_rho_avg = np.mean(spearman_rhos)
     pearson_rhos_avg = np.mean(pearson_rhos)
 
-    save_scatter_with_metric(combined_df, name1, name2, output_dir, os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_spearman.svg"),
+    save_scatter_with_metric(combined_df, name1, name2, output_dir, os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_spearman.png"),
                              f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (Spearman ρ = {spearman_rho_avg:.3f})")
-    save_scatter_with_metric(combined_df, name1, name2, output_dir, os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_pearson.svg"),
+    save_scatter_with_metric(combined_df, name1, name2, output_dir, os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_pearson.png"),
                              f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (Pearson ρ = {pearson_rhos_avg:.3f})")
     save_scatter_with_metric(combined_df, name1, name2, output_dir,
-                             os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_jsd.svg"),
+                             os.path.join(output_dir, f"combined_repertoires_{name2}_{name1}_symlog_jsd.png"),
                              f"Clone Frequencies: {name2.upper()} vs {name1.upper()} (Mean JSD = {jsd_avg:.3f})")
 
 
-def save_scatter_with_metric(combined_df, name1, name2, output_dir, svg_path, title_text):
+def save_scatter_with_metric(combined_df, name1, name2, output_dir, png_path, title_text):
     fig = create_scatter_plot(combined_df, name1, name2, title_text, color_by='repertoire')
-    fig.write_image(svg_path)
-    print(f"Combined plot saved as SVG at: {svg_path}")
+    fig.write_image(png_path, scale=3)
+    print(f"Combined plot saved as png at: {png_path}")
