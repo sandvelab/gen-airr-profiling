@@ -210,7 +210,7 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
     Returns:
         None
     """
-    for dataset in scores.mean_innovation_sensitivity:
+    for dataset in sorted(scores.mean_innovation_sensitivity):
         plot_avg_innovation_scores(analysis_config, scores.mean_innovation_sensitivity[dataset],
                                    scores.std_innovation_sensitivity[dataset],
                                    analysis_config.analysis_output_dir, "innovation",
@@ -257,6 +257,8 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
         pseudolog = False
 
     df = scores.innovation_df.copy()
+    df = df.sort_values(["dataset", "model"]).reset_index(drop=True)
+
     threshold = 1e-5
     df["precision_innovation_pseudolog"] = symlog_transform(df["precision_innovation"], linthresh=threshold, base=10)
 
@@ -319,6 +321,8 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
             ["precision_innovation", "sensitivity_innovation"]
         ]
         .mean()
+        .sort_values("model")
+        .reset_index(drop=True)
     )
 
     fig_mean = px.scatter(
@@ -353,8 +357,10 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
     Returns:
         None
     """
+    df = scores.innovation_df.sort_values(["dataset", "model"]).reset_index(drop=True)
+
     fig = px.scatter(
-        scores.innovation_df,
+        df,
         x="n_gen_novel",
         y="precision_innovation",
         color="model",
@@ -413,6 +419,8 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         None
     """
     df = scores.innovation_df.copy()
+    df = df.sort_values(["dataset", "model"]).reset_index(drop=True)
+
     threshold = 1e-5
     df["precision_innovation_pseudolog"] = symlog_transform(df["precision_innovation"], linthresh=threshold, base=10)
 
@@ -474,8 +482,8 @@ def collapse_mean_std_across_datasets(mean_dict, std_dict):
     mean_values = defaultdict(list)
     std_values = defaultdict(list)
 
-    for dataset in mean_dict:
-        for model in mean_dict[dataset]:
+    for dataset in sorted(mean_dict):
+        for model in sorted(mean_dict[dataset]):
             mean_values[model].append(mean_dict[dataset][model])
             std_values[model].append(std_dict[dataset][model])
 
