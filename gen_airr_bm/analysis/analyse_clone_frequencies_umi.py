@@ -204,7 +204,7 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
     color_palette = px.colors.qualitative.Safe
     fig.update_layout(
         template="plotly_white",
-        title={'text': wrap_title(title_text), 'font': {'size': 24}},
+        title={'text': wrap_title(title_text), 'font': {'size': 20}},
         xaxis_title={'text': f"{name2} Frequency (pseudo-log scale)", 'font': {'size': 20}},
         yaxis_title={'text': f"{name1.capitalize()} Frequency (pseudo-log scale)", 'font': {'size': 20}},
         xaxis=dict(tickfont=dict(size=18)),

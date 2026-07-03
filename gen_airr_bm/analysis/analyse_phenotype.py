@@ -268,6 +268,8 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
             'y': 0.95,
             'yanchor': 'top'
         },
+        width=1000,
+        height=900,
         margin=dict(t=140),
         plot_bgcolor="white",
         xaxis=dict(tickangle=-45, tickfont=dict(size=18)),

@@ -164,15 +164,15 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
     fig.update_layout(
         title={'text': wrap_title(f"Innovation Scores for Generated {collection_specification} Repertoires", width=50),
-               'font': {'size': 28},
+               'font': {'size': 20},
                'y': 0.95,
                'yanchor': 'top'
                },
         margin=dict(t=100),
         template="plotly_white",
         colorway=px.colors.qualitative.Dark24,
-        xaxis_title={'text': "Model", 'font': {'size': 24}},
-        yaxis_title={'text': "Innovation Score", 'font': {'size': 24}},
+        xaxis_title={'text': "Model", 'font': {'size': 20}},
+        yaxis_title={'text': "Innovation Score", 'font': {'size': 20}},
         xaxis=dict(tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
         showlegend=False

@@ -225,7 +225,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     fig.update_traces(marker=dict(size=10, opacity=0.8), selector=dict(mode='markers'))
     fig.update_layout(legend_title_text="Dataset",
                       title={'text': wrap_title(title, width=50),
-                             'font': {'size': 24},
+                             'font': {'size': 20},
                              'y': 0.93,
                              'yanchor': 'top'
                              },
