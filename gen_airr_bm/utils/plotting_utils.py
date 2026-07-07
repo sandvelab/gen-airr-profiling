@@ -211,7 +211,8 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
             line=dict(color="black", dash="dash"),
             annotation_text=f"Train vs. Test = {reference_score:.3f}",
             annotation_position="top right",
-            annotation_font=dict(size=16, color="black")
+            annotation_font=dict(size=18, color="black"),
+            annotation=dict(yshift=14)
         )
 
     fig.write_image(png_path, scale=3)
