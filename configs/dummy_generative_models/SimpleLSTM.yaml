@@ -16,11 +16,11 @@ definitions:
         num_epochs: 20
         batch_size: 1000
         device: cpu
-        hidden_size:  16 #1024
+        hidden_size: 16
         learning_rate: 0.001
-        embed_size: 2 #256
+        embed_size: 2
         temperature: 1
-        num_layers: 1 #3
+        num_layers: 1
         region_type: IMGT_JUNCTION
         iter_to_report: 1
 

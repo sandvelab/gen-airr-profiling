@@ -1,13 +1,13 @@
 n_experiments: 2
-output_dir: "results_dummy/experimental"
-input_dir: "data/experimental/dummy"
+output_dir: "results_dummy/experimental_umi"
+input_dir: "data/experimental/dummy_umi"
 seed: 42
 data_generation:
   experimental: True
-  method: "experimental"
-  n_samples: 100
-  default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus" ]
+  method: "experimental_umi"
+  n_samples: 1000
+  default_model_name: "humanIGH"
+  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
 models:
     - name: "vae"
       immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
@@ -29,39 +29,21 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
-sampling:
-  - model_name: "vae"
-    experiment_names: ["exp_0", "exp_1"]
-    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-    n_samples: 1000
-  - model_name: "pwm"
-    experiment_names: ["exp_0", "exp_1"]
-    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
-    n_samples: 1000
-postprocessing:
-  - model_name: "vae"
-    experiment_names: ["exp_0", "exp_1"]
-    n_samples: 100
-    n_subsets: 10
-  - model_name: "pwm"
-    experiment_names: ["exp_0", "exp_1"]
-    n_samples: 100
-    n_subsets: 10
 analyses:
     - name: "memorization"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
-      allowed_mismatches: 0
+      allowed_mismatches: 1
       indels: True
-      subfolder_name: "all dummy models"
+      subfolder_name: "all dummy models dist 1"
       receptor_type: "TCR"
     - name: "reduced_dimensionality"
       model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
-      n_subsets: 10
+      n_subsets: 6
       subfolder_name: "dummy models"
       receptor_type: "TCR"
     - name: "diversity"
@@ -79,13 +61,6 @@ analyses:
       allowed_mismatches: 0
       indels: False
     - name: "phenotype"
-      model_names: ["train"]
-      default_model_name: "humanTRB"
-      subfolder_name: "train"
-      receptor_type: "TCR"
-      allowed_mismatches: 0
-      indels: False
-    - name: "phenotype"
       model_names: ["sonnia"]
       default_model_name: "humanTRB"
       subfolder_name: "sonnia"
@@ -96,11 +71,11 @@ analyses:
       model_names: [ "vae" ]
       default_model_name: "humanTRB"
       subfolder_name: "vae"
-      receptor_type: "TCR"
+      receptor_type: "BCR UMI"
       allowed_mismatches: 0
       indels: False
     - name: "network"
-      model_names: [ "pwm" ]
+      model_names: [ "pwm", "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
@@ -108,27 +83,33 @@ analyses:
       subfolder_name: "dummy models"
       receptor_type: "TCR"
     - name: "precision_recall"
-      model_names: [ "pwm", "vae" ]
+      model_names: [ "vae" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
-      n_subsets: 10
+      n_subsets: 1
       allowed_mismatches: 1
       indels: True
       subfolder_name: "all dummy models dist 1"
       receptor_type: "TCR"
-    - name: "innovation"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
+    - name: "innovation_umi"
+      model_names: [ "vae" ]
+      default_model_name: "humanIGH"
+      n_subsets: 1
       allowed_mismatches: 0
       indels: False
-      subfolder_name: "all models"
-      receptor_type: "TCR"
-      n_subsets: 10
-    - name: "innovation_diversity"
-      model_names: [ "pwm", "vae" ]
-      default_model_name: "humanTRB"
+      subfolder_name: "all dummy models dist 0 elo elo"
+      receptor_type: "BCR UMI"
+    - name: "phenotype"
+      model_names: [ "train" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "train"
       allowed_mismatches: 0
       indels: False
-      subfolder_name: "all models"
-      receptor_type: "TCR"
+      receptor_type: "BCR UMI"
+    - name: "clone_frequencies"
+      model_names: [ "vae" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
       n_subsets: 10
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"

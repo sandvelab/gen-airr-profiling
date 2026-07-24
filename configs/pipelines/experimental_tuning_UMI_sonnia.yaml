@@ -9,7 +9,7 @@ seed: 42
 #  n_samples: 150000
 #  default_model_name: "humanIGH"
 #  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
-#
+
 models:
     - name: "sonnia_01"
       immuneml_model_config: "configs/tuning/UMI/SoNNia/sonnia_01.yaml"
