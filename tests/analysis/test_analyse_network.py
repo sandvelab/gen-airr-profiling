@@ -535,7 +535,7 @@ def test_summarize_and_plot_all(mocker):
     # Non-float kwargs can be compared directly
     assert kwargs["distribution_type"] == "connectivity"
     assert kwargs["file_name"] == "all_datasets_connectivity"
-    assert kwargs["scoring_method"] == "Jensen-Shannon Divergence"
+    assert kwargs["scoring_method"] == "JSD"
     assert kwargs["reference_score"] == mean_reference_score
 
 
