@@ -229,11 +229,13 @@ def test_plot_results(mocker):
     # Layout updated with expected labels and title
     assert mock_fig.update_layout.call_count == 1
     layout_kwargs = mock_fig.update_layout.call_args.kwargs
-    assert f"Mean Memorization Score for Generated Collection B (TCR) Repertoires" in layout_kwargs["title"]
-    assert layout_kwargs["xaxis_title"] == "Model"
-    assert layout_kwargs["yaxis_title"] == "Mean Memorization Ratio"
+    assert (layout_kwargs["title"]["text"]
+            == "Mean Memorization Score for Generated Collection B (TCR)<br>Repertoires")
+    assert layout_kwargs["xaxis"]["title"]["text"] == "Model"
+    assert layout_kwargs["yaxis"]["title"]["text"] == "Mean Memorization Ratio"
     assert layout_kwargs["xaxis_tickangle"] == -45
     assert layout_kwargs["template"] == "plotly_white"
 
     # Saved to correct path
-    mock_fig.write_image.assert_called_once_with(os.path.join(fig_dir, file_name + ".png"))
+    mock_fig.write_image.assert_called_once_with(os.path.join(fig_dir, file_name + ".png"),
+                                                 scale=3)

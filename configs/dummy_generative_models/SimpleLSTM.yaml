@@ -23,6 +23,7 @@ definitions:
         num_layers: 1
         region_type: IMGT_JUNCTION
         iter_to_report: 1
+        window_size: 42
 
 instructions:
   gen_model:

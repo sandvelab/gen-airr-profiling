@@ -82,7 +82,7 @@ def test_plot_frequencies_by_dataset(tmp_path, monkeypatch):
     # Speed up: patch write_image to avoid heavy image engine; instead, create a small placeholder file
     created_files = []
 
-    def fake_write_image(self, path):
+    def fake_write_image(self, path, **kwargs):
         # just create an empty file to simulate output
         open(path, "wb").close()
         created_files.append(path)
@@ -124,7 +124,7 @@ def test_plot_frequencies_combined(tmp_path, monkeypatch):
 
     created_files = []
 
-    def fake_write_image(self, path):
+    def fake_write_image(self, path, **kwargs):
         open(path, "wb").close()
         created_files.append(path)
 

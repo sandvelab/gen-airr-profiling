@@ -258,4 +258,4 @@ def test_plot_diversity_scatter_plotly(mocker, tmp_path):
         expected_df.sort_values(by=["source", "dataset"]).reset_index(drop=True)
     )
 
-    mock_fig.write_image.assert_called_once_with(output_path + ".png")
+    mock_fig.write_image.assert_called_once_with(output_path + ".png", scale=3)

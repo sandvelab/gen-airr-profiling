@@ -77,6 +77,51 @@ def simulate_experimental_and_olga_sequences(number_of_sequences, model, seed, o
     experimental_sequences.to_csv(experimental_sampled_data_file_path, sep='\t', index=False)
 
 
+# Some datasets (for example the Emerson data) use Adaptive-style column names instead of the AIRR ones.
+# For each AIRR column name we list the alternative names it can have in the input file.
+COLUMN_ALIASES = {
+    "junction_aa": ["cdr3_amino_acid"],
+    "v_call": ["v_resolved"],
+    "j_call": ["j_resolved"],
+}
+
+LOCUS_ALIASES = {
+    "TCRA": "TRA",
+    "TCRB": "TRB",
+    "TCRG": "TRG",
+    "TCRD": "TRD",
+}
+
+
+def read_experimental_columns(input_path, input_columns):
+    """
+    This function reads the requested columns from an experimental data file and renames them to the AIRR column names.
+    Columns can be requested either by their AIRR name (for example "junction_aa") or by an alias
+    (for example "cdr3_amino_acid"), and they are matched against whichever name is present in the file.
+    :param input_path: path to the experimental data file in tsv format
+    :param input_columns: list of column names to read
+    :return: dataframe with the requested columns named according to the AIRR standard
+    """
+    available_columns = pd.read_csv(input_path, sep='\t', nrows=0).columns
+    alias_to_airr = {alias: airr_column for airr_column, aliases in COLUMN_ALIASES.items() for alias in aliases}
+
+    columns_to_read = {}
+    for input_column in input_columns:
+        airr_column = alias_to_airr.get(input_column, input_column)
+        candidates = [airr_column] + COLUMN_ALIASES.get(airr_column, [])
+        matches = [candidate for candidate in candidates if candidate in available_columns]
+        if not matches:
+            raise ValueError(f"Could not find column {input_column} in {input_path}. Tried the following names: "
+                             f"{candidates}.")
+        columns_to_read[matches[0]] = airr_column
+
+    experimental_data = pd.read_csv(input_path, sep='\t', usecols=list(columns_to_read))
+    experimental_data = experimental_data.rename(columns=columns_to_read)
+    if "locus" in experimental_data:
+        experimental_data["locus"] = experimental_data["locus"].replace(LOCUS_ALIASES)
+    return experimental_data
+
+
 def preprocess_experimental_data(config: DataGenerationConfig):
     """
     This function preprocesses experimental data by sampling number_of_sequences sequences from the input data.
@@ -96,7 +141,7 @@ def preprocess_experimental_data(config: DataGenerationConfig):
     input_path_file_name = os.path.basename(input_path)
     experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
     experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
-    experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
+    experimental_data = read_experimental_columns(input_path, input_columns)
     experimental_data = experimental_data.dropna(subset=["junction_aa", "v_call", "j_call", "locus"])
     experimental_data = experimental_data.drop_duplicates(["junction_aa"])
     experimental_data = experimental_data[~experimental_data.junction_aa.str.contains("\*")]
@@ -134,7 +179,7 @@ def preprocess_experimental_umi_data(config: DataGenerationConfig):
     input_path_file_name = os.path.basename(input_path)
     experimental_train_file_path = os.path.join(train_dir, input_path_file_name)
     experimental_test_file_path = os.path.join(test_dir, input_path_file_name)
-    experimental_data = pd.read_csv(input_path, sep='\t', usecols=input_columns)
+    experimental_data = read_experimental_columns(input_path, input_columns)
     experimental_data = experimental_data.dropna(subset=["junction_aa", "v_call", "j_call", "umi_count", "locus"])
     experimental_data = experimental_data[~experimental_data.junction_aa.str.contains("\*")]
     experimental_data['v_call'] = experimental_data['v_call'].str.split(',').str[0].str.split('/').str[0]
