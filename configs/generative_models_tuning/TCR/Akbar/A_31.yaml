@@ -15,7 +15,7 @@ definitions:
         sequence_type: amino_acid
         num_epochs: 20
         batch_size: 128
-        device: cpu
+        device: cuda
         hidden_size: 512
         learning_rate: 0.001
         embed_size: 256
@@ -23,6 +23,7 @@ definitions:
         num_layers: 2
         region_type: IMGT_JUNCTION
         iter_to_report: 1
+        window_size: 42
 
 instructions:
   gen_model:
