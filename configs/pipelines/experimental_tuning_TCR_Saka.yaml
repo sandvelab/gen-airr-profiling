@@ -1,5 +1,5 @@
 n_experiments: 1
-output_dir: "RESULTS_TUNING_SEP23/TCR"
+output_dir: "RESULTS_TUNING_NOV6/TCR"
 input_dir: "data/tuning/TCR"
 seed: 42
 
