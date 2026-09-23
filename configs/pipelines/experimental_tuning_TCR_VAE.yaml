@@ -1,14 +1,14 @@
 n_experiments: 1
-output_dir: "RESULTS_TUNING_NOV6/TCR"
+output_dir: "RESULTS_TUNING_SEP23/TCR"
 input_dir: "data/tuning/TCR"
 seed: 42
 
-data_generation:
-  experimental: True
-  method: "experimental"
-  n_samples: 21500
-  default_model_name: "humanTRB"
-  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 21500
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
 
 models:
     - name: "VAE01"

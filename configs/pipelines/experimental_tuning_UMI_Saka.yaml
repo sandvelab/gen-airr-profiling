@@ -1,5 +1,5 @@
 n_experiments: 1
-output_dir: "RESULTS_TUNING_NOV6/UMI"
+output_dir: "RESULTS_TUNING_SEP23/UMI"
 input_dir: "data/tuning/UMI"
 seed: 42
 
