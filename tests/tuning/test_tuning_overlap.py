@@ -134,3 +134,37 @@ def test_run_overlap_tuning(sample_tuning_config, tmp_path, mocker):
     assert saved.get('called', (None, None))[0] == 'overlap'
     assert saved.get('called', (None, None))[1] == sample_tuning_config.tuning_output_dir
 
+
+
+def test_get_overlap_results_without_memorization_reference(sample_tuning_config, tmp_path):
+    # the memorization analysis writes "None" as reference score for non-UMI data
+    root = tmp_path / "root_out"
+    subfolder = "_".join(sample_tuning_config.subfolder_name.split())
+    memorization_base = root / "analyses" / "memorization" / subfolder / "memorization"
+    _write_tsv(memorization_base.with_suffix('.tsv'),
+               pd.DataFrame({"model": ["model_1", "model_2"], "mean_overlap_score": [0.1, 0.2]}))
+    with open(str(memorization_base) + "_mean_ref.tsv", "w") as f:
+        f.write("None\n")
+    _write_tsv(root / "analyses" / "precision_recall" / subfolder / "test" / "precision_recall_data.tsv",
+               pd.DataFrame({"Model": ["model_1", "upper_reference"], "Precision_mean": [0.5, 0.55]}))
+    sample_tuning_config.root_output_dir = str(root)
+
+    _, mem_mean_ref_score, _, prec_mean_ref_score = tuning_overlap.get_overlap_results(sample_tuning_config)
+
+    assert mem_mean_ref_score is None
+    assert prec_mean_ref_score == pytest.approx(0.55)
+
+
+@pytest.mark.parametrize("memorization_mean_ref_score,expected_reference_lines", [(0.3, 2), (None, 1)])
+def test_plot_precision_memorization_scatter(tmp_path, mocker, memorization_mean_ref_score, expected_reference_lines):
+    written_figures = []
+    mocker.patch("plotly.graph_objects.Figure.write_image",
+                 side_effect=lambda fig, path, *args, **kwargs: written_figures.append(fig), autospec=True)
+    overlap_score_df = pd.DataFrame({"Model": ["model_1", "model_2"], "Realism": [0.4, 0.6],
+                                     "Memorization": [0.1, 0.2]})
+
+    tuning_overlap.plot_precision_memorization_scatter(overlap_score_df, str(tmp_path), memorization_mean_ref_score,
+                                                       0.55)
+
+    assert len(written_figures) == 1
+    assert len(written_figures[0].layout.shapes) == expected_reference_lines

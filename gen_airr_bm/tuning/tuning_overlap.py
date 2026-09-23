@@ -44,8 +44,10 @@ def get_overlap_results(tuning_config: TuningConfig) -> tuple:
     memorization_path = Path(root_output_dir) / "analyses/memorization" / '_'.join(tuning_config.subfolder_name.split()) / "memorization"
     memorization_df = pd.read_csv(str(memorization_path) + ".tsv", sep="\t")
 
+    # the memorization analysis only computes a reference score for UMI data and writes "None" otherwise
     with open(str(memorization_path) + "_mean_ref.tsv", "r") as f:
-        memorization_mean_ref_score = float(f.readline().strip())
+        memorization_mean_ref_line = f.readline().strip()
+    memorization_mean_ref_score = None if memorization_mean_ref_line == "None" else float(memorization_mean_ref_line)
 
     precision_recall_path = glob.glob(str(root_output_dir) + "/analyses/precision_recall/" + '_'.join(tuning_config.subfolder_name.split()) +
                                       "/test/precision_recall_data.tsv")
@@ -99,7 +101,8 @@ def plot_precision_memorization_scatter(overlap_score_df: pd.DataFrame, output_d
     Args:
         overlap_score_df: DataFrame containing the overlap difference results.
         output_dir: Directory to save the plots.
-        memorization_mean_ref_score: Mean reference score from memorization analysis.
+        memorization_mean_ref_score: Mean reference score from memorization analysis, or None if there is no
+            reference score (then no memorization reference line is drawn).
         precision_mean_ref_score: Mean reference score from precision analysis.
     Returns:
         None
@@ -140,22 +143,19 @@ def plot_precision_memorization_scatter(overlap_score_df: pd.DataFrame, output_d
         margin=dict(b=120)
     )
 
+    memorization_values = scatterplot_df["Memorization"].tolist()
+    if memorization_mean_ref_score is not None:
+        memorization_values.append(memorization_mean_ref_score)
+
     x_max = max(scatterplot_df["Realism"].max(), precision_mean_ref_score)
-    y_max = max(scatterplot_df["Memorization"].max(), memorization_mean_ref_score)
+    y_max = max(memorization_values)
     x_min = min(scatterplot_df["Realism"].min(), precision_mean_ref_score)
-    y_min = min(scatterplot_df["Memorization"].min(), memorization_mean_ref_score)
+    y_min = min(memorization_values)
 
     fig.add_shape(
         type="line",
         x0=precision_mean_ref_score, x1=precision_mean_ref_score,
         y0=y_min, y1=y_max,
-        line=dict(color="red", width=0.8, dash="dash")
-    )
-
-    fig.add_shape(
-        type="line",
-        x0=x_min, x1=x_max,
-        y0=memorization_mean_ref_score, y1=memorization_mean_ref_score,
         line=dict(color="red", width=0.8, dash="dash")
     )
 
@@ -167,14 +167,22 @@ def plot_precision_memorization_scatter(overlap_score_df: pd.DataFrame, output_d
         xshift=-30
     )
 
-    fig.add_annotation(
-        x=x_min, y=memorization_mean_ref_score,
-        text=f"y = {memorization_mean_ref_score:.2f}",
-        showarrow=False,
-        font=dict(color="red", size=10),
-        yshift=10,
-        xshift=30
-    )
+    if memorization_mean_ref_score is not None:
+        fig.add_shape(
+            type="line",
+            x0=x_min, x1=x_max,
+            y0=memorization_mean_ref_score, y1=memorization_mean_ref_score,
+            line=dict(color="red", width=0.8, dash="dash")
+        )
+
+        fig.add_annotation(
+            x=x_min, y=memorization_mean_ref_score,
+            text=f"y = {memorization_mean_ref_score:.2f}",
+            showarrow=False,
+            font=dict(color="red", size=10),
+            yshift=10,
+            xshift=30
+        )
 
     plot_path = Path(output_dir) / "realism_memorization_scatter.png"
     fig.write_image(plot_path)
