@@ -4,6 +4,23 @@ from collections import defaultdict
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
+def get_generated_sequences_dir_name(analysis_config: AnalysisConfig, split: bool = True) -> str:
+    """ Returns the name of the folder with the generated sequences that the analysis should use. By default these are
+    the novel generated sequences (training sequences removed, made by post-processing). BCR UMI data and analyses
+    with use_novel_sequences set to False use all generated sequences as saved after training instead.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis.
+        split (bool): Whether to return the folder with the sequences divided into subsets.
+    Returns:
+        str: Name of the folder in the root output directory.
+    """
+    if analysis_config.receptor_type != "BCR UMI" and analysis_config.use_novel_sequences:
+        dir_name = "novel_generated_compairr_sequences"
+    else:
+        dir_name = "generated_compairr_sequences"
+    return f"{dir_name}_split" if split else dir_name
+
+
 def get_sequence_files(analysis_config: AnalysisConfig, model: str, reference_data: str):
     comparison_files_dir = defaultdict(set)
 
@@ -19,7 +36,7 @@ def get_sequence_files(analysis_config: AnalysisConfig, model: str, reference_da
         elif analysis_config.analysis == "innovation" or analysis_config.analysis == "innovation_diversity":
             gen_dir = f"{analysis_config.root_output_dir}/novel_unique_generated_compairr_sequences_split/{model}"
         else:
-            gen_dir = f"{analysis_config.root_output_dir}/novel_generated_compairr_sequences_split/{model}"
+            gen_dir = f"{analysis_config.root_output_dir}/{get_generated_sequences_dir_name(analysis_config)}/{model}"
     ref_files = set(os.listdir(ref_dir))
     gen_files = set(os.listdir(gen_dir))
 

@@ -5,6 +5,7 @@ from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDis
 from gen_airr_bm.analysis.distribution.distribution_factory import get_distribution_strategy
 from gen_airr_bm.constants.distribution_type import DistributionType
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name
 
 
 def run_reduced_dimensionality_analyses(analysis_config: AnalysisConfig) -> None:
@@ -135,10 +136,7 @@ def get_sequence_file_pairs(analysis_config: AnalysisConfig, model: str) -> list
         list: A list of tuples, each containing (generated_file_path, reference_file_path, reference_label).
     """
     comparison_pairs = []
-    if analysis_config.receptor_type == "BCR UMI":
-        sequences_dir_name = f"generated_compairr_sequences_split"
-    else:
-        sequences_dir_name = f"novel_generated_compairr_sequences_split"
+    sequences_dir_name = get_generated_sequences_dir_name(analysis_config)
     gen_dir = f"{analysis_config.root_output_dir}/{sequences_dir_name}/{model}"
     gen_files = os.listdir(gen_dir)
     gen_files = [file for file in gen_files if

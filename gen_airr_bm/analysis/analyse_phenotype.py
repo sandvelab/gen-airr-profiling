@@ -13,6 +13,7 @@ import plotly.express as px
 from scipy.cluster.hierarchy import linkage, leaves_list
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.utils.compairr_utils import deduplicate_and_merge_two_datasets, run_compairr_existence
 
@@ -32,10 +33,7 @@ def run_phenotype_analysis(analysis_config: AnalysisConfig):
     if model_name == DatasetSplit.TRAIN.value:
         compairr_sequences_dir = f"{analysis_config.root_output_dir}/{model_name}_compairr_sequences"
     else:
-        if analysis_config.receptor_type == 'BCR UMI':
-            sequences_dir_name = f"generated_compairr_sequences"
-        else:
-            sequences_dir_name = f"novel_generated_compairr_sequences"
+        sequences_dir_name = get_generated_sequences_dir_name(analysis_config, split=False)
         compairr_sequences_dir = f"{analysis_config.root_output_dir}/{sequences_dir_name}/{model_name}"
 
     similarities_matrix, dataset_names = calculate_similarities_matrix(analysis_config, compairr_sequences_dir,)
