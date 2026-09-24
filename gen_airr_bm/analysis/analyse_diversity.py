@@ -8,6 +8,7 @@ import plotly.express as px
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name
 from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, wrap_title
 
 
@@ -53,10 +54,7 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, reference
     for reference_name, reference_dir in reference_dirs.items():
         reference_diversities[reference_name] = compute_diversity(reference_dir, diversity_function)
 
-    if analysis_config.receptor_type == "BCR UMI":
-        sequences_dir_name = f"generated_compairr_sequences_split"
-    else:
-        sequences_dir_name = f"novel_generated_compairr_sequences_split"
+    sequences_dir_name = get_generated_sequences_dir_name(analysis_config)
     models_diversities = compute_diversities_for_models(analysis_config.model_names,
                                                         f"{analysis_config.root_output_dir}/"
                                                         f"{sequences_dir_name}",

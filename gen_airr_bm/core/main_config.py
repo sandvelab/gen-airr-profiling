@@ -78,7 +78,8 @@ class MainConfig:
                                allowed_mismatches=analysis.get("allowed_mismatches", 0),
                                indels=analysis.get("indels", False),
                                deduplicate=analysis.get("deduplicate", False),
-                               receptor_type=analysis["receptor_type"])
+                               receptor_type=analysis["receptor_type"],
+                               use_novel_sequences=analysis.get("use_novel_sequences", True))
                 for analysis in data.get("analyses", [])
             ])
 
