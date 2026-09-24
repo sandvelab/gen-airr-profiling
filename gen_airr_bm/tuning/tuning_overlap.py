@@ -52,7 +52,9 @@ def get_overlap_results(tuning_config: TuningConfig) -> tuple:
     precision_recall_path = glob.glob(str(root_output_dir) + "/analyses/precision_recall/" + '_'.join(tuning_config.subfolder_name.split()) +
                                       "/test/precision_recall_data.tsv")
     precision_recall_df = pd.read_csv(precision_recall_path[0], sep="\t")
-    precision_mean_ref_score = precision_recall_df[precision_recall_df["Model"] == "upper_reference"]["Precision_mean"].values[0]
+    # the precision recall analysis no longer adds the upper reference (train vs test), so it can be missing
+    upper_reference_precision = precision_recall_df[precision_recall_df["Model"] == "upper_reference"]["Precision_mean"]
+    precision_mean_ref_score = upper_reference_precision.values[0] if len(upper_reference_precision) > 0 else None
 
     return memorization_df, memorization_mean_ref_score, precision_recall_df, precision_mean_ref_score
 
@@ -103,7 +105,8 @@ def plot_precision_memorization_scatter(overlap_score_df: pd.DataFrame, output_d
         output_dir: Directory to save the plots.
         memorization_mean_ref_score: Mean reference score from memorization analysis, or None if there is no
             reference score (then no memorization reference line is drawn).
-        precision_mean_ref_score: Mean reference score from precision analysis.
+        precision_mean_ref_score: Mean reference score from precision analysis, or None if there is no reference
+            score (then no precision reference line is drawn).
     Returns:
         None
     """
@@ -143,29 +146,33 @@ def plot_precision_memorization_scatter(overlap_score_df: pd.DataFrame, output_d
         margin=dict(b=120)
     )
 
+    realism_values = scatterplot_df["Realism"].tolist()
+    if precision_mean_ref_score is not None:
+        realism_values.append(precision_mean_ref_score)
     memorization_values = scatterplot_df["Memorization"].tolist()
     if memorization_mean_ref_score is not None:
         memorization_values.append(memorization_mean_ref_score)
 
-    x_max = max(scatterplot_df["Realism"].max(), precision_mean_ref_score)
+    x_max = max(realism_values)
     y_max = max(memorization_values)
-    x_min = min(scatterplot_df["Realism"].min(), precision_mean_ref_score)
+    x_min = min(realism_values)
     y_min = min(memorization_values)
 
-    fig.add_shape(
-        type="line",
-        x0=precision_mean_ref_score, x1=precision_mean_ref_score,
-        y0=y_min, y1=y_max,
-        line=dict(color="red", width=0.8, dash="dash")
-    )
+    if precision_mean_ref_score is not None:
+        fig.add_shape(
+            type="line",
+            x0=precision_mean_ref_score, x1=precision_mean_ref_score,
+            y0=y_min, y1=y_max,
+            line=dict(color="red", width=0.8, dash="dash")
+        )
 
-    fig.add_annotation(
-        x=precision_mean_ref_score, y=y_min,
-        text=f"x = {precision_mean_ref_score:.2f}",
-        showarrow=False,
-        font=dict(color="red", size=10),
-        xshift=-30
-    )
+        fig.add_annotation(
+            x=precision_mean_ref_score, y=y_min,
+            text=f"x = {precision_mean_ref_score:.2f}",
+            showarrow=False,
+            font=dict(color="red", size=10),
+            xshift=-30
+        )
 
     if memorization_mean_ref_score is not None:
         fig.add_shape(

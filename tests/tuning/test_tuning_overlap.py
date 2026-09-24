@@ -136,8 +136,12 @@ def test_run_overlap_tuning(sample_tuning_config, tmp_path, mocker):
 
 
 
-def test_get_overlap_results_without_memorization_reference(sample_tuning_config, tmp_path):
-    # the memorization analysis writes "None" as reference score for non-UMI data
+@pytest.mark.parametrize("precision_models,expected_prec_mean_ref_score",
+                         [(["model_1", "upper_reference"], 0.55), (["model_1", "model_2"], None)])
+def test_get_overlap_results_without_reference_scores(sample_tuning_config, tmp_path, precision_models,
+                                                      expected_prec_mean_ref_score):
+    # the memorization analysis writes "None" as reference score for non-UMI data and the precision recall analysis
+    # doesn't add the upper_reference row anymore
     root = tmp_path / "root_out"
     subfolder = "_".join(sample_tuning_config.subfolder_name.split())
     memorization_base = root / "analyses" / "memorization" / subfolder / "memorization"
@@ -146,17 +150,22 @@ def test_get_overlap_results_without_memorization_reference(sample_tuning_config
     with open(str(memorization_base) + "_mean_ref.tsv", "w") as f:
         f.write("None\n")
     _write_tsv(root / "analyses" / "precision_recall" / subfolder / "test" / "precision_recall_data.tsv",
-               pd.DataFrame({"Model": ["model_1", "upper_reference"], "Precision_mean": [0.5, 0.55]}))
+               pd.DataFrame({"Model": precision_models, "Precision_mean": [0.5, 0.55]}))
     sample_tuning_config.root_output_dir = str(root)
 
     _, mem_mean_ref_score, _, prec_mean_ref_score = tuning_overlap.get_overlap_results(sample_tuning_config)
 
     assert mem_mean_ref_score is None
-    assert prec_mean_ref_score == pytest.approx(0.55)
+    if expected_prec_mean_ref_score is None:
+        assert prec_mean_ref_score is None
+    else:
+        assert prec_mean_ref_score == pytest.approx(expected_prec_mean_ref_score)
 
 
-@pytest.mark.parametrize("memorization_mean_ref_score,expected_reference_lines", [(0.3, 2), (None, 1)])
-def test_plot_precision_memorization_scatter(tmp_path, mocker, memorization_mean_ref_score, expected_reference_lines):
+@pytest.mark.parametrize("memorization_mean_ref_score,precision_mean_ref_score,expected_reference_lines",
+                         [(0.3, 0.55, 2), (None, 0.55, 1), (0.3, None, 1), (None, None, 0)])
+def test_plot_precision_memorization_scatter(tmp_path, mocker, memorization_mean_ref_score, precision_mean_ref_score,
+                                             expected_reference_lines):
     written_figures = []
     mocker.patch("plotly.graph_objects.Figure.write_image",
                  side_effect=lambda fig, path, *args, **kwargs: written_figures.append(fig), autospec=True)
@@ -164,7 +173,7 @@ def test_plot_precision_memorization_scatter(tmp_path, mocker, memorization_mean
                                      "Memorization": [0.1, 0.2]})
 
     tuning_overlap.plot_precision_memorization_scatter(overlap_score_df, str(tmp_path), memorization_mean_ref_score,
-                                                       0.55)
+                                                       precision_mean_ref_score)
 
     assert len(written_figures) == 1
     assert len(written_figures[0].layout.shapes) == expected_reference_lines
