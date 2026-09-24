@@ -181,6 +181,9 @@ analyses:
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       subfolder_name: "all Akbar models"
+      n_subsets: 6
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "memorization"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -192,6 +195,8 @@ analyses:
       allowed_mismatches: 0
       indels: False
       subfolder_name: "all Akbar models dist 0"
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "memorization"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -204,6 +209,8 @@ analyses:
       indels: False
       deduplicate: True
       subfolder_name: "all Akbar models dist 0 deduplicated"
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "diversity"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -213,6 +220,8 @@ analyses:
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "all Akbar models"
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "network"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -222,6 +231,8 @@ analyses:
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "all Akbar models"
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "precision_recall"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -233,6 +244,8 @@ analyses:
       allowed_mismatches: 0
       indels: False
       subfolder_name: "all Akbar models dist 0"
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "precision_recall"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -245,6 +258,8 @@ analyses:
       indels: False
       deduplicate: True
       subfolder_name: "all Akbar models dist 0 deduplicated"
+      receptor_type: "BCR"
+      use_novel_sequences: False
     - name: "precision_recall"
       model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
                      "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
@@ -256,31 +271,33 @@ analyses:
       allowed_mismatches: 1
       indels: True
       subfolder_name: "all Akbar models dist 1"
+      receptor_type: "BCR"
+      use_novel_sequences: False
 
-tuning:
-    - tuning_method: "reduced_dimensionality"
-      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
-                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
-                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
-                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
-      reference_data: [ "train", "test" ]
-      subfolder_name: "all Akbar models"
-      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
-                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
-                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
-                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
-      reference_data: [ "train", "test" ]
-      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
-      subfolder_name: "all Akbar models dist 0"
-      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
-                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
-                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
-                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
-      reference_data: [ "train", "test" ]
-      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-      subfolder_name: "all Akbar models dist 0 deduplicated"
-      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
+#tuning:
+#    - tuning_method: "reduced_dimensionality"
+#      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+#                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+#                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+#                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+#      reference_data: [ "train", "test" ]
+#      subfolder_name: "all Akbar models"
+#      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+#                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+#                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+#                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0]
+#      subfolder_name: "all Akbar models dist 0"
+#      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "A_01", "A_02", "A_03", "A_04", "A_05", "A_06", "A_07", "A_08",
+#                     "A_09", "A_10", "A_11", "A_12", "A_13", "A_14", "A_15", "A_16",
+#                     "A_17", "A_18", "A_19", "A_20", "A_21", "A_22", "A_23", "A_24",
+#                     "A_25", "A_26", "A_27", "A_28", "A_29", "A_30", "A_31", "A_32" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+#      subfolder_name: "all Akbar models dist 0 deduplicated"
+#      hyperparameter_table_path: "data/hyperparameter_tables/Akbar.tsv"
