@@ -1,4 +1,5 @@
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -92,12 +93,46 @@ LOCUS_ALIASES = {
     "TCRD": "TRD",
 }
 
+# Adaptive (immunoSEQ) writes TRB gene names differently from IMGT, e.g. TCRBV05-05*01 instead of TRBV5-5*01.
+ADAPTIVE_TRB_GENE_PATTERN = re.compile(r"^TCRB(?P<segment>[VDJ])(?P<family>[0-9A-Z]+?)"
+                                       r"(?:-(?P<gene>\d+|or\d+_\d+))?(?P<allele>\*\d+)?$")
+
+# TRB gene families with a single gene: IMGT names them without a gene number (TRBV2, not TRBV2-1)
+TRB_SINGLE_GENE_FAMILIES = {"V1", "V2", "V9", "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V26", "V27", "V28",
+                            "V30", "D1", "D2"}
+
+
+def adaptive_to_imgt_gene_name(gene_name):
+    """
+    This function converts an Adaptive TRB gene name to the IMGT name, for example TCRBV05-05*01 to TRBV5-5*01,
+    TCRBV02-01 to TRBV2 and TCRBV20-or09_02 to TRBV20/OR9-2. Calls that Adaptive only resolved to the gene family
+    (for example TCRBV20) stay family calls (TRBV20). Names that are not Adaptive TRB names are returned as is.
+    :param gene_name: gene name
+    :return: IMGT gene name
+    """
+    if not isinstance(gene_name, str):
+        return gene_name
+    match = ADAPTIVE_TRB_GENE_PATTERN.match(gene_name)
+    if match is None:
+        return gene_name
+    segment, family, gene, allele = match.group("segment", "family", "gene", "allele")
+    family = family.lstrip("0")
+    if gene is not None and gene.startswith("or"):
+        chromosome, number = gene[2:].split("_")
+        imgt_name = f"TRB{segment}{family}/OR{int(chromosome)}-{int(number)}"
+    elif gene is None or f"{segment}{family}" in TRB_SINGLE_GENE_FAMILIES:
+        imgt_name = f"TRB{segment}{family}"
+    else:
+        imgt_name = f"TRB{segment}{family}-{int(gene)}"
+    return imgt_name + (allele or "")
+
 
 def read_experimental_columns(input_path, input_columns):
     """
     This function reads the requested columns from an experimental data file and renames them to the AIRR column names.
     Columns can be requested either by their AIRR name (for example "junction_aa") or by an alias
     (for example "cdr3_amino_acid"), and they are matched against whichever name is present in the file.
+    Adaptive TRB gene names are converted to IMGT names (see adaptive_to_imgt_gene_name).
     :param input_path: path to the experimental data file in tsv format
     :param input_columns: list of column names to read
     :return: dataframe with the requested columns named according to the AIRR standard
@@ -119,6 +154,9 @@ def read_experimental_columns(input_path, input_columns):
     experimental_data = experimental_data.rename(columns=columns_to_read)
     if "locus" in experimental_data:
         experimental_data["locus"] = experimental_data["locus"].replace(LOCUS_ALIASES)
+    for gene_column in ["v_call", "d_call", "j_call"]:
+        if gene_column in experimental_data:
+            experimental_data[gene_column] = experimental_data[gene_column].map(adaptive_to_imgt_gene_name)
     return experimental_data
 
 
