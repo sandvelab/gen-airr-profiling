@@ -132,57 +132,57 @@ seed: 42
 #      test_dir: "test"
 #      n_subset_samples: 21500
 
-analyses:
-  - name: "reduced_dimensionality"
-    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
-                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
-                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-    default_model_name: "humanTRB"
-    reference_data: [ "train", "test" ]
-    subfolder_name: "all SoNNia models"
-    n_subsets: 6
-    receptor_type: "TCR"
-    use_novel_sequences: False
-  - name: "precision_recall"
-    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
-                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
-                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-    default_model_name: "humanTRB"
-    reference_data: [ "train", "test" ]
-    n_subsets: 6
-    allowed_mismatches: 0
-    indels: False
-    deduplicate: True
-    subfolder_name: "all SoNNia models"
-    receptor_type: "TCR"
-    use_novel_sequences: False
-  - name: "memorization"
-    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
-                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
-                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-    default_model_name: "humanTRB"
-    reference_data: [ "train", "test" ]
-    n_subsets: 6
-    allowed_mismatches: 0
-    indels: False
-    deduplicate: False
-    subfolder_name: "all SoNNia models"
-    receptor_type: "TCR"
-    use_novel_sequences: False
+#analyses:
+#  - name: "reduced_dimensionality"
+#    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+#                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+#                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#    default_model_name: "humanTRB"
+#    reference_data: [ "train", "test" ]
+#    subfolder_name: "all SoNNia models"
+#    n_subsets: 6
+#    receptor_type: "TCR"
+#    use_novel_sequences: False
+#  - name: "precision_recall"
+#    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+#                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+#                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#    default_model_name: "humanTRB"
+#    reference_data: [ "train", "test" ]
+#    n_subsets: 6
+#    allowed_mismatches: 0
+#    indels: False
+#    deduplicate: True
+#    subfolder_name: "all SoNNia models"
+#    receptor_type: "TCR"
+#    use_novel_sequences: False
+#  - name: "memorization"
+#    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+#                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+#                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+#    default_model_name: "humanTRB"
+#    reference_data: [ "train", "test" ]
+#    n_subsets: 6
+#    allowed_mismatches: 0
+#    indels: False
+#    deduplicate: False
+#    subfolder_name: "all SoNNia models"
+#    receptor_type: "TCR"
+#    use_novel_sequences: False
 
-#tuning:
-#  - tuning_method: "reduced_dimensionality"
-#    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
-#                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
-#                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-#    reference_data: [ "train", "test" ]
-#    subfolder_name: "all SoNNia models"
-#    hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
-#  - tuning_method: "overlap"
-#    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
-#                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
-#                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-#    reference_data: [ "train", "test" ]
-#    k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-#    subfolder_name: "all SoNNia models"
-#    hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
+tuning:
+  - tuning_method: "reduced_dimensionality"
+    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+    reference_data: [ "train", "test" ]
+    subfolder_name: "all SoNNia models"
+    hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
+  - tuning_method: "overlap"
+    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
+                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
+                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
+    reference_data: [ "train", "test" ]
+    k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+    subfolder_name: "all SoNNia models"
+    hyperparameter_table_path: "data/hyperparameter_tables/soNNia.tsv"
