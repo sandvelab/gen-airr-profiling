@@ -66,11 +66,11 @@ models:
 #      train_dir: "train"
 #      test_dir: "test"
 #      n_subset_samples: 150000
-    - name: "A_12"
-      immuneml_model_config: "configs/generative_models_tuning/UMI/Akbar/A_12.yaml"
-      train_dir: "train"
-      test_dir: "test"
-      n_subset_samples: 150000
+#    - name: "A_12"
+#      immuneml_model_config: "configs/generative_models_tuning/UMI/Akbar/A_12.yaml"
+#      train_dir: "train"
+#      test_dir: "test"
+#      n_subset_samples: 150000
     - name: "A_13"
       immuneml_model_config: "configs/generative_models_tuning/UMI/Akbar/A_13.yaml"
       train_dir: "train"
