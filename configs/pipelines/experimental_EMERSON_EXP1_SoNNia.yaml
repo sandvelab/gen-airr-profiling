@@ -1,0 +1,23 @@
+n_experiments: 100
+output_dir: "RESULTS_SEP25/EMERSON_EXP1"
+input_dir: "data/experimental/emerson_exp1"
+seed: 42
+
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 21500
+#  default_model_name: "humanTRB"
+#  input_columns: ["cdr3_amino_acid", "v_resolved", "j_resolved", "locus" ]
+
+models:
+    - name: "SoNNia_overlap"
+      immuneml_model_config: "configs/generative_models/EMERSON_EXP1/SoNNia/sonnia_09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "SoNNia_kmer"
+      immuneml_model_config: "configs/generative_models/EMERSON_EXP1/SoNNia/sonnia_11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
