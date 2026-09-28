@@ -1,0 +1,34 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    model:
+      TCRpeg:
+        locus: heavy
+        region_type: IMGT_JUNCTION
+        hidden_size: 128
+        num_layers: 2
+        dropout: 0.
+        num_epochs: 10
+        batch_size: 32
+        learning_rate: 0.0001
+        max_length: 40
+        vj: True
+        device: cpu
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: model
+    gen_examples_count: 60000
+    number_of_processes: 1
+    training_percentage: 1
