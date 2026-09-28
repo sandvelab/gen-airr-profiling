@@ -7,20 +7,25 @@ Only HIP donors (subject_id P...; the Keck cohort is left out) with a clean_coun
   Male, CMV True     P00492.tsv -> P00492_male_pos.tsv
   Female, CMV False  P00404.tsv -> P00404_female_neg.tsv
 
-Every selected subject is added to a selection CSV (default <data_dir>/emerson_selection.csv), and
-subjects already listed there are never selected again, so the experiment run can't pick the
-tuning repertoire.
+--experiment names the experiment (e.g. emerson_exp2) and sets where files are saved. Every selected
+subject is added to the experiment's selection CSV (default <data_dir>/emerson_selection_<experiment>.csv),
+and subjects already listed there are never selected again, so the experiment run can't pick the
+tuning repertoire. Subjects listed in the CSVs given with --exclude_selection (e.g. those of an earlier
+experiment) are also skipped.
 
-  tuning      pick --n_select (default 1) repertoires and copy them to <data_dir>/tuning/.
-              Can only be run once.
+  tuning      pick --n_select (default 1) repertoires and copy them to
+              <data_dir>/tuning/<EXPERIMENT>/ (upper case). Can only be run once per experiment.
   experiment  pick --n_select (default 100) repertoires and copy them to
-              <data_dir>/experimental/emerson_exp1/. Can be run again to extend the experiment,
+              <data_dir>/experimental/<experiment>/. Can be run again to extend the experiment,
               e.g. --n_select 20 now and --n_select 80 later for 100 in total. The run column in
               the selection CSV says which run each subject came from.
 
+The first experiment, emerson_exp1, was selected before --experiment existed and has its selection in
+data/emerson_selection.csv, so pass --selection_file data/emerson_selection.csv to extend it.
+
 Example:
-    python scripts/select_emerson_repertoires.py tuning data/emerson_updated_metadata.csv path/to/repertoires/ data/
-    python scripts/select_emerson_repertoires.py experiment data/emerson_updated_metadata.csv path/to/repertoires/ data/ --n_select 20
+    python scripts/select_emerson_repertoires.py tuning data/emerson_updated_metadata.csv path/to/repertoires/ data/ --experiment emerson_exp2
+    python scripts/select_emerson_repertoires.py experiment data/emerson_updated_metadata.csv path/to/repertoires/ data/ --experiment emerson_exp2 --n_select 20
 """
 
 import argparse
@@ -32,7 +37,6 @@ from pathlib import Path
 
 CMV_SUFFIXES = {"true": "pos", "false": "neg"}
 HIP_PREFIX = "P"  # HIP subject_ids are P00001...; Keck ones are Keck0001...
-TARGET_DIRS = {"tuning": Path("tuning") / "EMERSON_EXP1", "experiment": Path("experimental") / "emerson_exp1"}
 DEFAULT_N_SELECT = {"tuning": 1, "experiment": 100}
 SELECTION_COLUMNS = ["role", "run", "subject_id", "CMV", "sex", "age", "clean_count", "filename", "copied_as", "seed"]
 
@@ -40,6 +44,13 @@ SELECTION_COLUMNS = ["role", "run", "subject_id", "CMV", "sex", "age", "clean_co
 def updated_filename(row):
     """Return the filename with sex and CMV status, e.g. P00492.tsv -> P00492_male_pos.tsv."""
     return f'{row["subject_id"].strip()}_{row["sex"].strip().lower()}_{CMV_SUFFIXES[row["CMV"].strip().lower()]}.tsv'
+
+
+def target_dir(data_dir, role, experiment):
+    """Return where the selected files are copied, e.g. data/tuning/EMERSON_EXP2 or data/experimental/emerson_exp2."""
+    if role == "tuning":
+        return data_dir / "tuning" / experiment.upper()
+    return data_dir / "experimental" / experiment
 
 
 def read_selection(path):
@@ -54,19 +65,22 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("role", choices=TARGET_DIRS, help="which set of repertoires to select")
+    parser.add_argument("role", choices=DEFAULT_N_SELECT, help="which set of repertoires to select")
     parser.add_argument("metadata", type=Path, help="metadata CSV file")
     parser.add_argument("repertoire_dir", type=Path, help="folder with the repertoire files")
     parser.add_argument("data_dir", type=Path, help="the project's data folder, e.g. data/")
-    parser.add_argument("--selection_file", type=Path, help="default: <data_dir>/emerson_selection.csv")
+    parser.add_argument("--experiment", required=True, help="experiment name, e.g. emerson_exp2")
+    parser.add_argument("--selection_file", type=Path, help="default: <data_dir>/emerson_selection_<experiment>.csv")
+    parser.add_argument("--exclude_selection", type=Path, nargs="+", default=[],
+                        help="selection CSVs of other experiments whose subjects are skipped")
     parser.add_argument("--min_clean_count", type=int, default=100000)
     parser.add_argument("--n_select", type=int, help="default: 1 for tuning, 100 for experiment")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--dry_run", action="store_true", help="print the selection without copying")
     args = parser.parse_args()
 
-    selection_file = args.selection_file or args.data_dir / "emerson_selection.csv"
-    target_dir = args.data_dir / TARGET_DIRS[args.role]
+    selection_file = args.selection_file or args.data_dir / f"emerson_selection_{args.experiment}.csv"
+    copy_dir = target_dir(args.data_dir, args.role, args.experiment)
     n_select = args.n_select or DEFAULT_N_SELECT[args.role]
 
     selection = read_selection(selection_file)
@@ -75,6 +89,10 @@ def main():
         sys.exit(f"Error: {selection_file} already has tuning repertoires. Remove them first to redo the selection.")
     run = len(previous_runs) + 1
     already_selected = {row["subject_id"] for row in selection}
+    for path in args.exclude_selection:
+        if not path.is_file():
+            sys.exit(f"Error: {path} not found.")
+        already_selected |= {row["subject_id"] for row in read_selection(path)}
 
     with open(args.metadata, newline="") as f:
         rows = list(csv.DictReader(f))
@@ -106,10 +124,10 @@ def main():
     print(f"{args.role} run {run}: {len(selected)} files ({n_pos} CMV+, {len(selected) - n_pos} CMV-)")
 
     if not args.dry_run:
-        target_dir.mkdir(parents=True, exist_ok=True)
+        copy_dir.mkdir(parents=True, exist_ok=True)
     for row in selected:
         source = args.repertoire_dir / row["filename"].strip()
-        target = target_dir / updated_filename(row)
+        target = copy_dir / updated_filename(row)
         print(f"{source} -> {target}")
         if not args.dry_run:
             shutil.copy2(source, target)
