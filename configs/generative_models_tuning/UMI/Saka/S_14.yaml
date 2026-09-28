@@ -10,7 +10,7 @@ definitions:
         separator: "\t"
   ml_methods:
     model:
-      SimpleLSTM:
+      SakaLSTM:
         locus: beta
         sequence_type: amino_acid
         num_epochs: 100
@@ -18,9 +18,9 @@ definitions:
         device: cpu
         hidden_size: 128
         learning_rate: 0.01
-        embed_size: 256
         temperature: 0.8
         num_layers: 2
+        dropout: 0.2
         region_type: IMGT_JUNCTION
         iter_to_report: 1
 
