@@ -25,4 +25,6 @@ def run_immuneml_command(input_file, output_dir):
     command = ["immune-ml", input_file, output_dir]
     process = subprocess.Popen(command)
     print(f"Started PID {process.pid}")
-    process.wait()
+    return_code = process.wait()
+    if return_code != 0:
+        raise subprocess.CalledProcessError(return_code, command)
