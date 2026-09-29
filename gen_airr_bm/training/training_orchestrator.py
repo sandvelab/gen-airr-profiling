@@ -1,12 +1,15 @@
 from pathlib import Path
 import os
+import re
+import shutil
+import tempfile
 
 import pandas as pd
 
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.model_config import ModelConfig
 from gen_airr_bm.training.immuneml_runner import run_immuneml_command, write_immuneml_config
-from gen_airr_bm.utils.compairr_utils import preprocess_files_for_compairr
+from gen_airr_bm.utils.compairr_utils import preprocess_file_for_compairr
 
 
 class TrainingOrchestrator:
@@ -71,6 +74,70 @@ class TrainingOrchestrator:
                                  sep='\t', index=False)
 
     @staticmethod
+    def copy_file_if_missing(src_path: str, dst_path: str) -> None:
+        """Copies a file unless the destination already exists. The copy is written to a temporary file first and
+        then renamed, so other threads never see a partly written destination.
+        Args:
+            src_path (str): Path to the file to copy.
+            dst_path (str): Path to copy the file to.
+        Returns:
+            None
+        """
+        if os.path.exists(dst_path):
+            return
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(dst_path), suffix=".tmp")
+        os.close(tmp_fd)
+        try:
+            shutil.copyfile(src_path, tmp_path)
+            os.replace(tmp_path, dst_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
+    @staticmethod
+    def get_split_files(split_dir: Path, generated_sequences_filename: str) -> list[Path]:
+        """Returns the split files belonging to one generated sequences file.
+        Args:
+            split_dir (Path): Directory containing the split files.
+            generated_sequences_filename (str): Filename of the generated sequences file (without extension).
+        Returns:
+            list[Path]: Paths of the split files, e.g. <filename>_0.tsv, <filename>_1.tsv.
+        """
+        if not split_dir.is_dir():
+            return []
+        pattern = re.compile(rf"{re.escape(generated_sequences_filename)}_\d+\.tsv")
+        return [f for f in split_dir.iterdir() if pattern.fullmatch(f.name)]
+
+    @staticmethod
+    def get_generated_sequences_path(model_config: ModelConfig, output_dir: str, train_data_file_name: str) -> Path:
+        """Returns the path the generated sequences are copied to after immuneML training."""
+        return (Path(output_dir) / "generated_sequences" / model_config.name /
+                f"{train_data_file_name}_{model_config.experiment}.tsv")
+
+    @staticmethod
+    def is_training_done(model_config: ModelConfig, output_dir: str, train_data_file_name: str) -> bool:
+        """Checks whether training for this model and training file already finished in an earlier run.
+        Args:
+            model_config (ModelConfig): Configuration for the model training.
+            output_dir (str): Directory to save the output.
+            train_data_file_name (str): Filename of the training data file (without extension).
+        Returns:
+            bool: True if the generated sequences exist and all their splits have been written.
+        """
+        generated_sequences_path = TrainingOrchestrator.get_generated_sequences_path(model_config, output_dir,
+                                                                                     train_data_file_name)
+        if not generated_sequences_path.is_file():
+            return False
+        n_rows = len(pd.read_csv(generated_sequences_path, sep='\t', usecols=[0]))
+        split_files = TrainingOrchestrator.get_split_files(
+            Path(output_dir) / "generated_compairr_sequences_split" / model_config.name,
+            generated_sequences_path.stem)
+        # Leftover rows beyond the last full split are dropped, as in divide_generated_sequences. A set too small
+        # for a single split is never done, so a rerun reports the error again instead of skipping it.
+        n_expected_splits = n_rows // model_config.n_subset_samples
+        return n_expected_splits > 0 and len(split_files) == n_expected_splits
+
+    @staticmethod
     def save_ref_data(model_config: ModelConfig, output_dir: str, ref_data_full_path: str,
                       ref_data_file_name: str, ref_name: DatasetSplit) -> None:
         """Saves the reference data (test or train) to the output directory and preprocesses it for CompAIRR.
@@ -87,15 +154,18 @@ class TrainingOrchestrator:
         ref_data_dir_dst.mkdir(parents=True, exist_ok=True)
 
         ref_data_file_dst = ref_data_dir_dst / f"{ref_data_file_name}_{model_config.experiment}.tsv"
-        os.system(f"cp -n {ref_data_full_path} {ref_data_file_dst}")
+        TrainingOrchestrator.copy_file_if_missing(ref_data_full_path, str(ref_data_file_dst))
 
+        # Only this file is preprocessed: the folder is shared by all experiments, which may run in parallel
         compairr_ref_dir = Path(output_dir) / f"{ref_name.value}_compairr_sequences"
-        preprocess_files_for_compairr(str(ref_data_dir_dst), str(compairr_ref_dir))
+        compairr_ref_dir.mkdir(parents=True, exist_ok=True)
+        preprocess_file_for_compairr(str(ref_data_dir_dst), str(compairr_ref_dir), ref_data_file_dst.name)
 
     @staticmethod
     def save_generated_sequences(model_config: ModelConfig, output_dir: str, immuneml_output_dir: str,
                                  train_data_file_name: str) -> None:
-        """Saves the generated sequences to the output directory, preprocesses them for CompAIRR and divides into smaller subsets.
+        """Copies the generated sequences from the immuneML output to the output directory, then preprocesses them
+        for CompAIRR and divides them into smaller subsets.
         Args:
             model_config (ModelConfig): Configuration for the model training.
             output_dir (str): Directory to save the output.
@@ -112,26 +182,48 @@ class TrainingOrchestrator:
             if f.endswith(".tsv") and (immuneml_generated_sequences_dir / f).is_file()
         ]
 
-        generated_sequences_dir = Path(output_dir) / "generated_sequences" / model_config.name
-        generated_sequences_dir.mkdir(parents=True, exist_ok=True)
-
+        gen_data_file_path_dst = TrainingOrchestrator.get_generated_sequences_path(model_config, output_dir,
+                                                                                   train_data_file_name)
+        gen_data_file_path_dst.parent.mkdir(parents=True, exist_ok=True)
         gen_data_file_path_src = immuneml_generated_sequences_dir / immuneml_generated_sequences_file
-        gen_data_file_path_dst = generated_sequences_dir / f"{train_data_file_name}_{model_config.experiment}.tsv"
-        os.system(f"cp -n {gen_data_file_path_src} {gen_data_file_path_dst}")
+        TrainingOrchestrator.copy_file_if_missing(str(gen_data_file_path_src), str(gen_data_file_path_dst))
 
+        TrainingOrchestrator.split_generated_sequences(model_config, output_dir, train_data_file_name)
+
+    @staticmethod
+    def split_generated_sequences(model_config: ModelConfig, output_dir: str, train_data_file_name: str) -> None:
+        """Preprocesses the copied generated sequences for CompAIRR and divides them into smaller subsets,
+        replacing any splits left by an earlier run.
+        Args:
+            model_config (ModelConfig): Configuration for the model training.
+            output_dir (str): Directory to save the output.
+            train_data_file_name (str): Filename of the training data file (without extension).
+        Returns:
+            None
+        """
+        gen_data_file_path = TrainingOrchestrator.get_generated_sequences_path(model_config, output_dir,
+                                                                               train_data_file_name)
         compairr_model_dir = Path(output_dir) / "generated_compairr_sequences" / model_config.name
-        preprocess_files_for_compairr(str(generated_sequences_dir), str(compairr_model_dir))
+        split_dir = Path(output_dir) / "generated_compairr_sequences_split" / model_config.name
 
+        # Only this file is preprocessed: the folder is shared by all experiments, which may run in parallel
+        compairr_model_dir.mkdir(parents=True, exist_ok=True)
+        preprocess_file_for_compairr(str(gen_data_file_path.parent), str(compairr_model_dir), gen_data_file_path.name)
+
+        for split_file in TrainingOrchestrator.get_split_files(split_dir, gen_data_file_path.stem):
+            split_file.unlink()
         TrainingOrchestrator.divide_generated_sequences(
             str(compairr_model_dir),
-            f"{train_data_file_name}_{model_config.experiment}",
-            str(Path(output_dir) / "generated_compairr_sequences_split" / model_config.name),
+            gen_data_file_path.stem,
+            str(split_dir),
             model_config.n_subset_samples
         )
 
     @staticmethod
     def run_training(model_config: ModelConfig, output_dir: str) -> None:
         """Runs ImmuneML training and handles data saving and preprocessing for CompAIRR.
+        Training files that were fully processed in an earlier run are skipped. If a file was trained but not fully
+        split, only the splitting is redone.
         Args:
             model_config (ModelConfig): Configuration for the model training.
             output_dir (str): Directory to save the output.
@@ -144,6 +236,11 @@ class TrainingOrchestrator:
 
         for ref_data_file in train_data_files:
             ref_data_file_name = Path(ref_data_file).stem
+            run_description = f"{model_config.name} on {ref_data_file_name} (experiment {model_config.experiment})"
+            if TrainingOrchestrator.is_training_done(model_config, output_dir, ref_data_file_name):
+                print(f"Skipping {run_description}: generated sequences and all splits already exist.")
+                continue
+
             train_data_full_path = train_data_dir / ref_data_file
             test_data_full_path = test_data_dir / ref_data_file
             model_config.locus = TrainingOrchestrator.get_default_locus_name(str(train_data_full_path))
@@ -152,6 +249,13 @@ class TrainingOrchestrator:
                                                ref_data_file_name, DatasetSplit.TRAIN)
             TrainingOrchestrator.save_ref_data(model_config, output_dir, str(test_data_full_path), ref_data_file_name,
                                                DatasetSplit.TEST)
+
+            # Generated sequences are only copied after immuneML finished, so they can be split without retraining
+            if TrainingOrchestrator.get_generated_sequences_path(model_config, output_dir,
+                                                                 ref_data_file_name).is_file():
+                print(f"Re-splitting {run_description}: generated sequences exist but splits are incomplete.")
+                TrainingOrchestrator.split_generated_sequences(model_config, output_dir, ref_data_file_name)
+                continue
 
             immuneml_output_dir = Path(model_config.output_dir) / model_config.name / ref_data_file_name
             immuneml_output_dir.mkdir(parents=True, exist_ok=True)

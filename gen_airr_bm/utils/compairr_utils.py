@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -31,7 +32,15 @@ def preprocess_file_for_compairr(sequences_dir, compairr_sequences_dir, dataset)
         data['duplicate_count'] = 1
 
     data['sequence_id'] = [f"sequence_{i + 1}" for i in range(len(data))]
-    data.to_csv(f"{compairr_sequences_dir}/{dataset}", sep='\t', index=False)
+    # Write to a temporary file and rename it, so parallel readers never see a partly written file
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=compairr_sequences_dir, suffix=".tmp")
+    os.close(tmp_fd)
+    try:
+        data.to_csv(tmp_path, sep='\t', index=False)
+        os.replace(tmp_path, f"{compairr_sequences_dir}/{dataset}")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
     return f"{compairr_sequences_dir}/{dataset}"
 

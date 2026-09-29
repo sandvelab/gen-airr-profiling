@@ -1,0 +1,269 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_SEP23/UMI"
+input_dir: "data/tuning/UMI"
+seed: 42
+
+# data generation is commented out so that the existing train/test splits in output_dir are reused, not overwritten
+#data_generation:
+#  experimental: True
+#  method: "experimental_umi"
+#  n_samples: 150000
+#  default_model_name: "humanIGH"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus", "umi_count"]
+
+models:
+    - name: "tcrpeg_01"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_02"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_03"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_04"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_05"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_06"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_07"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_08"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_09"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_10"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_11"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_12"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_13"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_14"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_15"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_16"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_17"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_18"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_19"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_20"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_21"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_22"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_23"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_24"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_25"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_25.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_26"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_26.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_27"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_27.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_28"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_28.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_29"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_29.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_30"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_30.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_31"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_31.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_32"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_32.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_33"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_33.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_34"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_34.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_35"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_35.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+    - name: "tcrpeg_36"
+      immuneml_model_config: "configs/generative_models_tuning/UMI/TCRpeg/tcrpeg_36.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 150000
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all TCRpeg models"
+      receptor_type: "BCR UMI"
+      use_novel_sequences: False
+    - name: "memorization"
+      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all TCRpeg models dist 0"
+      receptor_type: "BCR UMI"
+      use_novel_sequences: False
+    - name: "network"
+      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all TCRpeg models"
+      receptor_type: "BCR UMI"
+      use_novel_sequences: False
+    - name: "precision_recall"
+      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all TCRpeg models dist 0"
+      receptor_type: "BCR UMI"
+      use_novel_sequences: False
+
+tuning:
+    - tuning_method: "reduced_dimensionality"
+      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all TCRpeg models"
+      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
+    - tuning_method: "overlap"
+      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+      reference_data: [ "train", "test" ]
+      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+      subfolder_name: "all TCRpeg models dist 0"
+      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
