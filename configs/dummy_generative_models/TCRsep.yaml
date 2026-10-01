@@ -1,0 +1,34 @@
+definitions:
+  datasets:
+    dataset:
+      format: AIRR
+      params:
+        path: data.tsv
+        is_repertoire: False
+        paired: False
+        region_type: IMGT_JUNCTION
+        separator: "\t"
+  ml_methods:
+    model:
+      TCRsep:
+        default_model_name: humanTRB
+        n_gen_seqs: 2000
+        alpha: 0.1
+        epochs: 10
+        batch_size: 64
+        learning_rate: 0.001
+        early_stopping: False
+        max_length: 30
+        sampling_bound: 10.
+        device: cpu
+        num_processes: 1
+
+instructions:
+  gen_model:
+    type: TrainGenModel
+    export_combined_dataset: False
+    dataset: dataset
+    method: model
+    gen_examples_count: 1000
+    number_of_processes: 1
+    training_percentage: 1

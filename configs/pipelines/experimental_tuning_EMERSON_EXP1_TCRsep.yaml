@@ -1,0 +1,233 @@
+n_experiments: 1
+output_dir: "RESULTS_TUNING_SEP23/EMERSON_EXP1"
+input_dir: "data/tuning/EMERSON_EXP1"
+seed: 42
+
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 21500
+#  default_model_name: "humanTRB"
+#  input_columns: ["cdr3_amino_acid", "v_resolved", "j_resolved", "locus" ]
+
+models:
+    - name: "tcrsep_01"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_01.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_02"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_02.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_03"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_03.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_04"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_04.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_05"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_05.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_06"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_06.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_07"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_07.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_08"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_08.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_09"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_09.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_10"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_10.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_11"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_11.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_12"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_12.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_13"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_13.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_14"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_14.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_15"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_16"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_17"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_17.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_18"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_18.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_19"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_19.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_20"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_20.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_21"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_21.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_22"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_23"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_23.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_24"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_24.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_25"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_25.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_26"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_26.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_27"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_27.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_28"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_28.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_29"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_29.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_30"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_30.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_31"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_31.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "tcrsep_32"
+      immuneml_model_config: "configs/generative_models_tuning/EMERSON_EXP1/TCRsep/tcrsep_32.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "tcrsep_01", "tcrsep_02", "tcrsep_03", "tcrsep_04", "tcrsep_05", "tcrsep_06", "tcrsep_07", "tcrsep_08",
+                    "tcrsep_09", "tcrsep_10", "tcrsep_11", "tcrsep_12", "tcrsep_13", "tcrsep_14", "tcrsep_15", "tcrsep_16",
+                    "tcrsep_17", "tcrsep_18", "tcrsep_19", "tcrsep_20", "tcrsep_21", "tcrsep_22", "tcrsep_23", "tcrsep_24",
+                    "tcrsep_25", "tcrsep_26", "tcrsep_27", "tcrsep_28", "tcrsep_29", "tcrsep_30", "tcrsep_31", "tcrsep_32" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all TCRsep models"
+      receptor_type: "TCR"
+      use_novel_sequences: False
+    - name: "precision_recall"
+      model_names: [ "tcrsep_01", "tcrsep_02", "tcrsep_03", "tcrsep_04", "tcrsep_05", "tcrsep_06", "tcrsep_07", "tcrsep_08",
+                    "tcrsep_09", "tcrsep_10", "tcrsep_11", "tcrsep_12", "tcrsep_13", "tcrsep_14", "tcrsep_15", "tcrsep_16",
+                    "tcrsep_17", "tcrsep_18", "tcrsep_19", "tcrsep_20", "tcrsep_21", "tcrsep_22", "tcrsep_23", "tcrsep_24",
+                    "tcrsep_25", "tcrsep_26", "tcrsep_27", "tcrsep_28", "tcrsep_29", "tcrsep_30", "tcrsep_31", "tcrsep_32" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: True
+      subfolder_name: "all TCRsep models"
+      receptor_type: "TCR"
+      use_novel_sequences: False
+    - name: "memorization"
+      model_names: [ "tcrsep_01", "tcrsep_02", "tcrsep_03", "tcrsep_04", "tcrsep_05", "tcrsep_06", "tcrsep_07", "tcrsep_08",
+                    "tcrsep_09", "tcrsep_10", "tcrsep_11", "tcrsep_12", "tcrsep_13", "tcrsep_14", "tcrsep_15", "tcrsep_16",
+                    "tcrsep_17", "tcrsep_18", "tcrsep_19", "tcrsep_20", "tcrsep_21", "tcrsep_22", "tcrsep_23", "tcrsep_24",
+                    "tcrsep_25", "tcrsep_26", "tcrsep_27", "tcrsep_28", "tcrsep_29", "tcrsep_30", "tcrsep_31", "tcrsep_32" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: False
+      subfolder_name: "all TCRsep models"
+      receptor_type: "TCR"
+      use_novel_sequences: False
+
+#tuning:
+#    - tuning_method: "reduced_dimensionality"
+#      model_names: [ "tcrsep_01", "tcrsep_02", "tcrsep_03", "tcrsep_04", "tcrsep_05", "tcrsep_06", "tcrsep_07", "tcrsep_08",
+#                    "tcrsep_09", "tcrsep_10", "tcrsep_11", "tcrsep_12", "tcrsep_13", "tcrsep_14", "tcrsep_15", "tcrsep_16",
+#                    "tcrsep_17", "tcrsep_18", "tcrsep_19", "tcrsep_20", "tcrsep_21", "tcrsep_22", "tcrsep_23", "tcrsep_24",
+#                    "tcrsep_25", "tcrsep_26", "tcrsep_27", "tcrsep_28", "tcrsep_29", "tcrsep_30", "tcrsep_31", "tcrsep_32" ]
+#      reference_data: [ "train", "test" ]
+#      subfolder_name: "all TCRsep models"
+#      hyperparameter_table_path: "data/hyperparameter_tables/TCRsep.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "tcrsep_01", "tcrsep_02", "tcrsep_03", "tcrsep_04", "tcrsep_05", "tcrsep_06", "tcrsep_07", "tcrsep_08",
+#                    "tcrsep_09", "tcrsep_10", "tcrsep_11", "tcrsep_12", "tcrsep_13", "tcrsep_14", "tcrsep_15", "tcrsep_16",
+#                    "tcrsep_17", "tcrsep_18", "tcrsep_19", "tcrsep_20", "tcrsep_21", "tcrsep_22", "tcrsep_23", "tcrsep_24",
+#                    "tcrsep_25", "tcrsep_26", "tcrsep_27", "tcrsep_28", "tcrsep_29", "tcrsep_30", "tcrsep_31", "tcrsep_32" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+#      subfolder_name: "all TCRsep models"
+#      hyperparameter_table_path: "data/hyperparameter_tables/TCRsep.tsv"

@@ -34,6 +34,11 @@ models:
       train_dir: "train"
       test_dir: "test"
       n_subset_samples: 100
+    - name: "tcrsep"
+      immuneml_model_config: "configs/dummy_generative_models/TCRsep.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
 sampling:
   - model_name: "vae"
     experiment_names: ["exp_0", "exp_1"]
@@ -52,6 +57,10 @@ sampling:
     immuneml_config: "configs/dummy_pipelines/sampling.yaml"
     n_samples: 1000
   - model_name: "tcrpeg"
+    experiment_names: [ "exp_0", "exp_1" ]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "tcrsep"
     experiment_names: [ "exp_0", "exp_1" ]
     immuneml_config: "configs/dummy_pipelines/sampling.yaml"
     n_samples: 1000
@@ -76,9 +85,13 @@ postprocessing:
     experiment_names: [ "exp_0", "exp_1" ]
     n_samples: 100
     n_subsets: 10
+  - model_name: "tcrsep"
+    experiment_names: [ "exp_0", "exp_1" ]
+    n_samples: 100
+    n_subsets: 10
 analyses:
     - name: "memorization"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
@@ -87,14 +100,14 @@ analyses:
       subfolder_name: "all dummy models"
       receptor_type: "TCR"
     - name: "reduced_dimensionality"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
       subfolder_name: "dummy models"
       receptor_type: "TCR"
     - name: "diversity"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
@@ -135,8 +148,15 @@ analyses:
       receptor_type: "TCR"
       allowed_mismatches: 0
       indels: False
+    - name: "phenotype"
+      model_names: [ "tcrsep" ]
+      default_model_name: "humanTRB"
+      subfolder_name: "tcrsep"
+      receptor_type: "TCR"
+      allowed_mismatches: 0
+      indels: False
     - name: "network"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
@@ -144,7 +164,7 @@ analyses:
       subfolder_name: "dummy models"
       receptor_type: "TCR"
     - name: "precision_recall"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 10
@@ -153,7 +173,7 @@ analyses:
       subfolder_name: "all dummy models dist 1"
       receptor_type: "TCR"
     - name: "innovation"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       allowed_mismatches: 0
       indels: False
@@ -161,7 +181,7 @@ analyses:
       receptor_type: "TCR"
       n_subsets: 10
     - name: "innovation_diversity"
-      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg" ]
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
       default_model_name: "humanTRB"
       allowed_mismatches: 0
       indels: False
