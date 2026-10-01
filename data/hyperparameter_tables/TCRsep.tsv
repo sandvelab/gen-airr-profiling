@@ -1,0 +1,9 @@
+Hyperparameters	tcrsep_01	tcrsep_02	tcrsep_03	tcrsep_04	tcrsep_05	tcrsep_06	tcrsep_07	tcrsep_08	tcrsep_09	tcrsep_10	tcrsep_11	tcrsep_12	tcrsep_13	tcrsep_14	tcrsep_15	tcrsep_16	tcrsep_17	tcrsep_18	tcrsep_19	tcrsep_20	tcrsep_21	tcrsep_22	tcrsep_23	tcrsep_24	tcrsep_25	tcrsep_26	tcrsep_27	tcrsep_28	tcrsep_29	tcrsep_30	tcrsep_31	tcrsep_32
+n_gen_seqs	100K	100K	100K	100K	100K	100K	100K	100K	200K	200K	200K	200K	200K	200K	200K	200K	500K	500K	500K	500K	500K	500K	500K	500K	1M	1M	1M	1M	1M	1M	1M	1M
+alpha	0.1	0.1	0.1	0.1	0.3	0.3	0.3	0.3	0.1	0.1	0.1	0.1	0.3	0.3	0.3	0.3	0.1	0.1	0.1	0.1	0.3	0.3	0.3	0.3	0.1	0.1	0.1	0.1	0.3	0.3	0.3	0.3
+epochs	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500	500
+batch_size	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512	512
+learning_rate	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001	0.0001	0.0001	0.001	0.001
+early_stopping	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True	True
+validation_ratio	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1	0.1
+sampling_bound	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20	10	20
