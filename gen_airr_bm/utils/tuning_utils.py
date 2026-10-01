@@ -140,8 +140,7 @@ def normalize_model_name_for_plotting(name: str) -> str:
     if name.startswith("VAE") and len(name) == 5 and name[3:].isdigit():
         return f"VAE_{name[3:]}"
     if name.startswith("progen_"):
-        return "ProGen_" + name.spli
-        t("_", 1)[1]
+        return "ProGen_" + name.split("_", 1)[1]
     if name.startswith("sonnia_"):
         return "SoNNia_" + name.split("_", 1)[1]
     return name
