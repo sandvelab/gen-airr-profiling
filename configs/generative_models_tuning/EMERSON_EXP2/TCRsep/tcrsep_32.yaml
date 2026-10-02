@@ -23,6 +23,7 @@ definitions:
         sampling_bound: 20.0
         device: cpu
         num_processes: 1
+        allow_family_calls: True
 
 instructions:
   gen_model:
