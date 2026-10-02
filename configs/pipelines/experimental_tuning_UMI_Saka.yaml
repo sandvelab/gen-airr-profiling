@@ -195,7 +195,7 @@ analyses:
       allowed_mismatches: 0
       indels: False
       deduplicate: True
-      subfolder_name: "all Saka models"
+      subfolder_name: "all Saka models dist 0"
       receptor_type: "BCR UMI"
       use_novel_sequences: False
     - name: "memorization"
@@ -209,7 +209,7 @@ analyses:
       allowed_mismatches: 0
       indels: False
       deduplicate: False
-      subfolder_name: "all Saka models"
+      subfolder_name: "all Saka models dist 0"
       receptor_type: "BCR UMI"
       use_novel_sequences: False
 

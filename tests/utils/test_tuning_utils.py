@@ -125,3 +125,13 @@ def test_save_and_plot_tuning_results(tmp_path, mocker):
     assert img_path.exists()
     # file should be empty per FakeFig.write_image implementation
     assert img_path.read_text() == ""
+
+
+@pytest.mark.parametrize("name,expected", [
+    ("progen_07", "ProGen_07"),
+    ("sonnia_12", "SoNNia_12"),
+    ("VAE05", "VAE_05"),
+    ("A_21", "A_21"),
+])
+def test_normalize_model_name_for_plotting(name, expected):
+    assert tuning_utils.normalize_model_name_for_plotting(name) == expected
