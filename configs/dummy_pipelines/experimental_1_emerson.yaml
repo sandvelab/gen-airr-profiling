@@ -1,0 +1,86 @@
+n_experiments: 1
+output_dir: "results_dummy/emerson"
+input_dir: "data/emerson"
+seed: 42
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 100
+  default_model_name: "humanTRB"
+  input_columns: ["cdr3_amino_acid", "v_resolved", "j_resolved", "locus" ]
+models:
+    - name: "vae"
+      immuneml_model_config: "configs/dummy_generative_models/SimpleVAE.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
+    - name: "pwm"
+      immuneml_model_config: "configs/dummy_generative_models/PWM.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
+    - name: "sonnia"
+      immuneml_model_config: "configs/dummy_generative_models/SoNNia.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
+    - name: "tcrpeg"
+      immuneml_model_config: "configs/dummy_generative_models/TCRpeg.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
+    - name: "tcrsep"
+      immuneml_model_config: "configs/dummy_generative_models/TCRsep.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100
+sampling:
+  - model_name: "vae"
+    experiment_names: [ "exp_0" ]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "pwm"
+    experiment_names: [ "exp_0" ]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "sonnia"
+    experiment_names: [ "exp_0" ]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "tcrpeg"
+    experiment_names: [ "exp_0" ]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+  - model_name: "tcrsep"
+    experiment_names: [ "exp_0" ]
+    immuneml_config: "configs/dummy_pipelines/sampling.yaml"
+    n_samples: 1000
+postprocessing:
+  - model_name: "vae"
+    experiment_names: [ "exp_0" ]
+    n_samples: 100
+    n_subsets: 10
+  - model_name: "pwm"
+    experiment_names: [ "exp_0" ]
+    n_samples: 100
+    n_subsets: 10
+  - model_name: "sonnia"
+    experiment_names: [ "exp_0" ]
+    n_samples: 100
+    n_subsets: 10
+  - model_name: "tcrpeg"
+    experiment_names: [ "exp_0" ]
+    n_samples: 100
+    n_subsets: 10
+  - model_name: "tcrsep"
+    experiment_names: [ "exp_0" ]
+    n_samples: 100
+    n_subsets: 10
+analyses:
+    - name: "gene_usage"
+      model_names: [ "vae", "pwm", "sonnia", "tcrpeg", "tcrsep" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 10
+      subfolder_name: "all dummy models"
+      receptor_type: "TCR"
