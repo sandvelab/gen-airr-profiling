@@ -3,12 +3,12 @@ output_dir: "RESULTS_TUNING_SEP23/EMERSON_EXP2"
 input_dir: "data/tuning/EMERSON_EXP2"
 seed: 42
 
-data_generation:
-  experimental: True
-  method: "experimental"
-  n_samples: 100000
-  default_model_name: "humanTRB"
-  input_columns: ["cdr3_amino_acid", "v_resolved", "j_resolved", "locus" ]
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 100000
+#  default_model_name: "humanTRB"
+#  input_columns: ["cdr3_amino_acid", "v_resolved", "j_resolved", "locus" ]
 
 models:
 #    - name: "progen_01"
