@@ -7,6 +7,7 @@ import pytest
 from gen_airr_bm.analysis.analyse_gene_usage import (compute_gene_usage_frequencies, compute_gene_usage_scores,
                                                     compute_jsd, compute_train_test_reference_score,
                                                     compute_usage_distribution, get_gene_family,
+                                                    get_gene_usage_plotting_data, get_metric_label,
                                                     model_generates_gene_calls, normalise_gene_call, read_gene_calls,
                                                     run_gene_usage_analysis, aggregate_scores_by_reference)
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -194,6 +195,43 @@ def test_compute_gene_usage_frequencies(analysis_config):
     assert set(v_gene_frequencies[v_gene_frequencies["source"] == "sonnia"]["gene"]) == set(V_GENERATED)
     for source in ["sonnia", "train", "test"]:
         assert v_gene_frequencies[v_gene_frequencies["source"] == source]["frequency"].sum() == pytest.approx(1.0)
+
+
+
+@pytest.mark.parametrize("metric_name, expected", [
+    ("v gene", "V Gene"),
+    ("j family", "J Family"),
+    ("vj pairing", "VJ Pairing"),
+])
+def test_get_metric_label(metric_name, expected):
+    assert get_metric_label(metric_name) == expected
+
+
+def test_get_gene_usage_plotting_data_keeps_genes_missing_on_either_side(analysis_config):
+    frequencies_df = pd.DataFrame([
+        {"metric": "v gene", "source": "vae", "dataset": "rep_1", "gene": "TRBV6-1", "frequency": 0.6},
+        {"metric": "v gene", "source": "vae", "dataset": "rep_1", "gene": "TRBV20-1", "frequency": 0.4},
+        {"metric": "v gene", "source": "test", "dataset": "rep_1", "gene": "TRBV6-1", "frequency": 0.5},
+        {"metric": "v gene", "source": "test", "dataset": "rep_1", "gene": "TRBV20", "frequency": 0.5},
+        {"metric": "v gene", "source": "train", "dataset": "rep_1", "gene": "TRBV19", "frequency": 1.0},
+        {"metric": "j gene", "source": "vae", "dataset": "rep_1", "gene": "TRBJ1-1", "frequency": 1.0},
+    ])
+
+    plotting_df = get_gene_usage_plotting_data(analysis_config, frequencies_df, "v gene", "test")
+
+    # pwm and sonnia have no frequencies and get no rows, the train-only gene TRBV19 is not part of the test reference
+    rows = {(row.source, row.gene): (row.frequency_generated, row.frequency_reference)
+            for row in plotting_df.itertuples()}
+    assert rows == {("vae", "TRBV6-1"): (0.6, 0.5),
+                    ("vae", "TRBV20-1"): (0.4, 0.0),
+                    ("vae", "TRBV20"): (0.0, 0.5)}
+
+
+def test_get_gene_usage_plotting_data_without_model_frequencies(analysis_config):
+    frequencies_df = pd.DataFrame([
+        {"metric": "v gene", "source": "test", "dataset": "rep_1", "gene": "TRBV6-1", "frequency": 1.0}])
+
+    assert get_gene_usage_plotting_data(analysis_config, frequencies_df, "v gene", "test").empty
 
 
 def test_run_gene_usage_analysis_writes_outputs(analysis_config):

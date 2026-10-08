@@ -11,7 +11,7 @@ from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name, get_reference_files, get_sequence_files
 from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, plot_grouped_avg_scores,
-                                             wrap_title)
+                                             title_case, wrap_title)
 
 GENE_CALL_COLUMNS = ["v_call", "j_call"]
 
@@ -28,6 +28,7 @@ GENE_USAGE_METRICS = {
 }
 
 SUBSET_INDEX_PATTERN = re.compile(r"_(\d+)\.tsv$")
+GENE_ABBREVIATIONS = {"v", "j", "vj"}
 
 
 def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
@@ -62,9 +63,20 @@ def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
         mean_scores_by_ref, std_scores_by_ref = aggregate_scores_by_reference(scores_df, metric_name)
         reference_score = compute_train_test_reference_score(analysis_config, metric_name, distributions_cache)
         plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
-                               f"gene_usage_{metric_name.replace(' ', '_')}_grouped", metric_name, "JSD",
-                               reference_score)
+                               f"gene_usage_{metric_name.replace(' ', '_')}_grouped", get_metric_label(metric_name),
+                               "JSD", reference_score)
         plot_gene_usage_frequencies(analysis_config, frequencies_df, metric_name)
+
+
+def get_metric_label(metric_name: str) -> str:
+    """ Returns the metric name as used in plot titles, with the gene abbreviations capitalised, for example
+    "VJ Pairing" for "vj pairing".
+    Args:
+        metric_name (str): The metric name as used in GENE_USAGE_METRICS.
+    Returns:
+        str: The title-cased metric label.
+    """
+    return title_case(" ".join(word.upper() if word in GENE_ABBREVIATIONS else word for word in metric_name.split()))
 
 
 def split_models_by_gene_calls(analysis_config: AnalysisConfig) -> tuple[list, list]:
@@ -340,6 +352,38 @@ def summarise_frequencies(files: list, source: str, distributions_cache: dict, i
     return frequencies
 
 
+def get_gene_usage_plotting_data(analysis_config: AnalysisConfig, frequencies_df: pd.DataFrame, metric_name: str,
+                                 reference: str) -> pd.DataFrame:
+    """ Pairs the generated frequency of every gene with its reference frequency, averaged over repertoires. Each
+    model gets a row for every gene that it or the reference uses, so genes the model never generates are shown at a
+    generated frequency of 0 and genes missing from the reference at a reference frequency of 0.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        frequencies_df (pd.DataFrame): Frequencies as returned by compute_gene_usage_frequencies.
+        metric_name (str): The metric to plot.
+        reference (str): The reference dataset to compare against, e.g. "test".
+    Returns:
+        pd.DataFrame: Columns source, gene, frequency_generated and frequency_reference.
+    """
+    metric_frequencies = frequencies_df[frequencies_df["metric"] == metric_name]
+    mean_frequencies = metric_frequencies.groupby(["source", "gene"])["frequency"].mean().reset_index()
+    reference_frequencies = mean_frequencies[mean_frequencies["source"] == reference][["gene", "frequency"]]
+
+    model_dfs = []
+    for model in analysis_config.model_names:
+        model_frequencies = mean_frequencies[mean_frequencies["source"] == model][["gene", "frequency"]]
+        if model_frequencies.empty:
+            continue
+        model_df = model_frequencies.merge(reference_frequencies, on="gene", how="outer",
+                                           suffixes=("_generated", "_reference")).fillna(0.0)
+        model_df.insert(0, "source", model)
+        model_dfs.append(model_df)
+
+    if not model_dfs:
+        return pd.DataFrame(columns=["source", "gene", "frequency_generated", "frequency_reference"])
+    return pd.concat(model_dfs, ignore_index=True)
+
+
 def plot_gene_usage_frequencies(analysis_config: AnalysisConfig, frequencies_df: pd.DataFrame,
                                 metric_name: str) -> None:
     """ Plots the generated gene usage frequencies against the test (or, if test is not used, the train) frequencies,
@@ -353,15 +397,7 @@ def plot_gene_usage_frequencies(analysis_config: AnalysisConfig, frequencies_df:
     """
     reference = (DatasetSplit.TEST.value if DatasetSplit.TEST.value in analysis_config.reference_data
                  else analysis_config.reference_data[0])
-    metric_frequencies = frequencies_df[frequencies_df["metric"] == metric_name]
-    mean_frequencies = metric_frequencies.groupby(["source", "gene"])["frequency"].mean().reset_index()
-
-    reference_frequencies = mean_frequencies[mean_frequencies["source"] == reference]
-    model_frequencies = mean_frequencies[mean_frequencies["source"].isin(analysis_config.model_names)]
-    plotting_df = model_frequencies.merge(reference_frequencies[["gene", "frequency"]], on="gene", how="outer",
-                                          suffixes=("_generated", "_reference")).fillna(
-        {"frequency_generated": 0.0, "frequency_reference": 0.0})
-    plotting_df = plotting_df.dropna(subset=["source"])
+    plotting_df = get_gene_usage_plotting_data(analysis_config, frequencies_df, metric_name, reference)
     if plotting_df.empty:
         return
 
@@ -369,7 +405,7 @@ def plot_gene_usage_frequencies(analysis_config: AnalysisConfig, frequencies_df:
                    f"gene_usage_frequencies_{metric_name.replace(' ', '_')}")
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
                                                                      analysis_config.collection)
-    title = (f"{metric_name.title()} Usage in Generated vs. {reference.capitalize()} "
+    title = (f"{get_metric_label(metric_name)} Usage in Generated vs. {reference.capitalize()} "
              f"{collection_specification} Repertoires")
 
     fig = px.scatter(plotting_df, x="frequency_reference", y="frequency_generated", color="source",

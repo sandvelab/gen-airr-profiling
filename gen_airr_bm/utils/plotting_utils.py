@@ -27,6 +27,13 @@ def get_collection_specification_for_title(receptor_type, collection=None):
         raise ValueError(f"Unknown receptor type: {receptor_type}")
 
 
+def title_case(text: str) -> str:
+    """ Title-cases the words of a text, leaving words that already contain capitals as they are, so that
+    abbreviations survive: "vj pairing" becomes "Vj Pairing", but "VJ pairing" becomes "VJ Pairing".
+    """
+    return " ".join(word if any(char.isupper() for char in word) else word.title() for word in text.split(" "))
+
+
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
                     distribution_type, scoring_method="JSD"):
     """ Plots a bar chart for mean scores across models.
@@ -192,7 +199,7 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
 
     fig = go.Figure(data=data)
     color_palette = px.colors.qualitative.Safe
-    title_text = (f"{distribution_type.title()} Distribution Comparison:<br>Generated vs. Train and "
+    title_text = (f"{title_case(distribution_type)} Distribution Comparison:<br>Generated vs. Train and "
                   f"Test {get_collection_specification_for_title(receptor_type, analysis_config.collection)} Repertoires")
     fig.update_layout(
         barmode='group',

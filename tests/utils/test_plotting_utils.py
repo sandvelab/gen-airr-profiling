@@ -2,7 +2,7 @@ import pytest
 import yaml
 
 from gen_airr_bm.core.main_config import MainConfig
-from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, title_case
 
 
 @pytest.mark.parametrize("receptor_type,expected", [
@@ -41,3 +41,13 @@ def test_main_config_reads_collection(tmp_path, config_value):
     main_config = MainConfig(str(config_path))
 
     assert main_config.analysis_configs[0].collection == config_value
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("connectivity", "Connectivity"),
+    ("aa (Seq. Len.: 12)", "Aa (Seq. Len.: 12)"),
+    ("VJ pairing", "VJ Pairing"),
+    ("clone frequency", "Clone Frequency"),
+])
+def test_title_case_keeps_capitalised_words(text, expected):
+    assert title_case(text) == expected
