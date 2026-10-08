@@ -11,7 +11,10 @@ from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name, get_reference_files, get_sequence_files
 from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, plot_grouped_avg_scores,
-                                             title_case, wrap_title)
+                                             plot_paired_comparisons, title_case, wrap_title)
+from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
+                                               describe_error_bars, run_repertoire_statistics,
+                                               summarise_repertoire_scores)
 
 GENE_CALL_COLUMNS = ["v_call", "j_call"]
 
@@ -34,7 +37,10 @@ GENE_ABBREVIATIONS = {"v", "j", "vj"}
 def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
     """ Runs the germline gene usage analysis: compares V gene, J gene and V-J pairing frequencies of the novel
     generated sequences with those of the train and test sequences of the same repertoire. Models that do not
-    generate gene calls are skipped and reported in skipped_models.txt.
+    generate gene calls are skipped and reported in skipped_models.txt. Against the test sequences, the models are
+    also compared at the repertoire level (see statistics_utils): with the train vs. test reference, with each other,
+    and in the contrasts given in the config. These comparisons are descriptive, or include confidence intervals and
+    tests if statistical_tests is set, which requires one repertoire per donor.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
@@ -55,17 +61,22 @@ def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
     distributions_cache = {}
     scores_df = compute_gene_usage_scores(analysis_config, models_with_gene_calls, distributions_cache)
     scores_df.to_csv(f"{analysis_config.analysis_output_dir}/gene_usage_jsd_scores.tsv", sep="\t", index=False)
+    if analysis_config.statistical_tests:
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "jsd", analysis_config.donor_pattern))
 
     frequencies_df = compute_gene_usage_frequencies(analysis_config, models_with_gene_calls, distributions_cache)
     frequencies_df.to_csv(f"{analysis_config.analysis_output_dir}/gene_usage_frequencies.tsv", sep="\t", index=False)
 
     for metric_name in GENE_USAGE_METRICS:
-        mean_scores_by_ref, std_scores_by_ref = aggregate_scores_by_reference(scores_df, metric_name)
-        reference_score = compute_train_test_reference_score(analysis_config, metric_name, distributions_cache)
+        mean_scores_by_ref, std_scores_by_ref, error_bars_by_ref, repertoire_scores_by_ref, error_bar_caption = \
+            summarise_scores_by_reference(analysis_config, scores_df, metric_name)
+        reference_scores = compute_train_test_reference_scores(analysis_config, metric_name, distributions_cache)
+        reference_score = float(reference_scores["score"].mean()) if reference_scores is not None else None
         plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
                                f"gene_usage_{metric_name.replace(' ', '_')}_grouped", get_metric_label(metric_name),
-                               "JSD", reference_score)
+                               "JSD", reference_score, error_bars_by_ref, error_bar_caption, repertoire_scores_by_ref)
         plot_gene_usage_frequencies(analysis_config, frequencies_df, metric_name)
+        run_gene_usage_statistics(analysis_config, scores_df, metric_name, models_with_gene_calls, reference_scores)
 
 
 def get_metric_label(metric_name: str) -> str:
@@ -254,43 +265,101 @@ def compute_gene_usage_scores(analysis_config: AnalysisConfig, models: list, dis
     return pd.DataFrame(scores)
 
 
-def aggregate_scores_by_reference(scores_df: pd.DataFrame, metric_name: str) -> tuple[dict, dict]:
+def summarise_scores_by_reference(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,
+                                  metric_name: str) -> tuple[dict, dict, dict, dict, str]:
     """ Averages the divergence scores of a metric over the generated subsets of each repertoire, and summarises them
-    over repertoires.
+    over repertoires, so that the repertoires and not the generated subsets are the observations.
     Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including the statistics mode and the donor
+            pattern.
         scores_df (pd.DataFrame): Scores as returned by compute_gene_usage_scores.
         metric_name (str): The metric to summarise.
     Returns:
-        tuple[dict, dict]: Mean and standard deviation of the scores as {reference: {model: score}}.
+        tuple[dict, dict, dict, dict, str]: As {reference: {model: value}}: the mean and the standard deviation over
+        repertoires, the error bars (the confidence interval with statistical tests, otherwise the mean plus and
+        minus the standard deviation), and the (donor, score) pairs of the repertoires; and the error bar caption.
     """
-    mean_scores_by_ref, std_scores_by_ref = defaultdict(dict), defaultdict(dict)
+    mean_scores_by_ref, std_scores_by_ref, error_bars_by_ref, repertoire_scores_by_ref = (
+        defaultdict(dict), defaultdict(dict), defaultdict(dict), defaultdict(dict))
+    n_repertoires, n_donors = 0, 0
     metric_scores = scores_df[scores_df["metric"] == metric_name]
-    dataset_scores = metric_scores.groupby(["reference", "model", "dataset"])["jsd"].mean().reset_index()
-    for (reference, model), group in dataset_scores.groupby(["reference", "model"]):
-        mean_scores_by_ref[reference][model] = group["jsd"].mean()
-        std_scores_by_ref[reference][model] = group["jsd"].std(ddof=0)
-    return dict(mean_scores_by_ref), dict(std_scores_by_ref)
+    for reference, reference_scores in metric_scores.groupby("reference"):
+        repertoire_scores = aggregate_repertoire_scores(reference_scores, "jsd", analysis_config.donor_pattern)
+        summary = summarise_repertoire_scores(repertoire_scores, analysis_config.statistical_tests)
+        for row in summary.itertuples():
+            mean_scores_by_ref[reference][row.source] = row.mean
+            std_scores_by_ref[reference][row.source] = row.sd
+            error_bars_by_ref[reference][row.source] = ((row.ci_low, row.ci_high) if analysis_config.statistical_tests
+                                                        else (row.mean - row.sd, row.mean + row.sd))
+        n_repertoires = max(n_repertoires, summary["n_repertoires"].max())
+        n_donors = max(n_donors, summary["n_donors"].max())
+        for model, model_scores in repertoire_scores.dropna(subset=["score"]).groupby("source"):
+            repertoire_scores_by_ref[reference][model] = list(zip(model_scores["donor"], model_scores["score"]))
+    error_bar_caption = describe_error_bars(analysis_config.statistical_tests, n_repertoires, n_donors)
+    return (dict(mean_scores_by_ref), dict(std_scores_by_ref), dict(error_bars_by_ref), dict(repertoire_scores_by_ref),
+            error_bar_caption)
 
 
-def compute_train_test_reference_score(analysis_config: AnalysisConfig, metric_name: str,
-                                       distributions_cache: dict) -> float | None:
-    """ Computes the gene usage divergence between the train and test sequences, as a reference for how similar two
-    samples of the same repertoire are.
+def compute_train_test_reference_scores(analysis_config: AnalysisConfig, metric_name: str,
+                                        distributions_cache: dict) -> pd.DataFrame | None:
+    """ Computes the gene usage divergence between the train and test sequences of each repertoire, as a reference
+    for how similar two samples of the same repertoire are.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
-        metric_name (str): The metric to compute the reference score for.
+        metric_name (str): The metric to compute the reference scores for.
         distributions_cache (dict): Cache mapping file paths to their usage distributions.
     Returns:
-        float | None: The mean divergence over repertoires, or None if train and test are not both used.
+        pd.DataFrame | None: Columns repertoire and score, or None if train and test are not both used.
     """
     if not (DatasetSplit.TRAIN.value in analysis_config.reference_data
             and DatasetSplit.TEST.value in analysis_config.reference_data):
         return None
 
-    scores = [compute_jsd(get_usage_distributions(test_file, distributions_cache)[metric_name],
-                          get_usage_distributions(train_file, distributions_cache)[metric_name])
-              for train_file, test_file in get_reference_files(analysis_config)]
-    return float(np.nanmean(scores)) if scores else None
+    rows = [{"repertoire": os.path.splitext(os.path.basename(train_file))[0],
+             "score": compute_jsd(get_usage_distributions(test_file, distributions_cache)[metric_name],
+                                  get_usage_distributions(train_file, distributions_cache)[metric_name])}
+            for train_file, test_file in sorted(get_reference_files(analysis_config))]
+    return pd.DataFrame(rows, columns=["repertoire", "score"])
+
+
+def run_gene_usage_statistics(analysis_config: AnalysisConfig, scores_df: pd.DataFrame, metric_name: str,
+                              models: list, reference_scores: pd.DataFrame | None) -> None:
+    """ Runs the repertoire-level comparisons of a metric against the test sequences and plots the comparisons with
+    the train vs. test reference and the contrasts from the config. The train sequences are left out, since the
+    models were fitted on them. With statistical tests, each metric is its own multiple testing family.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores_df (pd.DataFrame): Scores as returned by compute_gene_usage_scores.
+        metric_name (str): The metric to test.
+        models (list): The models to compare.
+        reference_scores (pd.DataFrame | None): Train vs. test scores per repertoire.
+    Returns:
+        None
+    """
+    if DatasetSplit.TEST.value not in analysis_config.reference_data:
+        print("Skipping gene usage statistics, since they are computed against the test sequences.")
+        return
+
+    test_scores = scores_df[(scores_df["metric"] == metric_name)
+                            & (scores_df["reference"] == DatasetSplit.TEST.value)]
+    metric_file_name = metric_name.replace(" ", "_")
+    output_prefix = f"{analysis_config.analysis_output_dir}/statistics/gene_usage_{metric_file_name}"
+    repertoire_scores = aggregate_repertoire_scores(test_scores, "jsd", analysis_config.donor_pattern)
+    results = run_repertoire_statistics(repertoire_scores, models, output_prefix, analysis_config.statistical_tests,
+                                        reference_scores, analysis_config.contrasts, analysis_config.donor_pattern)
+
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
+    metric_label = get_metric_label(metric_name)
+    if "vs_train_test" in results:
+        plot_paired_comparisons(results["vs_train_test"], f"{output_prefix}_vs_train_test",
+                                f"{metric_label} JSD to Test: Models Compared with Train vs. Test in "
+                                f"{collection_specification} Repertoires", "Difference in JSD",
+                                results["vs_train_test_differences"])
+    if "contrasts" in results:
+        plot_paired_comparisons(results["contrasts"], f"{output_prefix}_contrasts",
+                                f"{metric_label} JSD to Test: Model Contrasts in {collection_specification} "
+                                f"Repertoires", "Difference in JSD", results["contrasts_differences"])
 
 
 def compute_gene_usage_frequencies(analysis_config: AnalysisConfig, models: list,

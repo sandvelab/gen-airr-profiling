@@ -5,11 +5,11 @@ import pandas as pd
 import pytest
 
 from gen_airr_bm.analysis.analyse_gene_usage import (compute_gene_usage_frequencies, compute_gene_usage_scores,
-                                                    compute_jsd, compute_train_test_reference_score,
+                                                    compute_jsd, compute_train_test_reference_scores,
                                                     compute_usage_distribution, get_gene_family,
                                                     get_gene_usage_plotting_data, get_metric_label,
                                                     model_generates_gene_calls, normalise_gene_call, read_gene_calls,
-                                                    run_gene_usage_analysis, aggregate_scores_by_reference)
+                                                    run_gene_usage_analysis, summarise_scores_by_reference)
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 # The models generate gene names without the allele
@@ -159,31 +159,62 @@ def test_compute_gene_usage_scores_matches_gene_names_across_allele_resolutions(
     assert scores_df["jsd"].max() == pytest.approx(0.0, abs=1e-12)
 
 
-def test_aggregate_scores_by_reference():
-    scores_df = pd.DataFrame([
-        {"metric": "v gene", "model": "vae", "reference": "train", "dataset": "rep_1", "subset": 0, "jsd": 0.1},
-        {"metric": "v gene", "model": "vae", "reference": "train", "dataset": "rep_1", "subset": 1, "jsd": 0.3},
-        {"metric": "v gene", "model": "vae", "reference": "train", "dataset": "rep_2", "subset": 0, "jsd": 0.6},
-        {"metric": "j gene", "model": "vae", "reference": "train", "dataset": "rep_1", "subset": 0, "jsd": 0.9},
-    ])
+SUMMARY_SCORES = pd.DataFrame([
+    {"metric": "v gene", "model": "vae", "reference": "train", "dataset": "rep_1", "subset": 0, "jsd": 0.1},
+    {"metric": "v gene", "model": "vae", "reference": "train", "dataset": "rep_1", "subset": 1, "jsd": 0.3},
+    {"metric": "v gene", "model": "vae", "reference": "train", "dataset": "rep_2", "subset": 0, "jsd": 0.6},
+    {"metric": "j gene", "model": "vae", "reference": "train", "dataset": "rep_1", "subset": 0, "jsd": 0.9},
+])
 
-    mean_scores_by_ref, std_scores_by_ref = aggregate_scores_by_reference(scores_df, "v gene")
+
+def test_summarise_scores_by_reference_descriptive(analysis_config):
+    mean_scores_by_ref, std_scores_by_ref, error_bars_by_ref, repertoire_scores_by_ref, caption = \
+        summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
 
     # The two subsets of rep_1 are averaged first, so the repertoire scores are 0.2 and 0.6
+    assert repertoire_scores_by_ref == {"train": {"vae": [("rep_1", pytest.approx(0.2)),
+                                                          ("rep_2", pytest.approx(0.6))]}}
     assert mean_scores_by_ref == {"train": {"vae": pytest.approx(0.4)}}
-    assert std_scores_by_ref == {"train": {"vae": pytest.approx(0.2)}}
+    sd = np.std([0.2, 0.6], ddof=1)
+    assert std_scores_by_ref == {"train": {"vae": pytest.approx(sd)}}
+    # Without statistical tests the error bars are the mean plus and minus the standard deviation
+    assert error_bars_by_ref["train"]["vae"] == (pytest.approx(0.4 - sd), pytest.approx(0.4 + sd))
+    assert caption.startswith("Error bars: SD")
 
 
-def test_compute_train_test_reference_score(analysis_config):
-    reference_score = compute_train_test_reference_score(analysis_config, "v gene", {})
+def test_summarise_scores_by_reference_with_tests(analysis_config):
+    analysis_config.statistical_tests = True
 
-    assert reference_score == pytest.approx(0.0, abs=1e-12)
+    _, _, error_bars_by_ref, _, caption = summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
+
+    # t-interval with one degree of freedom: 0.4 +- 12.706 * 0.2828 / sqrt(2)
+    ci_low, ci_high = error_bars_by_ref["train"]["vae"]
+    assert ci_low == pytest.approx(0.4 - 12.7062 * 0.2, rel=1e-4)
+    assert ci_high == pytest.approx(0.4 + 12.7062 * 0.2, rel=1e-4)
+    assert caption.startswith("Error bars: 95% CI")
 
 
-def test_compute_train_test_reference_score_without_both_references(analysis_config):
+def test_summarise_scores_by_reference_counts_donors(analysis_config):
+    analysis_config.donor_pattern = "^(rep)_"
+
+    *_, repertoire_scores_by_ref, caption = summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
+
+    assert [donor for donor, _ in repertoire_scores_by_ref["train"]["vae"]] == ["rep", "rep"]
+    assert "(n=2 from 1 donors)" in caption
+
+
+def test_compute_train_test_reference_scores(analysis_config):
+    reference_scores = compute_train_test_reference_scores(analysis_config, "v gene", {})
+
+    # Train and test files are identical in the fixture, so every repertoire scores 0
+    assert reference_scores["repertoire"].tolist() == ["rep_1", "rep_2"]
+    assert reference_scores["score"].tolist() == pytest.approx([0.0, 0.0], abs=1e-12)
+
+
+def test_compute_train_test_reference_scores_without_both_references(analysis_config):
     analysis_config.reference_data = ["test"]
 
-    assert compute_train_test_reference_score(analysis_config, "v gene", {}) is None
+    assert compute_train_test_reference_scores(analysis_config, "v gene", {}) is None
 
 
 def test_compute_gene_usage_frequencies(analysis_config):
@@ -251,6 +282,45 @@ def test_run_gene_usage_analysis_writes_outputs(analysis_config):
         assert "pwm" in file.read()
     scores_df = pd.read_csv(f"{output_dir}/gene_usage_jsd_scores.tsv", sep="\t")
     assert set(scores_df["model"]) == {"vae", "sonnia"}
+
+    for metric_name in ["v_gene", "j_gene", "vj_pairing", "v_family", "j_family"]:
+        for table in ["repertoire_scores", "summary", "vs_train_test", "all_pairs"]:
+            assert os.path.exists(f"{output_dir}/statistics/gene_usage_{metric_name}_{table}.tsv")
+        assert os.path.exists(f"{output_dir}/statistics/gene_usage_{metric_name}_vs_train_test.png")
+    # No contrasts in the config, so no contrast outputs, and without statistical tests no p-values
+    assert not os.path.exists(f"{output_dir}/statistics/gene_usage_v_gene_contrasts.tsv")
+    vs_train_test = pd.read_csv(f"{output_dir}/statistics/gene_usage_v_gene_vs_train_test.tsv", sep="\t")
+    assert "p_value" not in vs_train_test.columns
+
+
+def test_run_gene_usage_analysis_with_statistical_tests(analysis_config):
+    analysis_config.statistical_tests = True
+
+    run_gene_usage_analysis(analysis_config)
+
+    vs_train_test = pd.read_csv(f"{analysis_config.analysis_output_dir}/statistics/gene_usage_v_gene_vs_train_test.tsv",
+                                sep="\t")
+    assert vs_train_test["first"].tolist() == ["vae", "sonnia"]
+    assert {"ci_low", "ci_high", "p_value", "p_adjusted"} <= set(vs_train_test.columns)
+
+
+def test_run_gene_usage_analysis_with_tests_requires_one_repertoire_per_donor(analysis_config):
+    analysis_config.statistical_tests = True
+    analysis_config.donor_pattern = "^(rep)_"
+
+    with pytest.raises(ValueError, match="one repertoire per donor"):
+        run_gene_usage_analysis(analysis_config)
+
+
+def test_run_gene_usage_analysis_with_contrasts(analysis_config):
+    analysis_config.contrasts = [["vae", "sonnia"]]
+
+    run_gene_usage_analysis(analysis_config)
+
+    prefix = f"{analysis_config.analysis_output_dir}/statistics/gene_usage_v_gene"
+    contrasts = pd.read_csv(f"{prefix}_contrasts.tsv", sep="\t")
+    assert contrasts[["first", "second", "n_repertoires"]].values.tolist() == [["vae", "sonnia", 2]]
+    assert os.path.exists(f"{prefix}_contrasts.png")
 
 
 def test_run_gene_usage_analysis_without_gene_generating_models(analysis_config):

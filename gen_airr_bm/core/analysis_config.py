@@ -2,7 +2,8 @@ class AnalysisConfig:
     def __init__(self, analysis: str, model_names: list, analysis_output_dir: str, root_output_dir: str,
                  default_model_name: str, reference_data: str | list, subfolder_name: str, receptor_type: str, n_subsets: int = None,
                  allowed_mismatches: int = 0, indels: bool = False, deduplicate: bool = False,
-                 use_novel_sequences: bool = True, collection: str = None):
+                 use_novel_sequences: bool = True, collection: str = None,
+                 contrasts: list = None, statistical_tests: bool = False, donor_pattern: str = None):
         self.analysis = analysis
         self.model_names = model_names
         self.analysis_output_dir = analysis_output_dir
@@ -17,10 +18,14 @@ class AnalysisConfig:
         self.receptor_type = receptor_type
         self.use_novel_sequences = use_novel_sequences
         self.collection = collection
+        self.contrasts = contrasts
+        self.statistical_tests = statistical_tests
+        self.donor_pattern = donor_pattern
 
     def __repr__(self):
         return (f"AnalysisConfig(analysis={self.analysis}, model_names={self.model_names}, "
                 f"analysis_output_dir={self.analysis_output_dir}, root_output_dir={self.root_output_dir}, "
                 f"default_model_name={self.default_model_name}, reference_data={self.reference_data}, "
                 f"subfolder_name={self.subfolder_name}, n_subsets={self.n_subsets}, receptor_type={self.receptor_type}, "
-                f"use_novel_sequences={self.use_novel_sequences}, collection={self.collection})")
+                f"use_novel_sequences={self.use_novel_sequences}, collection={self.collection}, contrasts={self.contrasts}, "
+                f"statistical_tests={self.statistical_tests}, donor_pattern={self.donor_pattern})")
