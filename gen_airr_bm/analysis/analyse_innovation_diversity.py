@@ -185,7 +185,8 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
     else:
         innovation_title_part = ""
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     fig = plot_single_dataset(plotting_dfs,
                               title=f'Number of {innovation_title_part}Model Sequences by Distance to Nearest <br>Train Sequence for {collection_specification} Repertoires',
                               xtitle='Distance to nearest training sequence', ytitle='Mean Sequence Count',
@@ -324,7 +325,8 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
         for model, dataset_dict in num_clusters_by_model.items()
     }
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     fig = plot_single_dataset(
         cluster_dfs,
         title=f"Average Number of Clusters by Distance Threshold <br>for {collection_specification} Repertoires",

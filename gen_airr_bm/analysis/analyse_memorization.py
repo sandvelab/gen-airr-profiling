@@ -37,7 +37,7 @@ def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
         mean_reference_memorization_score = None
 
     plot_results(model_memorization_scores, mean_reference_memorization_score, output_dir, "memorization",
-                 analysis_config.receptor_type)
+                 analysis_config.receptor_type, analysis_config.collection)
 
 
 def get_mean_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: str, train_reference: str) -> dict:
@@ -135,7 +135,8 @@ def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test
     return ratio, novel_sequences
 
 
-def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str, receptor_type: str) \
+def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, file_name: str, receptor_type: str,
+                 collection: str = None) \
         -> None:
     """ Plot memorization scores for each model with std error bars and reference line.
     Args:
@@ -144,6 +145,7 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
         fig_dir (str): Directory to save the plot.
         file_name (str): Name of the output plot and tsv files (without extension).
         receptor_type (str): Type of receptor being analyzed ("BCR", "TCR").
+        collection (str): Optional collection label for the title (e.g. "D"), inferred from receptor_type if None.
     Returns:
         None
     """
@@ -172,7 +174,7 @@ def plot_results(model_scores: dict, mean_reference_score: float, fig_dir: str, 
         marker=dict(color=px.colors.qualitative.Safe[0]),
     ))
 
-    collection_specification = get_collection_specification_for_title(receptor_type)
+    collection_specification = get_collection_specification_for_title(receptor_type, collection)
     fig.update_layout(
         title=dict(
             text=f"Mean Memorization Score for Generated {collection_specification}<br>Repertoires",

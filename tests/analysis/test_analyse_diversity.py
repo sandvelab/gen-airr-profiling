@@ -115,7 +115,8 @@ def test_compute_and_plot_diversity_scores(mocker, sample_analysis_config):
         expected_models_diversities_grouped,
         output_path,
         metric_name,
-        sample_analysis_config.receptor_type
+        sample_analysis_config.receptor_type,
+        sample_analysis_config.collection
     )
 
 

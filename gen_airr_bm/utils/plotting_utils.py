@@ -10,8 +10,14 @@ import plotly.colors as pc
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
-def get_collection_specification_for_title(receptor_type):
-    if receptor_type == "TCR":
+def get_collection_specification_for_title(receptor_type, collection=None):
+    """ Returns the collection label used in plot titles, e.g. "Collection B (TCR)".
+    An explicit collection (e.g. "D" for the Emerson repertoires) takes precedence, since several collections
+    share a receptor type. Without one, the collection is inferred from the receptor type.
+    """
+    if collection is not None:
+        return f"Collection {collection} ({receptor_type.replace(' UMI', '')})"
+    elif receptor_type == "TCR":
         return "Collection B (TCR)"
     elif receptor_type == "BCR":
         return "Collection C (BCR)"
@@ -111,7 +117,8 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         )
     )
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     fig.update_layout(
         title=wrap_title(f"Mean Unique Innovation Score for Generated {collection_specification} Repertoires"),
         xaxis_title="Models",
@@ -186,7 +193,7 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
     fig = go.Figure(data=data)
     color_palette = px.colors.qualitative.Safe
     title_text = (f"{distribution_type.title()} Distribution Comparison:<br>Generated vs. Train and "
-                  f"Test {get_collection_specification_for_title(receptor_type)} Repertoires")
+                  f"Test {get_collection_specification_for_title(receptor_type, analysis_config.collection)} Repertoires")
     fig.update_layout(
         barmode='group',
         title={'text': title_text,
@@ -436,7 +443,8 @@ def plot_degree_distribution_by_dataset(analysis_config: AnalysisConfig, connect
 
             distance_type = "Levenshtein" if analysis_config.indels else "Hamming"
             dataset_name_clean = dataset_name.rsplit("_", 1)[0]
-            collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+            collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                                 analysis_config.collection)
             fig.update_layout(
                 width=1600,
                 height=800,

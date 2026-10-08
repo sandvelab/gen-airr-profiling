@@ -367,7 +367,8 @@ def plot_gene_usage_frequencies(analysis_config: AnalysisConfig, frequencies_df:
 
     output_path = (f"{analysis_config.analysis_output_dir}/"
                    f"gene_usage_frequencies_{metric_name.replace(' ', '_')}")
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     title = (f"{metric_name.title()} Usage in Generated vs. {reference.capitalize()} "
              f"{collection_specification} Repertoires")
 
