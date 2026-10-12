@@ -303,33 +303,33 @@ analyses:
       receptor_type: "BCR"
       use_novel_sequences: False
 
-tuning:
-    - tuning_method: "reduced_dimensionality"
-      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
-                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
-                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
-                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
-                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
-      reference_data: [ "train", "test" ]
-      subfolder_name: "all TCRpeg models"
-      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
-                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
-                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
-                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
-                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
-      reference_data: [ "train", "test" ]
-      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-      subfolder_name: "all TCRpeg models dist 0"
-      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
-    - tuning_method: "overlap"
-      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
-                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
-                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
-                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
-                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
-      reference_data: [ "train", "test" ]
-      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
-      subfolder_name: "all TCRpeg models dist 0 deduplicated"
-      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
+#tuning:
+#    - tuning_method: "reduced_dimensionality"
+#      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+#                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+#                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+#                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+#                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+#      reference_data: [ "train", "test" ]
+#      subfolder_name: "all TCRpeg models"
+#      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+#                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+#                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+#                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+#                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+#      subfolder_name: "all TCRpeg models dist 0"
+#      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"
+#    - tuning_method: "overlap"
+#      model_names: [ "tcrpeg_01", "tcrpeg_02", "tcrpeg_03", "tcrpeg_04", "tcrpeg_05", "tcrpeg_06", "tcrpeg_07", "tcrpeg_08",
+#                    "tcrpeg_09", "tcrpeg_10", "tcrpeg_11", "tcrpeg_12", "tcrpeg_13", "tcrpeg_14", "tcrpeg_15", "tcrpeg_16",
+#                    "tcrpeg_17", "tcrpeg_18", "tcrpeg_19", "tcrpeg_20", "tcrpeg_21", "tcrpeg_22", "tcrpeg_23", "tcrpeg_24",
+#                    "tcrpeg_25", "tcrpeg_26", "tcrpeg_27", "tcrpeg_28", "tcrpeg_29", "tcrpeg_30", "tcrpeg_31", "tcrpeg_32",
+#                    "tcrpeg_33", "tcrpeg_34", "tcrpeg_35", "tcrpeg_36" ]
+#      reference_data: [ "train", "test" ]
+#      k_values: [ 0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 1.0 ]
+#      subfolder_name: "all TCRpeg models dist 0 deduplicated"
+#      hyperparameter_table_path: "data/hyperparameter_tables/TCRpeg.tsv"

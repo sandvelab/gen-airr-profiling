@@ -1,0 +1,23 @@
+n_experiments: 20
+output_dir: "RESULTS_SEP25/EMERSON_EXP2"
+input_dir: "data/experimental/emerson_exp2"
+seed: 42
+
+data_generation:
+  experimental: True
+  method: "experimental"
+  n_samples: 100000
+  default_model_name: "humanTRB"
+  input_columns: ["cdr3_amino_acid", "v_resolved", "j_resolved", "locus" ]
+
+models:
+    - name: "ProGen_overlap"
+      immuneml_model_config: "configs/generative_models/EMERSON_EXP2/ProGen/progen_22.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100000
+    - name: "ProGen_kmer"
+      immuneml_model_config: "configs/generative_models/EMERSON_EXP2/ProGen/progen_16.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 100000
