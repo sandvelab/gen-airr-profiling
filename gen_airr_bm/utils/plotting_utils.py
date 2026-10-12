@@ -343,6 +343,12 @@ def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, titl
     for label, annotation in zip(labels, annotations):
         fig.add_annotation(text=annotation, x=1.02, xref="paper", y=label, yref="y", xanchor="left",
                            showarrow=False, font=dict(size=13))
+    if statistical_tests:
+        correction = title_case(str(comparisons_df["correction"].iloc[0]))
+        fig.add_annotation(text=f"Error bars: unadjusted 95% CI across repertoires. p<sub>adj</sub>: {correction}-"
+                                f"corrected across the comparisons in this plot only.",
+                           x=0, xref="paper", y=-0.2, yref="paper", xanchor="left", yanchor="top", showarrow=False,
+                           font=dict(size=13))
     fig.update_layout(title={'text': wrap_title(title, width=80), 'font': {'size': 18}},
                       xaxis=dict(title=dict(text=x_label, font=dict(size=16)), tickfont=dict(size=14)),
                       yaxis=dict(tickfont=dict(size=14), categoryorder="array", categoryarray=labels),

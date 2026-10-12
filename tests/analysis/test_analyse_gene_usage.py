@@ -295,6 +295,7 @@ def test_run_gene_usage_analysis_writes_outputs(analysis_config):
 
 def test_run_gene_usage_analysis_with_statistical_tests(analysis_config):
     analysis_config.statistical_tests = True
+    analysis_config.donor_pattern = "^(rep_\\d+)$"
 
     run_gene_usage_analysis(analysis_config)
 
@@ -309,6 +310,13 @@ def test_run_gene_usage_analysis_with_tests_requires_one_repertoire_per_donor(an
     analysis_config.donor_pattern = "^(rep)_"
 
     with pytest.raises(ValueError, match="one repertoire per donor"):
+        run_gene_usage_analysis(analysis_config)
+
+
+def test_run_gene_usage_analysis_with_tests_requires_donor_pattern(analysis_config):
+    analysis_config.statistical_tests = True
+
+    with pytest.raises(ValueError, match="require a donor_pattern"):
         run_gene_usage_analysis(analysis_config)
 
 

@@ -40,7 +40,7 @@ def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
     generate gene calls are skipped and reported in skipped_models.txt. Against the test sequences, the models are
     also compared at the repertoire level (see statistics_utils): with the train vs. test reference, with each other,
     and in the contrasts given in the config. These comparisons are descriptive, or include confidence intervals and
-    tests if statistical_tests is set, which requires one repertoire per donor.
+    tests if statistical_tests is set, which requires a donor_pattern and one repertoire per donor.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
@@ -62,7 +62,8 @@ def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
     scores_df = compute_gene_usage_scores(analysis_config, models_with_gene_calls, distributions_cache)
     scores_df.to_csv(f"{analysis_config.analysis_output_dir}/gene_usage_jsd_scores.tsv", sep="\t", index=False)
     if analysis_config.statistical_tests:
-        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "jsd", analysis_config.donor_pattern))
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "jsd", analysis_config.donor_pattern),
+                                       analysis_config.donor_pattern)
 
     frequencies_df = compute_gene_usage_frequencies(analysis_config, models_with_gene_calls, distributions_cache)
     frequencies_df.to_csv(f"{analysis_config.analysis_output_dir}/gene_usage_frequencies.tsv", sep="\t", index=False)
@@ -326,7 +327,8 @@ def run_gene_usage_statistics(analysis_config: AnalysisConfig, scores_df: pd.Dat
                               models: list, reference_scores: pd.DataFrame | None) -> None:
     """ Runs the repertoire-level comparisons of a metric against the test sequences and plots the comparisons with
     the train vs. test reference and the contrasts from the config. The train sequences are left out, since the
-    models were fitted on them. With statistical tests, each metric is its own multiple testing family.
+    models were fitted on them. With statistical tests, the p-values are Bonferroni-corrected within each metric
+    comparison set, and not across them.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         scores_df (pd.DataFrame): Scores as returned by compute_gene_usage_scores.

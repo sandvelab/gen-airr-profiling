@@ -1,19 +1,17 @@
-import itertools
 import os
 
 import numpy as np
 import pandas as pd
 import pytest
 import yaml
+from scipy import stats
 
 from gen_airr_bm.core.main_config import MainConfig
-from gen_airr_bm.utils import statistics_utils
 from gen_airr_bm.utils.statistics_utils import (DESCRIPTIVE_COMPARISON_COLUMNS, TRAIN_TEST_REFERENCE,
                                                 aggregate_repertoire_scores, check_one_repertoire_per_donor,
-                                                compare_paired, describe_error_bars, get_donor, is_underpowered,
-                                                min_possible_p, run_repertoire_statistics, sign_flip_test,
-                                                summarise_repertoire_scores, t_confidence_interval,
-                                                validate_contrasts)
+                                                compare_paired, describe_error_bars, get_donor, paired_t_test,
+                                                run_repertoire_statistics, summarise_repertoire_scores,
+                                                t_confidence_interval, validate_contrasts)
 
 
 def make_repertoire_scores(scores_by_source: dict, donors: list = None) -> pd.DataFrame:
@@ -54,9 +52,14 @@ def test_aggregate_repertoire_scores_averages_subsets():
 
 
 def test_check_one_repertoire_per_donor():
-    check_one_repertoire_per_donor(make_repertoire_scores({"a": [0.1, 0.2]}))
+    check_one_repertoire_per_donor(make_repertoire_scores({"a": [0.1, 0.2]}), "^(rep_\\d+)$")
     with pytest.raises(ValueError, match="one repertoire per donor"):
-        check_one_repertoire_per_donor(make_repertoire_scores({"a": [0.1, 0.2]}, donors=["d1", "d1"]))
+        check_one_repertoire_per_donor(make_repertoire_scores({"a": [0.1, 0.2]}, donors=["d1", "d1"]), "^(rep)_")
+
+
+def test_check_one_repertoire_per_donor_requires_donor_pattern():
+    with pytest.raises(ValueError, match="require a donor_pattern"):
+        check_one_repertoire_per_donor(make_repertoire_scores({"a": [0.1, 0.2]}), None)
 
 
 def test_t_confidence_interval():
@@ -82,49 +85,27 @@ def test_summarise_repertoire_scores(statistical_tests):
     assert ("ci_low" in summary.columns) == statistical_tests
 
 
-@pytest.mark.parametrize("differences, expected_p", [
-    # All six repertoires in the same direction: only "no flips" and "all flipped" are as extreme, 2 / 2^6
-    ([0.02, 0.03, 0.01, 0.04, 0.02, 0.03], 2 / 64),
-    # One repertoire in the other direction
-    ([0.02, 0.03, -0.01, 0.04, 0.02, 0.03], 0.0625),
-    ([0.0, 0.0, 0.0], 1.0),
-])
-def test_sign_flip_test_exact(differences, expected_p):
-    p_value, test = sign_flip_test(differences)
+def test_paired_t_test_matches_scipy():
+    first, second = np.array([0.21, 0.35, 0.28, 0.40, 0.31]), np.array([0.25, 0.36, 0.33, 0.41, 0.30])
 
-    assert p_value == pytest.approx(expected_p)
-    assert test == "exact sign-flip"
+    p_value, test = paired_t_test(first - second)
+
+    assert p_value == pytest.approx(stats.ttest_rel(first, second).pvalue)
+    assert test == "paired t-test"
 
 
-def test_sign_flip_test_exact_matches_brute_force():
-    differences = np.random.default_rng(0).normal(0.01, 0.02, size=9)
-    observed = abs(differences.mean())
-    flipped_means = [abs((differences * np.array(signs)).mean())
-                     for signs in itertools.product([1, -1], repeat=len(differences))]
-    expected_p = np.mean([mean >= observed - 1e-12 for mean in flipped_means])
-
-    assert sign_flip_test(differences)[0] == pytest.approx(expected_p)
+@pytest.mark.parametrize("differences", [[], [0.1], [np.nan, 0.1], [0.0, 0.0, 0.0]])
+def test_paired_t_test_without_enough_differences(differences):
+    assert np.isnan(paired_t_test(differences)[0])
 
 
-def test_sign_flip_test_monte_carlo(monkeypatch):
-    monkeypatch.setattr(statistics_utils, "N_PERMUTATIONS", 2000)
-    differences = np.full(30, 0.01)
-
-    p_value, test = sign_flip_test(differences)
-
-    # No random sign combination is as extreme as all positive, so p is the smallest possible Monte Carlo p-value
-    assert p_value == pytest.approx(1 / 2001)
-    assert test.startswith("Monte Carlo")
-
-
-def test_sign_flip_test_without_differences():
-    assert np.isnan(sign_flip_test([])[0])
-
-
-def test_min_possible_p():
-    assert min_possible_p(6) == pytest.approx(0.03125)
-    assert min_possible_p(11) == pytest.approx(2 / 2048)
-    assert min_possible_p(100) == pytest.approx(1 / (statistics_utils.N_PERMUTATIONS + 1))
+def test_paired_t_test_agrees_with_confidence_interval():
+    # The p-value is below 0.05 exactly when the 95% confidence interval of the mean difference excludes zero
+    rng = np.random.default_rng(0)
+    for _ in range(50):
+        differences = rng.normal(0.01, 0.02, size=8)
+        ci_low, ci_high = t_confidence_interval(differences)
+        assert (paired_t_test(differences)[0] < 0.05) == (ci_low > 0 or ci_high < 0)
 
 
 def test_compare_paired_descriptive_counts_repertoires_and_donors():
@@ -144,30 +125,20 @@ def test_compare_paired_descriptive_counts_repertoires_and_donors():
     assert differences["donor"].tolist() == ["d1", "d1", "d2"]
 
 
-def test_compare_paired_with_tests_holm_correction():
-    repertoire_scores = make_repertoire_scores({"a": [0.1] * 6, "b": [0.2] * 6, "c": [0.3] * 6})
+def test_compare_paired_with_tests_bonferroni_correction():
+    # a - b and a - c have different raw p-values. Unlike Holm, Bonferroni multiplies every p-value, not only the
+    # smallest, by the number of tests.
+    repertoire_scores = make_repertoire_scores({"a": [0.10, 0.12, 0.11, 0.13, 0.10, 0.12],
+                                                "b": [0.20, 0.21, 0.19, 0.22, 0.20, 0.23],
+                                                "c": [0.30, 0.00, 0.30, 0.00, 0.30, 0.05]})
 
     comparisons, _ = compare_paired(repertoire_scores, [("a", "b"), ("a", "c")], statistical_tests=True)
 
-    # Both raw p-values are at the floor of 2 / 2^6, and Holm multiplies the smallest by the number of tests
-    assert comparisons["p_value"].tolist() == pytest.approx([0.03125, 0.03125])
-    assert comparisons["p_adjusted"].tolist() == pytest.approx([0.0625, 0.0625])
-    assert is_underpowered(comparisons)
-
-
-def test_is_underpowered():
-    repertoire_scores = make_repertoire_scores({"a": [0.1] * 11, "b": [0.2] * 11})
-
-    assert not is_underpowered(compare_paired(repertoire_scores, [("a", "b")], statistical_tests=True)[0])
-    assert not is_underpowered(compare_paired(repertoire_scores, [("a", "b")], statistical_tests=False)[0])
-
-
-def test_validate_contrasts():
-    assert validate_contrasts([["a", "b"]], ["a", "b"]) == [("a", "b")]
-    with pytest.raises(ValueError, match="Unknown models"):
-        validate_contrasts([["a", "x"]], ["a", "b"])
-    with pytest.raises(ValueError, match="pairs"):
-        validate_contrasts([["a", "b", "c"]], ["a", "b", "c"])
+    p_values = comparisons["p_value"].to_numpy()
+    assert p_values[0] < 0.001 < 0.5 < p_values[1]
+    # Adjusted p-values are capped at 1
+    assert comparisons["p_adjusted"].tolist() == pytest.approx([2 * p_values[0], 1.0])
+    assert set(comparisons["test"]) == {"paired t-test"}
 
 
 @pytest.mark.parametrize("statistical_tests, n_repertoires, n_donors, expected", [
@@ -185,7 +156,7 @@ def test_run_repertoire_statistics(tmp_path, statistical_tests):
     output_prefix = str(tmp_path / "statistics" / "metric")
 
     results = run_repertoire_statistics(repertoire_scores, ["a", "b", "c"], output_prefix, statistical_tests,
-                                        reference_scores, [["a", "b"]])
+                                        reference_scores, [["a", "b"]], donor_pattern="^(rep_\\d+)$")
 
     assert results["vs_train_test"][["first", "second"]].values.tolist() == [
         ["a", TRAIN_TEST_REFERENCE], ["b", TRAIN_TEST_REFERENCE], ["c", TRAIN_TEST_REFERENCE]]
@@ -194,7 +165,7 @@ def test_run_repertoire_statistics(tmp_path, statistical_tests):
     assert ("p_adjusted" in results["all_pairs"].columns) == statistical_tests
     if statistical_tests:
         for name in ["vs_train_test", "contrasts", "all_pairs"]:
-            assert set(results[name]["correction"]) == {"holm"}
+            assert set(results[name]["correction"]) == {"bonferroni"}
     assert TRAIN_TEST_REFERENCE in set(results["summary"]["source"])
     for table in ["repertoire_scores", "summary", "vs_train_test", "vs_train_test_differences", "contrasts",
                   "contrasts_differences", "all_pairs", "all_pairs_differences"]:
@@ -205,6 +176,14 @@ def test_run_repertoire_statistics_with_tests_requires_one_repertoire_per_donor(
     repertoire_scores = make_repertoire_scores({"a": [0.2, 0.3], "b": [0.3, 0.4]}, donors=["d1", "d1"])
 
     with pytest.raises(ValueError, match="one repertoire per donor"):
+        run_repertoire_statistics(repertoire_scores, ["a", "b"], str(tmp_path / "metric"), statistical_tests=True,
+                                  donor_pattern="^(rep)_")
+
+
+def test_run_repertoire_statistics_with_tests_requires_donor_pattern(tmp_path):
+    repertoire_scores = make_repertoire_scores({"a": [0.2, 0.3], "b": [0.3, 0.4]})
+
+    with pytest.raises(ValueError, match="require a donor_pattern"):
         run_repertoire_statistics(repertoire_scores, ["a", "b"], str(tmp_path / "metric"), statistical_tests=True)
 
 

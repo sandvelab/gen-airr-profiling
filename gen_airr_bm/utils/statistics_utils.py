@@ -13,12 +13,13 @@ There are two modes, set per analysis with statistical_tests:
   source is lower or higher. No confidence intervals or p-values are computed.
 - Statistical tests: for collections with one repertoire per donor, where repertoires are independent. In addition,
   t-based confidence intervals are computed for the means and mean differences, and each comparison is tested with a
-  two-sided paired sign-flip permutation test: under the null hypothesis of no difference, the sign of each
-  repertoire's difference is equally likely to be positive or negative, so the observed mean difference is compared
-  to the mean differences of all sign combinations (exactly for up to MAX_EXACT_REPERTOIRES repertoires, otherwise by
-  Monte Carlo). Every set of comparisons (with the train vs. test reference, the contrasts from the config, all
-  pairs of models) is a separate multiple testing family, corrected with Holm, which controls the probability of any
-  false positive in the family (family-wise error rate).
+  two-sided paired t-test of whether the mean of the per-repertoire differences is zero. The test and the confidence
+  interval of a mean difference use the same t distribution, so the unadjusted p-value is below 1 - CONFIDENCE_LEVEL
+  exactly when the interval excludes zero. The p-values are corrected with Bonferroni within each metric and comparison
+  set (with the train vs. test reference, the contrasts from the config, all pairs of models): each such set is a
+  separate multiple testing family, and Bonferroni controls the probability of any false positive within it (family-wise
+  error rate). There is no correction across metrics or comparison sets. The confidence intervals are not adjusted for
+  multiple comparisons, so an interval can exclude zero while the adjusted p-value is above ALPHA.
 
 Donors are derived from the repertoire names with donor_pattern, a regular expression whose first group (or whole
 match) is the donor, e.g. "^([^_]+)_" for 6271_pLN_CD8. Without a pattern, every repertoire is its own donor.
@@ -34,18 +35,14 @@ from statsmodels.stats.multitest import multipletests
 
 CONFIDENCE_LEVEL = 0.95
 ALPHA = 0.05
-MAX_EXACT_REPERTOIRES = 20
-N_PERMUTATIONS = 100_000
-PERMUTATION_SEED = 42
-PERMUTATION_CHUNK_SIZE = 2 ** 16
-CORRECTION = "holm"
+CORRECTION = "bonferroni"
 TRAIN_TEST_REFERENCE = "train vs. test"
 
 DESCRIPTIVE_COMPARISON_COLUMNS = ["first", "second", "n_repertoires", "n_donors", "mean_difference", "sd_difference",
                                   "n_first_higher", "n_first_lower", "n_donors_first_higher",
                                   "n_donors_first_lower"]
 TEST_COMPARISON_COLUMNS = DESCRIPTIVE_COMPARISON_COLUMNS + ["ci_low", "ci_high", "p_value", "p_adjusted",
-                                                            "correction", "test", "min_possible_p"]
+                                                            "correction", "test"]
 
 
 def get_donor(repertoire: str, donor_pattern: str | None) -> str:
@@ -79,9 +76,13 @@ def aggregate_repertoire_scores(scores_df: pd.DataFrame, score_column: str, dono
     return repertoire_scores
 
 
-def check_one_repertoire_per_donor(repertoire_scores: pd.DataFrame) -> None:
-    """ Raises an error if a donor has several repertoires, since the statistical tests assume that the repertoires
-    are independent. """
+def check_one_repertoire_per_donor(repertoire_scores: pd.DataFrame, donor_pattern: str | None) -> None:
+    """ Raises an error if no donor pattern is given or if a donor has several repertoires, since the statistical
+    tests assume that the repertoires are independent. Without a donor pattern every repertoire would count as its
+    own donor, so the check could not detect several repertoires from the same donor. """
+    if donor_pattern is None:
+        raise ValueError("Statistical tests require a donor_pattern, so that it can be checked that every donor has "
+                         "only one repertoire.")
     n_repertoires = repertoire_scores.groupby("donor")["repertoire"].nunique()
     repeated_donors = n_repertoires[n_repertoires > 1].index.tolist()
     if repeated_donors:
@@ -126,48 +127,19 @@ def summarise_repertoire_scores(repertoire_scores: pd.DataFrame, statistical_tes
     return pd.DataFrame(rows, columns=columns)
 
 
-def sign_flip_test(differences) -> tuple[float, str]:
-    """ Two-sided paired sign-flip permutation test of whether the mean difference is zero.
+def paired_t_test(differences) -> tuple[float, str]:
+    """ Two-sided paired t-test of whether the mean of the per-repertoire differences between two sources is zero.
     Args:
         differences: The per-repertoire differences between two sources.
     Returns:
-        tuple[float, str]: The p-value and a description of how it was computed.
+        tuple[float, str]: The p-value, or nan if there are fewer than two differences or they are all zero, and the
+        name of the test.
     """
     differences = np.asarray(differences, dtype=float)
-    n = len(differences)
-    if n == 0:
-        return np.nan, "none"
-    observed = abs(differences.mean())
-    # Tolerance so that sign combinations with the same mean as the observed one count as at least as extreme
-    threshold = observed - 1e-12 * max(observed, 1.0)
-
-    if n <= MAX_EXACT_REPERTOIRES:
-        n_combinations = 2 ** n
-        bits = np.arange(n)
-        n_extreme = 0
-        for start in range(0, n_combinations, PERMUTATION_CHUNK_SIZE):
-            indices = np.arange(start, min(start + PERMUTATION_CHUNK_SIZE, n_combinations))
-            signs = 1 - 2 * ((indices[:, None] >> bits) & 1)
-            n_extreme += np.count_nonzero(np.abs(signs @ differences) / n >= threshold)
-        return n_extreme / n_combinations, "exact sign-flip"
-
-    rng = np.random.default_rng(PERMUTATION_SEED)
-    n_extreme = 0
-    for start in range(0, N_PERMUTATIONS, PERMUTATION_CHUNK_SIZE):
-        size = min(PERMUTATION_CHUNK_SIZE, N_PERMUTATIONS - start)
-        signs = rng.choice([-1, 1], size=(size, n))
-        n_extreme += np.count_nonzero(np.abs(signs @ differences) / n >= threshold)
-    return (n_extreme + 1) / (N_PERMUTATIONS + 1), f"Monte Carlo sign-flip ({N_PERMUTATIONS} permutations)"
-
-
-def min_possible_p(n_repertoires: int) -> float:
-    """ The smallest p-value the sign-flip test can give for this number of repertoires, reached when all
-    differences have the same sign. """
-    if n_repertoires == 0:
-        return np.nan
-    if n_repertoires <= MAX_EXACT_REPERTOIRES:
-        return 2 / 2 ** n_repertoires
-    return 1 / (N_PERMUTATIONS + 1)
+    differences = differences[~np.isnan(differences)]
+    if len(differences) < 2:
+        return np.nan, "paired t-test"
+    return float(stats.ttest_1samp(differences, 0).pvalue), "paired t-test"
 
 
 def compare_paired(repertoire_scores: pd.DataFrame, comparisons: list,
@@ -176,7 +148,7 @@ def compare_paired(repertoire_scores: pd.DataFrame, comparisons: list,
     Args:
         repertoire_scores (pd.DataFrame): Scores as returned by aggregate_repertoire_scores.
         comparisons (list): Pairs (first, second) of sources to compare. They form one multiple testing family.
-        statistical_tests (bool): Whether to add confidence intervals and tests, Holm-corrected across the
+        statistical_tests (bool): Whether to add confidence intervals and tests, Bonferroni-corrected across the
             comparisons.
     Returns:
         tuple[pd.DataFrame, pd.DataFrame]: One row per comparison with the mean difference and the number of
@@ -205,9 +177,8 @@ def compare_paired(repertoire_scores: pd.DataFrame, comparisons: list,
                "n_donors_first_lower": int((donor_differences < 0).sum())}
         if statistical_tests:
             row["ci_low"], row["ci_high"] = t_confidence_interval(values)
-            row["p_value"], row["test"] = sign_flip_test(values)
+            row["p_value"], row["test"] = paired_t_test(values)
             row["p_adjusted"], row["correction"] = np.nan, CORRECTION
-            row["min_possible_p"] = min_possible_p(len(values))
         rows.append(row)
         differences_dfs.append(differences.assign(first=first, second=second))
 
@@ -222,15 +193,6 @@ def compare_paired(repertoire_scores: pd.DataFrame, comparisons: list,
                       else pd.DataFrame(columns=["repertoire", "donor", "difference"]))
     differences_df = differences_df.reindex(columns=["first", "second", "repertoire", "donor", "difference"])
     return comparisons_df, differences_df
-
-
-def is_underpowered(comparisons_df: pd.DataFrame) -> bool:
-    """ Whether no comparison of a Holm-corrected family can reach significance, even if every repertoire showed a
-    difference in the same direction. Holm can only reject anything if the smallest p-value is at most alpha divided
-    by the number of comparisons. """
-    if comparisons_df.empty or "min_possible_p" not in comparisons_df:
-        return False
-    return comparisons_df["min_possible_p"].min() * len(comparisons_df) > ALPHA
 
 
 def validate_contrasts(contrasts: list, sources: list) -> list:
@@ -262,8 +224,8 @@ def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, out
         repertoire_scores (pd.DataFrame): Model scores as returned by aggregate_repertoire_scores.
         models (list): The models to compare, in plotting order.
         output_prefix (str): Path prefix of the output files.
-        statistical_tests (bool): Whether to compute confidence intervals and tests. Requires one repertoire per
-            donor.
+        statistical_tests (bool): Whether to compute confidence intervals and tests. Requires a donor pattern and one
+            repertoire per donor.
         reference_scores (pd.DataFrame): Optional train vs. test scores per repertoire, with columns repertoire and
             score. Every model is compared to them.
         contrasts (list): Optional pre-specified pairs of models to compare, e.g. from the analysis config.
@@ -276,7 +238,7 @@ def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, out
     models = [model for model in models if model in set(repertoire_scores["source"])]
     scores = repertoire_scores[repertoire_scores["source"].isin(models)]
     if statistical_tests:
-        check_one_repertoire_per_donor(scores)
+        check_one_repertoire_per_donor(scores, donor_pattern)
     if reference_scores is not None:
         reference_scores = reference_scores.assign(
             source=TRAIN_TEST_REFERENCE,
@@ -297,8 +259,4 @@ def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, out
     scores.to_csv(f"{output_prefix}_repertoire_scores.tsv", sep="\t", index=False)
     for name, table in results.items():
         table.to_csv(f"{output_prefix}_{name}.tsv", sep="\t", index=False)
-        if is_underpowered(table):
-            print(f"Warning: with {table['n_repertoires'].max()} repertoires and {len(table)} Holm-corrected "
-                  f"comparisons, none of the comparisons in {output_prefix}_{name}.tsv can reach significance at "
-                  f"alpha={ALPHA}.")
     return results
