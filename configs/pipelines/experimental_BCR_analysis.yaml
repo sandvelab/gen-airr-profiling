@@ -144,3 +144,5 @@ analyses:
       n_subsets: 6
       subfolder_name: "gene generating models"
       receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
