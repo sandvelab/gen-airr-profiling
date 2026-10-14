@@ -10,8 +10,14 @@ import plotly.colors as pc
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
-def get_collection_specification_for_title(receptor_type):
-    if receptor_type == "TCR":
+def get_collection_specification_for_title(receptor_type, collection=None):
+    """ Returns the collection label used in plot titles, e.g. "Collection B (TCR)".
+    An explicit collection (e.g. "D" for the Emerson repertoires) takes precedence, since several collections
+    share a receptor type. Without one, the collection is inferred from the receptor type.
+    """
+    if collection is not None:
+        return f"Collection {collection} ({receptor_type.replace(' UMI', '')})"
+    elif receptor_type == "TCR":
         return "Collection B (TCR)"
     elif receptor_type == "BCR":
         return "Collection C (BCR)"
@@ -19,6 +25,13 @@ def get_collection_specification_for_title(receptor_type):
         return "Collection A (BCR)"
     else:
         raise ValueError(f"Unknown receptor type: {receptor_type}")
+
+
+def title_case(text: str) -> str:
+    """ Title-cases the words of a text, leaving words that already contain capitals as they are, so that
+    abbreviations survive: "vj pairing" becomes "Vj Pairing", but "VJ pairing" becomes "VJ Pairing".
+    """
+    return " ".join(word if any(char.isupper() for char in word) else word.title() for word in text.split(" "))
 
 
 def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
@@ -111,7 +124,8 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         )
     )
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     fig.update_layout(
         title=wrap_title(f"Mean Unique Innovation Score for Generated {collection_specification} Repertoires"),
         xaxis_title="Models",
@@ -125,19 +139,39 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
     print(f"Plot saved as png at: {png_path}.png")
 
 
+DONOR_SYMBOLS = ["circle", "square", "diamond", "triangle-up", "x", "cross", "star", "triangle-down", "pentagon",
+                 "hexagon"]
+
+
+def get_donor_symbols(donors) -> dict | None:
+    """ Assigns a marker symbol to each donor, or returns None if no donor occurs more than once, since symbols only
+    help to see which repertoires come from the same donor. """
+    donors = list(donors)
+    if len(set(donors)) == len(donors):
+        return None
+    return {donor: DONOR_SYMBOLS[i % len(DONOR_SYMBOLS)] for i, donor in enumerate(sorted(set(donors)))}
+
+
 def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref, std_scores_by_ref,  file_name,
-                            distribution_type, scoring_method="JSD", reference_score=None) -> None:
+                            distribution_type, scoring_method="JSD", reference_score=None, error_bars_by_ref=None,
+                            error_bar_caption=None, repertoire_scores_by_ref=None) -> None:
     """
     Plots grouped bar chart for mean scores across models and reference types.
 
     Args:
         analysis_config: AnalysisConfig object containing analysis settings
         mean_scores_by_ref: dict of {ref_label: {model: mean_score}}
-        std_scores_by_ref: dict of {ref_label: {model: std_score}}
+        std_scores_by_ref: dict of {ref_label: {model: std_score}}, used for the error bars if error_bars_by_ref is
+            not given
         file_name: output file name without extension
         distribution_type: used for titles. e.g. "connectivity"
         scoring_method: used for titles. e.g. "JSD"
         reference_score: optional float, to plot a reference line
+        error_bars_by_ref: optional dict of {ref_label: {model: (lower, upper)}}, plotted as error bars instead of the
+            standard deviation, e.g. a confidence interval
+        error_bar_caption: optional caption that explains the error bars
+        repertoire_scores_by_ref: optional dict of {ref_label: {model: list of (donor, score)}}, plotted as one dot
+            per repertoire, with one marker symbol per donor if donors have several repertoires
     Returns:
         None
     """
@@ -166,27 +200,31 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
                                                      if reference_score is not None else np.nan)}
                                 for ref in all_refs
                                 for model in all_models])
+    if error_bars_by_ref is not None:
+        plotting_df["Error_Lower"] = [error_bars_by_ref.get(ref, {}).get(model, (np.nan, np.nan))[0]
+                                      for ref, model in zip(plotting_df["Reference"], plotting_df["Model"])]
+        plotting_df["Error_Upper"] = [error_bars_by_ref.get(ref, {}).get(model, (np.nan, np.nan))[1]
+                                      for ref, model in zip(plotting_df["Reference"], plotting_df["Model"])]
 
     plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
 
-    data = [
-        go.Bar(
-            name=ref.capitalize(),
-            x=plotting_df.loc[plotting_df["Reference"] == ref, "Model"],
-            y=plotting_df.loc[plotting_df["Reference"] == ref, "Mean_Score"],
-            error_y=dict(
-                type="data",
-                array=plotting_df.loc[plotting_df["Reference"] == ref, "Std_Dev"],
-                visible=True,
-            ),
-        )
-        for ref in all_refs
-    ]
+    data = []
+    for ref in all_refs:
+        ref_df = plotting_df[plotting_df["Reference"] == ref]
+        if error_bars_by_ref is not None:
+            error_y = dict(type="data", array=ref_df["Error_Upper"] - ref_df["Mean_Score"],
+                           arrayminus=ref_df["Mean_Score"] - ref_df["Error_Lower"], visible=True)
+        else:
+            error_y = dict(type="data", array=ref_df["Std_Dev"], visible=True)
+        data.append(go.Bar(name=ref.capitalize(), x=ref_df["Model"], y=ref_df["Mean_Score"], error_y=error_y,
+                           offsetgroup=ref))
+    if repertoire_scores_by_ref is not None:
+        data.extend(get_repertoire_dot_traces(repertoire_scores_by_ref, all_refs, all_models))
 
     fig = go.Figure(data=data)
     color_palette = px.colors.qualitative.Safe
-    title_text = (f"{distribution_type.title()} Distribution Comparison:<br>Generated vs. Train and "
-                  f"Test {get_collection_specification_for_title(receptor_type)} Repertoires")
+    title_text = (f"{title_case(distribution_type)} Distribution Comparison:<br>Generated vs. Train and "
+                  f"Test {get_collection_specification_for_title(receptor_type, analysis_config.collection)} Repertoires")
     fig.update_layout(
         barmode='group',
         title={'text': title_text,
@@ -203,7 +241,11 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
         template="plotly_white",
         colorway=color_palette,
         showlegend=True,
+        scattermode="group",
     )
+    if error_bar_caption is not None:
+        fig.add_annotation(text=error_bar_caption, xref="paper", yref="paper", x=1, y=1.02, showarrow=False,
+                           xanchor="right", yanchor="bottom", font=dict(size=14))
 
     if reference_score is not None:
         fig.add_hline(
@@ -217,6 +259,104 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
 
     fig.write_image(png_path, scale=3)
     print(f"Plot saved as png at: {png_path}")
+
+
+def get_repertoire_dot_traces(repertoire_scores_by_ref: dict, refs: list, models: list) -> list:
+    """ Returns scatter traces with one dot per repertoire, placed on the bars of their reference. If donors have
+    several repertoires, each donor gets its own marker symbol and legend entry. """
+    points = [(ref, model, donor, score) for ref in refs for model in models
+              for donor, score in repertoire_scores_by_ref.get(ref, {}).get(model, [])]
+    first_ref_model = [(donor, model) for ref, model, donor, _ in points if ref == refs[0]]
+    donor_symbols = get_donor_symbols(donor for donor, model in first_ref_model if model == first_ref_model[0][1]) \
+        if first_ref_model else None
+
+    traces = []
+    for ref in refs:
+        donors = sorted(donor_symbols) if donor_symbols else [None]
+        for donor in donors:
+            donor_points = [(model, score) for point_ref, model, point_donor, score in points
+                            if point_ref == ref and (donor is None or point_donor == donor)]
+            if not donor_points:
+                continue
+            traces.append(go.Scatter(
+                x=[model for model, _ in donor_points], y=[score for _, score in donor_points], mode="markers",
+                offsetgroup=ref, name=f"Donor {donor}", legendgroup=f"donor_{donor}",
+                showlegend=donor is not None and ref == refs[0], hoverinfo="y",
+                marker=dict(color="black", size=6, opacity=0.6,
+                            symbol=donor_symbols[donor] if donor is not None else "circle")))
+    return traces
+
+
+def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, title: str, x_label: str,
+                            differences_df: pd.DataFrame = None) -> None:
+    """ Plots paired comparisons as a forest plot, one row per comparison, labelled with the number of repertoires
+    (and donors) in which the first source is lower. The labels assume lower scores are better, as for divergences.
+    With statistical tests (comparisons_df has p-values), each row shows the mean difference with its confidence
+    interval and the adjusted p-value. Without, each row shows the per-repertoire differences and their mean.
+    Args:
+        comparisons_df (pd.DataFrame): Comparisons as returned by statistics_utils.compare_paired.
+        output_path (str): Output path without extension.
+        title (str): Plot title.
+        x_label (str): Label of the x-axis, e.g. "Difference in JSD".
+        differences_df (pd.DataFrame): Per-repertoire differences as returned by statistics_utils.compare_paired,
+            plotted as dots without statistical tests.
+    Returns:
+        None
+    """
+    if comparisons_df.empty:
+        return
+    statistical_tests = "p_adjusted" in comparisons_df.columns
+    plotting_df = comparisons_df.iloc[::-1]
+    labels = [f"{first} − {second}" for first, second in zip(plotting_df["first"], plotting_df["second"])]
+
+    traces = []
+    if statistical_tests:
+        annotations = [f"lower in {row.n_first_lower}/{row.n_repertoires}, p<sub>adj</sub> = {row.p_adjusted:.2g}"
+                       for row in plotting_df.itertuples()]
+        traces.append(go.Scatter(
+            x=plotting_df["mean_difference"], y=labels, mode="markers", showlegend=False,
+            marker=dict(color="black", size=9),
+            error_x=dict(type="data", array=plotting_df["ci_high"] - plotting_df["mean_difference"],
+                         arrayminus=plotting_df["mean_difference"] - plotting_df["ci_low"], visible=True)))
+    else:
+        annotations = [f"lower in {row.n_first_lower}/{row.n_repertoires} repertoires"
+                       + (f" ({row.n_donors_first_lower}/{row.n_donors} donors)" if row.n_donors < row.n_repertoires
+                          else "")
+                       for row in plotting_df.itertuples()]
+        if differences_df is not None and not differences_df.empty:
+            labelled = differences_df.assign(label=[f"{first} − {second}" for first, second
+                                                    in zip(differences_df["first"], differences_df["second"])])
+            first_comparison = labelled[labelled["label"] == labelled["label"].iloc[0]]
+            donor_symbols = get_donor_symbols(first_comparison["donor"])
+            for donor, donor_df in (labelled.groupby("donor") if donor_symbols else [(None, labelled)]):
+                traces.append(go.Scatter(
+                    x=donor_df["difference"], y=donor_df["label"], mode="markers", name=f"Donor {donor}",
+                    showlegend=donor is not None,
+                    marker=dict(color="grey", size=8, opacity=0.7,
+                                symbol=donor_symbols[donor] if donor is not None else "circle")))
+        traces.append(go.Scatter(x=plotting_df["mean_difference"], y=labels, mode="markers", name="Mean",
+                                 marker=dict(color="black", size=22, symbol="line-ns", line=dict(width=3))))
+
+    fig = go.Figure(traces)
+    fig.add_vline(x=0, line=dict(color="grey", dash="dash"))
+    # The statistics are written in a column to the right of the plot, so they never overlap the intervals
+    for label, annotation in zip(labels, annotations):
+        fig.add_annotation(text=annotation, x=1.02, xref="paper", y=label, yref="y", xanchor="left",
+                           showarrow=False, font=dict(size=13))
+    if statistical_tests:
+        correction = title_case(str(comparisons_df["correction"].iloc[0]))
+        fig.add_annotation(text=f"Error bars: unadjusted 95% CI across repertoires. p<sub>adj</sub>: {correction}-"
+                                f"corrected across the comparisons in this plot only.",
+                           x=0, xref="paper", y=-0.2, yref="paper", xanchor="left", yanchor="top", showarrow=False,
+                           font=dict(size=13))
+    fig.update_layout(title={'text': wrap_title(title, width=80), 'font': {'size': 18}},
+                      xaxis=dict(title=dict(text=x_label, font=dict(size=16)), tickfont=dict(size=14)),
+                      yaxis=dict(tickfont=dict(size=14), categoryorder="array", categoryarray=labels),
+                      template="plotly_white", showlegend=not statistical_tests, margin=dict(r=320, b=130),
+                      legend=dict(orientation="h", x=0, xanchor="left", y=-0.25, yanchor="top"),
+                      height=max(400, 60 * len(plotting_df) + 260), width=1300)
+    fig.write_image(output_path + ".png", scale=2)
+    print(f"Plot saved as png at: {output_path}.png")
 
 
 def wrap_title(text, width=60):
@@ -436,7 +576,8 @@ def plot_degree_distribution_by_dataset(analysis_config: AnalysisConfig, connect
 
             distance_type = "Levenshtein" if analysis_config.indels else "Hamming"
             dataset_name_clean = dataset_name.rsplit("_", 1)[0]
-            collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+            collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                                 analysis_config.collection)
             fig.update_layout(
                 width=1600,
                 height=800,

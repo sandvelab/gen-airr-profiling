@@ -188,3 +188,10 @@ analyses:
       subfolder_name: "all models"
       receptor_type: "TCR"
       n_subsets: 10
+    - name: "gene_usage"
+      model_names: [ "pwm", "vae", "sonnia", "lstm", "tcrpeg", "tcrsep" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 10
+      subfolder_name: "all dummy models"
+      receptor_type: "TCR"

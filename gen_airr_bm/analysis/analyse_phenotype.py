@@ -255,7 +255,8 @@ def plot_cluster_heatmap(analysis_config: AnalysisConfig, similarities_matrix, m
         )
     )
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     title_text = f"Pairwise Jaccard Similarity Between {model_name.upper()} <br>{collection_specification} Repertoires" + f'<br><span style="font-size:22px">MAP phenotype = {map_phenotype:.3f} | MAP subject = {map_subject:.3f}</span>'
 
 

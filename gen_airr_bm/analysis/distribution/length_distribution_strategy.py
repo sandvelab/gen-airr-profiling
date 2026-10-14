@@ -59,7 +59,8 @@ class LengthDistributionStrategy(BaseDistributionStrategy):
             name=f"{ref_label}"
         ))
 
-        collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+        collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                         analysis_config.collection)
         title_text = (f"Length Distribution: Generated vs. {ref_label.capitalize()} {collection_specification} Repertoires"
                       f" (Dataset {dataset_label})")
         fig.update_layout(

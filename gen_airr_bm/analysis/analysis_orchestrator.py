@@ -1,5 +1,6 @@
 from gen_airr_bm.analysis.analyse_clone_frequencies_umi import run_clone_frequencies_analysis
 from gen_airr_bm.analysis.analyse_diversity import run_diversity_analysis
+from gen_airr_bm.analysis.analyse_gene_usage import run_gene_usage_analysis
 from gen_airr_bm.analysis.analyse_innovation import run_innovation_analysis
 from gen_airr_bm.analysis.analyse_innovation_diversity import run_innovation_diversity_analysis
 from gen_airr_bm.analysis.analyse_innovation_umi import run_innovation_umi_analysis
@@ -23,7 +24,8 @@ class AnalysisOrchestrator:
         "innovation_umi": run_innovation_umi_analysis,
         "clone_frequencies": run_clone_frequencies_analysis,
         "innovation": run_innovation_analysis,
-        "innovation_diversity": run_innovation_diversity_analysis
+        "innovation_diversity": run_innovation_diversity_analysis,
+        "gene_usage": run_gene_usage_analysis
     }
 
     def run_analysis(self, analysis_config: AnalysisConfig):
