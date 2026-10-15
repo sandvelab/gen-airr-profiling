@@ -8,7 +8,9 @@ sampling:
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 100000
+    compute_p_gens: True
   - model_name: "Saka_kmer"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 100000
+    compute_p_gens: True
