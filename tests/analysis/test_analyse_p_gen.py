@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gen_airr_bm.analysis.analyse_p_gen import collect_p_gens, compute_auc, summarize_p_gens, run_p_gen_analysis
+from gen_airr_bm.analysis.analyse_p_gen import collect_p_gens, compute_auc, summarize_p_gens, run_p_gen_analysis, \
+    compute_density, get_density_grid, get_grid_shape, get_family_colors, plot_p_gen_distributions
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
@@ -74,6 +75,53 @@ def test_summarize_p_gens_mostly_zero(tmp_path):
 ])
 def test_compute_auc(train, test, expected):
     assert compute_auc(pd.Series(train), pd.Series(test)) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("n_panels, expected", [(1, (1, 1)), (3, (3, 1)), (5, (5, 1)), (6, (5, 2)), (15, (5, 3))])
+def test_get_grid_shape(n_panels, expected):
+    assert get_grid_shape(n_panels) == expected
+
+
+def test_get_family_colors():
+    family_colors = get_family_colors(["PWM", "TCRpeg_kmer", "TCRpeg_overlap", "Saka_kmer"])
+
+    assert list(family_colors) == ["PWM", "TCRpeg", "Saka"]
+    assert len(set(family_colors.values())) == 3
+
+
+def test_plot_p_gen_distributions_grid(analysis_config, mocker):
+    m_write = mocker.patch("plotly.graph_objects.Figure.write_image", autospec=True)
+    model_names = [f"model{i}_kmer" for i in range(7)]
+    p_gens_df = pd.DataFrame([{"model": model_name, "split": split, "file": "rep_0", "junction_aa": "CASF",
+                               "p_gen": p_gen} for model_name in model_names for split in ["train", "test"]
+                              for p_gen in [1e-10, 1e-12, 1e-14]])
+
+    plot_p_gen_distributions(p_gens_df, model_names, analysis_config.analysis_output_dir, "TCR")
+
+    fig = m_write.call_args.args[0]
+    # 7 panels wrap into 2 rows of at most 5, with a train and a test curve per panel plus 2 legend traces
+    assert fig.layout.height == 100 + 450 * 2
+    assert len(fig.data) == 7 * 2 + 2
+    # all models are of different families, so every panel has its own color
+    assert len({trace.line.color for trace in fig.data if trace.showlegend is False}) == 7
+
+
+def test_get_density_grid():
+    grid = get_density_grid(np.array([-20.0, -10.0]), n_points=5)
+
+    assert grid[0] == pytest.approx(-21) and grid[-1] == pytest.approx(-9)
+    assert len(grid) == 5
+
+
+def test_compute_density():
+    values = np.array([-12.0, -11.0, -10.0, -9.0, -8.0])
+    grid = np.linspace(-30, 10, 2001)
+
+    density = compute_density(values, grid)
+
+    assert np.trapz(density, grid) == pytest.approx(1, abs=1e-3)
+    assert grid[np.argmax(density)] == pytest.approx(-10, abs=0.1)
+    assert compute_density(np.array([-10.0, -10.0]), grid) is None
 
 
 def test_run_p_gen_analysis(analysis_config, mocker):

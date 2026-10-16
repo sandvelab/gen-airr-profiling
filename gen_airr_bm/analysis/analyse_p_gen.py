@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from scipy.stats import gaussian_kde
 
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -138,64 +140,100 @@ def get_title_specification(receptor_type: str) -> str:
 
 def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_dir: str, receptor_type: str) \
         -> None:
-    """ Plots split violins of log10 p_gens per model, train on the left and test on the right, pooled over
-    repertoires. The inner box marks the median and quartiles. Sequences with p_gen 0 cannot be drawn on a log scale,
-    so their share per split is written above each model instead.
+    """ Plots the density of log10 p_gens of train (solid) and test (dashed) sequences, pooled over repertoires, with
+    one panel per model in a grid of at most max_cols panels per row. p_gens of different model types are on different
+    scales, so each panel has its own x-axis. Panels are colored by model family, so that e.g. TCRpeg_kmer and
+    TCRpeg_overlap share a color. Sequences with p_gen 0 cannot be drawn on a log scale, so their share per split is
+    written in the panel title instead.
     Args:
         p_gens_df (pd.DataFrame): Long table from collect_p_gens.
-        model_names (list): Models in plotting order.
+        model_names (list): Models in plotting order, one panel each.
         output_dir (str): Directory to save the plot.
         receptor_type (str): Type of receptor being analyzed (e.g. "TCR", "BCR").
     Returns:
         None
     """
+    n_cols, n_rows = get_grid_shape(len(model_names))
+    zero_shares = (p_gens_df["p_gen"] == 0).groupby([p_gens_df["model"], p_gens_df["split"]]).mean() * 100
+    subplot_titles = [f"{model_name}<br><sup>p_gen = 0: train {zero_shares.get((model_name, 'train'), 0):.1f}% / "
+                      f"test {zero_shares.get((model_name, 'test'), 0):.1f}%</sup>" for model_name in model_names]
+    fig = make_subplots(rows=n_rows, cols=n_cols, subplot_titles=subplot_titles, horizontal_spacing=0.05,
+                        vertical_spacing=0.3 / n_rows)
+
     nonzero_df = p_gens_df[p_gens_df["p_gen"] > 0].assign(log10_p_gen=lambda df: np.log10(df["p_gen"]))
+    family_colors = get_family_colors(model_names)
+    for i, model_name in enumerate(model_names):
+        row, col = i // n_cols + 1, i % n_cols + 1
+        model_df = nonzero_df[nonzero_df["model"] == model_name]
+        if model_df.empty:
+            continue
+        grid = get_density_grid(model_df["log10_p_gen"].to_numpy())
+        for split, dash in [("train", "solid"), ("test", "dash")]:
+            density = compute_density(model_df.loc[model_df["split"] == split, "log10_p_gen"].to_numpy(), grid)
+            if density is None:
+                print(f"p_gen_distributions: too few distinct {split} p_gens for {model_name} to draw a density.")
+                continue
+            fig.add_trace(go.Scatter(x=grid, y=density, mode="lines", showlegend=False,
+                                     line=dict(color=family_colors[get_model_family(model_name)], dash=dash,
+                                               width=3)),
+                          row=row, col=col)
 
-    fig = go.Figure()
-    for split, side, color in [("train", "negative", px.colors.qualitative.Safe[0]),
-                               ("test", "positive", px.colors.qualitative.Safe[1])]:
-        split_df = nonzero_df[nonzero_df["split"] == split]
-        fig.add_trace(go.Violin(
-            x=split_df["model"],
-            y=split_df["log10_p_gen"],
-            name=split.capitalize(),
-            legendgroup=split,
-            side=side,
-            line_color=color,
-            box_visible=True,
-            points=False,
-            scalemode="width",
-        ))
+    # Line style legend in neutral grey, as the colors only identify the model family of each panel
+    for split, dash in [("Train", "solid"), ("Test", "dash")]:
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode="lines", name=split,
+                                 line=dict(color="grey", dash=dash, width=3)), row=1, col=1)
 
+    fig.update_xaxes(title=dict(text="log10 p_gen", font=dict(size=18)), tickfont=dict(size=16))
+    fig.update_yaxes(tickfont=dict(size=16))
+    fig.update_yaxes(title=dict(text="Density", font=dict(size=18)), col=1)
+    fig.update_annotations(font=dict(size=18))
     fig.update_layout(
         title=dict(text=f"Generation Probabilities of Train and Test Sequences<br>"
                         f"{get_title_specification(receptor_type)}", font=dict(size=20)),
-        xaxis=dict(title=dict(text="Model", font=dict(size=20)), tickangle=-45, tickfont=dict(size=18),
-                   categoryorder="array", categoryarray=model_names,
-                   # Plotly does not pad a category axis for violins, so the outer halves would be cut off
-                   range=[-0.5, len(model_names) - 0.5]),
-        yaxis=dict(title=dict(text="log10 p_gen", font=dict(size=20)), tickfont=dict(size=18)),
-        violingap=0.1,
-        violinmode="overlay",
         legend=dict(font=dict(size=18)),
         template="plotly_white",
-        margin=dict(t=170),
+        width=max(700, 450 * n_cols),
+        height=100 + 450 * n_rows,
+        margin=dict(t=160),
     )
-    add_zero_p_gen_annotations(fig, p_gens_df, model_names)
 
     png_path = os.path.join(output_dir, "p_gen_distributions.png")
     fig.write_image(png_path, scale=3)
     print(f"Plot saved as png at: {png_path}")
 
 
-def add_zero_p_gen_annotations(fig: go.Figure, p_gens_df: pd.DataFrame, model_names: list) -> None:
-    """ Writes the percentage of train and test sequences with p_gen 0 above each model's violins. """
-    zero_shares = (p_gens_df["p_gen"] == 0).groupby([p_gens_df["model"], p_gens_df["split"]]).mean() * 100
-    for model_name in model_names:
-        fig.add_annotation(x=model_name, xref="x", y=1.0, yref="paper", yanchor="bottom", showarrow=False,
-                           text=f"p_gen = 0<br>train {zero_shares.get((model_name, 'train'), 0):.1f}% / "
-                                f"test {zero_shares.get((model_name, 'test'), 0):.1f}%",
-                           font=dict(size=14))
+def get_grid_shape(n_panels: int, max_cols: int = 5) -> tuple[int, int]:
+    """ Returns the number of columns and rows of a grid with at most max_cols panels per row. """
+    n_cols = min(n_panels, max_cols)
+    return n_cols, -(-n_panels // n_cols)
+
+
+def get_model_family(model_name: str) -> str:
+    """ Returns the model family, i.e. the model name without the tuning criterion or grid search suffix, e.g.
+    TCRpeg for TCRpeg_kmer and tcrsep for tcrsep_01. """
+    return model_name.split("_")[0]
+
+
+def get_family_colors(model_names: list) -> dict:
+    """ Assigns one color of the Safe palette to each model family, in order of first appearance. """
+    families = list(dict.fromkeys(get_model_family(model_name) for model_name in model_names))
+    colors = px.colors.qualitative.Safe
+    return {family: colors[i % len(colors)] for i, family in enumerate(families)}
+
+
+def get_density_grid(values: np.ndarray, n_points: int = 200) -> np.ndarray:
+    """ Returns evenly spaced points over the range of the values, padded by 10% of the range (at least 0.5) on
+    each side so that the density tails are not cut off. """
+    padding = max(0.1 * (values.max() - values.min()), 0.5)
+    return np.linspace(values.min() - padding, values.max() + padding, n_points)
+
+
+def compute_density(values: np.ndarray, grid: np.ndarray) -> np.ndarray | None:
+    """ Estimates the density of the values on the grid with a Gaussian kernel density estimate (Scott's rule for the
+    bandwidth). Returns None if there are fewer than two distinct values, for which no density can be estimated. """
+    if len(np.unique(values)) < 2:
+        return None
+    return gaussian_kde(values)(grid)
 
 
 def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, reference_value: float,
@@ -236,7 +274,7 @@ def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, refe
         showlegend=False,
     ))
     fig.add_hline(y=reference_value, line=dict(color="black", dash="dash"), annotation_text=reference_label,
-                  annotation_position="bottom right", annotation_font=dict(size=16, color="black"))
+                  annotation_position="top left", annotation_font=dict(size=16, color="black"))
 
     fig.update_layout(
         title=dict(text=f"{title}<br>{get_title_specification(receptor_type)}, one point per repertoire",
