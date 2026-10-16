@@ -4,6 +4,7 @@ from gen_airr_bm.analysis.analyse_innovation import run_innovation_analysis
 from gen_airr_bm.analysis.analyse_innovation_diversity import run_innovation_diversity_analysis
 from gen_airr_bm.analysis.analyse_innovation_umi import run_innovation_umi_analysis
 from gen_airr_bm.analysis.analyse_network import run_network_analysis
+from gen_airr_bm.analysis.analyse_p_gen import run_p_gen_analysis
 from gen_airr_bm.analysis.analyse_phenotype import run_phenotype_analysis
 from gen_airr_bm.analysis.analyse_reduced_dimensionality import run_reduced_dimensionality_analyses
 from gen_airr_bm.analysis.analyse_precision_recall import run_precision_recall_analysis
@@ -23,7 +24,8 @@ class AnalysisOrchestrator:
         "innovation_umi": run_innovation_umi_analysis,
         "clone_frequencies": run_clone_frequencies_analysis,
         "innovation": run_innovation_analysis,
-        "innovation_diversity": run_innovation_diversity_analysis
+        "innovation_diversity": run_innovation_diversity_analysis,
+        "p_gen": run_p_gen_analysis
     }
 
     def run_analysis(self, analysis_config: AnalysisConfig):
