@@ -153,7 +153,7 @@ def get_donor_symbols(donors) -> dict | None:
 
 
 def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref, std_scores_by_ref,  file_name,
-                            distribution_type, scoring_method="JSD", reference_score=None, error_bars_by_ref=None,
+                            distribution_type, scoring_method="JSD", reference_score=None,
                             error_bar_caption=None, repertoire_scores_by_ref=None) -> None:
     """
     Plots grouped bar chart for mean scores across models and reference types.
@@ -161,14 +161,11 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
     Args:
         analysis_config: AnalysisConfig object containing analysis settings
         mean_scores_by_ref: dict of {ref_label: {model: mean_score}}
-        std_scores_by_ref: dict of {ref_label: {model: std_score}}, used for the error bars if error_bars_by_ref is
-            not given
+        std_scores_by_ref: dict of {ref_label: {model: std_score}}, plotted as error bars
         file_name: output file name without extension
         distribution_type: used for titles. e.g. "connectivity"
         scoring_method: used for titles. e.g. "JSD"
         reference_score: optional float, to plot a reference line
-        error_bars_by_ref: optional dict of {ref_label: {model: (lower, upper)}}, plotted as error bars instead of the
-            standard deviation, e.g. a confidence interval
         error_bar_caption: optional caption that explains the error bars
         repertoire_scores_by_ref: optional dict of {ref_label: {model: list of (donor, score)}}, plotted as one dot
             per repertoire, with one marker symbol per donor if donors have several repertoires
@@ -200,24 +197,14 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
                                                      if reference_score is not None else np.nan)}
                                 for ref in all_refs
                                 for model in all_models])
-    if error_bars_by_ref is not None:
-        plotting_df["Error_Lower"] = [error_bars_by_ref.get(ref, {}).get(model, (np.nan, np.nan))[0]
-                                      for ref, model in zip(plotting_df["Reference"], plotting_df["Model"])]
-        plotting_df["Error_Upper"] = [error_bars_by_ref.get(ref, {}).get(model, (np.nan, np.nan))[1]
-                                      for ref, model in zip(plotting_df["Reference"], plotting_df["Model"])]
 
     plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
 
     data = []
     for ref in all_refs:
         ref_df = plotting_df[plotting_df["Reference"] == ref]
-        if error_bars_by_ref is not None:
-            error_y = dict(type="data", array=ref_df["Error_Upper"] - ref_df["Mean_Score"],
-                           arrayminus=ref_df["Mean_Score"] - ref_df["Error_Lower"], visible=True)
-        else:
-            error_y = dict(type="data", array=ref_df["Std_Dev"], visible=True)
-        data.append(go.Bar(name=ref.capitalize(), x=ref_df["Model"], y=ref_df["Mean_Score"], error_y=error_y,
-                           offsetgroup=ref))
+        data.append(go.Bar(name=ref.capitalize(), x=ref_df["Model"], y=ref_df["Mean_Score"],
+                           error_y=dict(type="data", array=ref_df["Std_Dev"], visible=True), offsetgroup=ref))
     if repertoire_scores_by_ref is not None:
         data.extend(get_repertoire_dot_traces(repertoire_scores_by_ref, all_refs, all_models))
 

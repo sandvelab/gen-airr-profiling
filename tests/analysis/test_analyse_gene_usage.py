@@ -170,7 +170,7 @@ SUMMARY_SCORES = pd.DataFrame([
 
 
 def test_summarise_scores_by_reference_descriptive(analysis_config):
-    mean_scores_by_ref, std_scores_by_ref, error_bars_by_ref, repertoire_scores_by_ref, caption = \
+    mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, caption = \
         summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
 
     # The two subsets of rep_1 are averaged first, so the repertoire scores are 0.2 and 0.6
@@ -179,21 +179,17 @@ def test_summarise_scores_by_reference_descriptive(analysis_config):
     assert mean_scores_by_ref == {"train": {"vae": pytest.approx(0.4)}}
     sd = np.std([0.2, 0.6], ddof=1)
     assert std_scores_by_ref == {"train": {"vae": pytest.approx(sd)}}
-    # Without statistical tests the error bars are the mean plus and minus the standard deviation
-    assert error_bars_by_ref["train"]["vae"] == (pytest.approx(0.4 - sd), pytest.approx(0.4 + sd))
     assert caption.startswith("Error bars: SD")
 
 
-def test_summarise_scores_by_reference_with_tests(analysis_config):
+def test_summarise_scores_by_reference_uses_sd_with_tests(analysis_config):
     analysis_config.statistical_tests = True
 
-    _, _, error_bars_by_ref, _, caption = summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
+    _, std_scores_by_ref, _, caption = summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
 
-    # t-interval with one degree of freedom: 0.4 +- 12.706 * 0.2828 / sqrt(2)
-    ci_low, ci_high = error_bars_by_ref["train"]["vae"]
-    assert ci_low == pytest.approx(0.4 - 12.7062 * 0.2, rel=1e-4)
-    assert ci_high == pytest.approx(0.4 + 12.7062 * 0.2, rel=1e-4)
-    assert caption.startswith("Error bars: 95% CI")
+    # The error bars are the standard deviation also with statistical tests, so they are comparable across collections
+    assert std_scores_by_ref == {"train": {"vae": pytest.approx(np.std([0.2, 0.6], ddof=1))}}
+    assert caption.startswith("Error bars: SD")
 
 
 def test_summarise_scores_by_reference_counts_donors(analysis_config):

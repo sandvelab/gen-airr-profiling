@@ -141,12 +141,12 @@ def test_compare_paired_with_tests_bonferroni_correction():
     assert set(comparisons["test"]) == {"paired t-test"}
 
 
-@pytest.mark.parametrize("statistical_tests, n_repertoires, n_donors, expected", [
-    (True, 20, 20, "Error bars: 95% CI across repertoires (n=20); dots: repertoires"),
-    (False, 11, 5, "Error bars: SD across repertoires (n=11 from 5 donors); dots: repertoires"),
+@pytest.mark.parametrize("n_repertoires, n_donors, expected", [
+    (20, 20, "Error bars: SD across repertoires (n=20); dots: repertoires"),
+    (11, 5, "Error bars: SD across repertoires (n=11 from 5 donors); dots: repertoires"),
 ])
-def test_describe_error_bars(statistical_tests, n_repertoires, n_donors, expected):
-    assert describe_error_bars(statistical_tests, n_repertoires, n_donors) == expected
+def test_describe_error_bars(n_repertoires, n_donors, expected):
+    assert describe_error_bars(n_repertoires, n_donors) == expected
 
 
 @pytest.mark.parametrize("statistical_tests", [False, True])

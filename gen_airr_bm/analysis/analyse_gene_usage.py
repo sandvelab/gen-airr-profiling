@@ -70,13 +70,13 @@ def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
     frequencies_df.to_csv(f"{analysis_config.analysis_output_dir}/gene_usage_frequencies.tsv", sep="\t", index=False)
 
     for metric_name in GENE_USAGE_METRICS:
-        mean_scores_by_ref, std_scores_by_ref, error_bars_by_ref, repertoire_scores_by_ref, error_bar_caption = \
+        mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, error_bar_caption = \
             summarise_scores_by_reference(analysis_config, scores_df, metric_name)
         reference_scores = compute_train_test_reference_scores(analysis_config, metric_name, distributions_cache)
         reference_score = float(reference_scores["score"].mean()) if reference_scores is not None else None
         plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
                                f"gene_usage_{metric_name.replace(' ', '_')}_grouped", get_metric_label(metric_name),
-                               "JSD", reference_score, error_bars_by_ref, error_bar_caption, repertoire_scores_by_ref)
+                               "JSD", reference_score, error_bar_caption, repertoire_scores_by_ref)
         plot_gene_usage_frequencies(analysis_config, frequencies_df, metric_name)
         run_gene_usage_statistics(analysis_config, scores_df, metric_name, models_with_gene_calls, reference_scores)
 
@@ -268,38 +268,35 @@ def compute_gene_usage_scores(analysis_config: AnalysisConfig, models: list, dis
 
 
 def summarise_scores_by_reference(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,
-                                  metric_name: str) -> tuple[dict, dict, dict, dict, str]:
+                                  metric_name: str) -> tuple[dict, dict, dict, str]:
     """ Averages the divergence scores of a metric over the generated subsets of each repertoire, and summarises them
-    over repertoires, so that the repertoires and not the generated subsets are the observations.
+    over repertoires, so that the repertoires and not the generated subsets are the observations. The error bars are
+    the standard deviation in every collection, so that they are comparable across collections. With statistical
+    tests, the confidence intervals of the means are reported by run_gene_usage_statistics instead.
     Args:
-        analysis_config (AnalysisConfig): Configuration for the analysis, including the statistics mode and the donor
-            pattern.
+        analysis_config (AnalysisConfig): Configuration for the analysis, including the donor pattern.
         scores_df (pd.DataFrame): Scores as returned by compute_gene_usage_scores.
         metric_name (str): The metric to summarise.
     Returns:
-        tuple[dict, dict, dict, dict, str]: As {reference: {model: value}}: the mean and the standard deviation over
-        repertoires, the error bars (the confidence interval with statistical tests, otherwise the mean plus and
-        minus the standard deviation), and the (donor, score) pairs of the repertoires; and the error bar caption.
+        tuple[dict, dict, dict, str]: As {reference: {model: value}}: the mean and the standard deviation over
+        repertoires, and the (donor, score) pairs of the repertoires; and the error bar caption.
     """
-    mean_scores_by_ref, std_scores_by_ref, error_bars_by_ref, repertoire_scores_by_ref = (
-        defaultdict(dict), defaultdict(dict), defaultdict(dict), defaultdict(dict))
+    mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref = (defaultdict(dict), defaultdict(dict),
+                                                                       defaultdict(dict))
     n_repertoires, n_donors = 0, 0
     metric_scores = scores_df[scores_df["metric"] == metric_name]
     for reference, reference_scores in metric_scores.groupby("reference"):
         repertoire_scores = aggregate_repertoire_scores(reference_scores, "jsd", analysis_config.donor_pattern)
-        summary = summarise_repertoire_scores(repertoire_scores, analysis_config.statistical_tests)
+        summary = summarise_repertoire_scores(repertoire_scores, statistical_tests=False)
         for row in summary.itertuples():
             mean_scores_by_ref[reference][row.source] = row.mean
             std_scores_by_ref[reference][row.source] = row.sd
-            error_bars_by_ref[reference][row.source] = ((row.ci_low, row.ci_high) if analysis_config.statistical_tests
-                                                        else (row.mean - row.sd, row.mean + row.sd))
         n_repertoires = max(n_repertoires, summary["n_repertoires"].max())
         n_donors = max(n_donors, summary["n_donors"].max())
         for model, model_scores in repertoire_scores.dropna(subset=["score"]).groupby("source"):
             repertoire_scores_by_ref[reference][model] = list(zip(model_scores["donor"], model_scores["score"]))
-    error_bar_caption = describe_error_bars(analysis_config.statistical_tests, n_repertoires, n_donors)
-    return (dict(mean_scores_by_ref), dict(std_scores_by_ref), dict(error_bars_by_ref), dict(repertoire_scores_by_ref),
-            error_bar_caption)
+    error_bar_caption = describe_error_bars(n_repertoires, n_donors)
+    return dict(mean_scores_by_ref), dict(std_scores_by_ref), dict(repertoire_scores_by_ref), error_bar_caption
 
 
 def compute_train_test_reference_scores(analysis_config: AnalysisConfig, metric_name: str,

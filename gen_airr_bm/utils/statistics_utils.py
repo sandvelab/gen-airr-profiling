@@ -208,11 +208,9 @@ def validate_contrasts(contrasts: list, sources: list) -> list:
     return validated
 
 
-def describe_error_bars(statistical_tests: bool, n_repertoires: int, n_donors: int) -> str:
-    """ Returns the caption that explains the error bars of a plot. """
+def describe_error_bars(n_repertoires: int, n_donors: int) -> str:
+    """ Returns the caption that explains the standard deviation error bars of a bar plot. """
     sample = f"n={n_repertoires}" if n_repertoires == n_donors else f"n={n_repertoires} from {n_donors} donors"
-    if statistical_tests:
-        return f"Error bars: {CONFIDENCE_LEVEL:.0%} CI across repertoires ({sample}); dots: repertoires"
     return f"Error bars: SD across repertoires ({sample}); dots: repertoires"
 
 
