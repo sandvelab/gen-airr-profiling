@@ -1,0 +1,23 @@
+n_experiments: 11
+output_dir: "RESULTS_SEP25/TCR"
+input_dir: "data/experimental/collectionA"
+seed: 42
+
+#data_generation:
+#  experimental: True
+#  method: "experimental"
+#  n_samples: 21500
+#  default_model_name: "humanTRB"
+#  input_columns: ["junction_aa", "v_call", "j_call", "locus"]
+
+models:
+    - name: "TCRpeg_overlap"
+      immuneml_model_config: "configs/generative_models/TCR/TCRpeg/tcrpeg_29.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
+    - name: "TCRpeg_kmer"
+      immuneml_model_config: "configs/generative_models/TCR/TCRpeg/tcrpeg_15.yaml"
+      train_dir: "train"
+      test_dir: "test"
+      n_subset_samples: 21500
