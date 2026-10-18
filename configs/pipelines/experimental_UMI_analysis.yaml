@@ -1,5 +1,5 @@
 n_experiments: 6
-output_dir: "RESULTS_NOV12/UMI"
+output_dir: "RESULTS_SEP25/UMI"
 input_dir: "data/experimental/collectionC"
 seed: 42
 
@@ -130,3 +130,9 @@ analyses:
       receptor_type: "BCR UMI"
       statistical_tests: False
       donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "p_gen"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
