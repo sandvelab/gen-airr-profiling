@@ -135,11 +135,9 @@ analyses:
       subfolder_name: "all models"
       receptor_type: "BCR"
       n_subsets: 6
-    # Only models that generate V and J gene calls are listed; models that generate CDR3 sequences only are skipped
-    # by the analysis. TCRpeg and TCRsep should be added here once their runs are available.
     - name: "gene_usage"
-      model_names: [ "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer" ]
-      default_model_name: "humanTRB"
+      model_names: [ "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "gene generating models"
