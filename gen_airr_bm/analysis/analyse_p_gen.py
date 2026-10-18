@@ -35,15 +35,17 @@ def run_p_gen_analysis(analysis_config: AnalysisConfig) -> None:
     summary_df = summarize_p_gens(p_gens_df)
     summary_df.to_csv(f"{output_dir}/p_gen_summary.tsv", sep="\t", index=False)
 
-    plot_p_gen_distributions(p_gens_df, analysis_config.model_names, output_dir, analysis_config.receptor_type)
+    plot_p_gen_distributions(p_gens_df, analysis_config.model_names, output_dir, analysis_config.receptor_type,
+                             analysis_config.collection)
     plot_per_repertoire_scores(summary_df, "median_log10_p_gen_gap", 0, "0 = no difference",
                                "Median log10 p_gen (train - test)",
                                "Train - Test Gap in Median log10 p_gen", "p_gen_train_test_gap",
-                               analysis_config.model_names, output_dir, analysis_config.receptor_type)
+                               analysis_config.model_names, output_dir, analysis_config.receptor_type,
+                               analysis_config.collection)
     plot_per_repertoire_scores(summary_df, "membership_auc", 0.5, "0.5 = no preference for train sequences",
                                "P(train p_gen > test p_gen)", "Membership Inference AUC from p_gen",
                                "p_gen_membership_auc", analysis_config.model_names, output_dir,
-                               analysis_config.receptor_type)
+                               analysis_config.receptor_type, analysis_config.collection)
 
 
 def collect_p_gens(analysis_config: AnalysisConfig) -> pd.DataFrame:
@@ -131,15 +133,15 @@ def compute_auc(train_p_gens: pd.Series, test_p_gens: pd.Series) -> float:
     return (train_rank_sum - n_train * (n_train + 1) / 2) / (n_train * n_test)
 
 
-def get_title_specification(receptor_type: str) -> str:
+def get_title_specification(receptor_type: str, collection: str = None) -> str:
     try:
-        return get_collection_specification_for_title(receptor_type)
+        return get_collection_specification_for_title(receptor_type, collection)
     except ValueError:
         return receptor_type
 
 
-def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_dir: str, receptor_type: str) \
-        -> None:
+def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_dir: str, receptor_type: str,
+                             collection: str = None) -> None:
     """ Plots the density of log10 p_gens of train (solid) and test (dashed) sequences, pooled over repertoires, with
     one panel per model in a grid of at most max_cols panels per row. p_gens of different model types are on different
     scales, so each panel has its own x-axis. Panels are colored by model family, so that e.g. TCRpeg_kmer and
@@ -150,6 +152,8 @@ def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_
         model_names (list): Models in plotting order, one panel each.
         output_dir (str): Directory to save the plot.
         receptor_type (str): Type of receptor being analyzed (e.g. "TCR", "BCR").
+        collection (str): Optional collection label for the plot title (e.g. "D"); inferred from the receptor type
+            if not given.
     Returns:
         None
     """
@@ -189,7 +193,7 @@ def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_
     fig.update_annotations(font=dict(size=18))
     fig.update_layout(
         title=dict(text=f"Generation Probabilities of Train and Test Sequences<br>"
-                        f"{get_title_specification(receptor_type)}", font=dict(size=20)),
+                        f"{get_title_specification(receptor_type, collection)}", font=dict(size=20)),
         legend=dict(font=dict(size=18)),
         template="plotly_white",
         width=max(700, 450 * n_cols),
@@ -238,7 +242,7 @@ def compute_density(values: np.ndarray, grid: np.ndarray) -> np.ndarray | None:
 
 def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, reference_value: float,
                                reference_label: str, y_title: str, title: str, file_name: str, model_names: list,
-                               output_dir: str, receptor_type: str) -> None:
+                               output_dir: str, receptor_type: str, collection: str = None) -> None:
     """ Plots a per-repertoire score for each model as a box with one point per repertoire, e.g. the gap between
     median train and test log10 p_gen (0 means no difference) or the membership inference AUC (0.5 means no
     difference). Values above the
@@ -256,6 +260,8 @@ def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, refe
         model_names (list): Models in plotting order.
         output_dir (str): Directory to save the plot.
         receptor_type (str): Type of receptor being analyzed (e.g. "TCR", "BCR").
+        collection (str): Optional collection label for the plot title (e.g. "D"); inferred from the receptor type
+            if not given.
     Returns:
         None
     """
@@ -277,7 +283,7 @@ def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, refe
                   annotation_position="top left", annotation_font=dict(size=16, color="black"))
 
     fig.update_layout(
-        title=dict(text=f"{title}<br>{get_title_specification(receptor_type)}, one point per repertoire",
+        title=dict(text=f"{title}<br>{get_title_specification(receptor_type, collection)}, one point per repertoire",
                    font=dict(size=20)),
         xaxis=dict(title=dict(text="Model", font=dict(size=20)), tickangle=-45, tickfont=dict(size=18),
                    categoryorder="array", categoryarray=model_names),

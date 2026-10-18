@@ -3,7 +3,8 @@ import pandas as pd
 import pytest
 
 from gen_airr_bm.analysis.analyse_p_gen import collect_p_gens, compute_auc, summarize_p_gens, run_p_gen_analysis, \
-    compute_density, get_density_grid, get_grid_shape, get_family_colors, plot_p_gen_distributions
+    compute_density, get_density_grid, get_grid_shape, get_family_colors, plot_p_gen_distributions, \
+    plot_per_repertoire_scores
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
@@ -104,6 +105,22 @@ def test_plot_p_gen_distributions_grid(analysis_config, mocker):
     assert len(fig.data) == 7 * 2 + 2
     # all models are of different families, so every panel has its own color
     assert len({trace.line.color for trace in fig.data if trace.showlegend is False}) == 7
+
+
+def test_p_gen_plot_titles_use_collection(analysis_config, mocker):
+    m_write = mocker.patch("plotly.graph_objects.Figure.write_image", autospec=True)
+    p_gens_df = pd.DataFrame([{"model": "modelA", "split": split, "file": "rep_0", "junction_aa": "CASF",
+                               "p_gen": p_gen} for split in ["train", "test"] for p_gen in [1e-10, 1e-12, 1e-14]])
+    summary_df = pd.DataFrame({"model": ["modelA"], "file": ["rep_0"], "membership_auc": [0.6]})
+
+    plot_p_gen_distributions(p_gens_df, ["modelA"], analysis_config.analysis_output_dir, "TCR")
+    plot_p_gen_distributions(p_gens_df, ["modelA"], analysis_config.analysis_output_dir, "TCR", "D")
+    plot_per_repertoire_scores(summary_df, "membership_auc", 0.5, "", "AUC", "AUC", "auc", ["modelA"],
+                               analysis_config.analysis_output_dir, "TCR", "D")
+
+    titles = [call.args[0].layout.title.text for call in m_write.call_args_list]
+    assert "Collection B (TCR)" in titles[0]
+    assert "Collection D (TCR)" in titles[1] and "Collection D (TCR)" in titles[2]
 
 
 def test_get_density_grid():
