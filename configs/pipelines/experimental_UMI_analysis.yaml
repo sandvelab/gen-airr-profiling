@@ -121,3 +121,12 @@ analyses:
       indels: False
       subfolder_name: "all models excluding train"
       receptor_type: "BCR UMI"
+    - name: "gene_usage"
+      model_names: [ "VAE_kmer", "SoNNia_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "gene generating models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"

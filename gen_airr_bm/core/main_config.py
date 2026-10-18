@@ -79,7 +79,11 @@ class MainConfig:
                                indels=analysis.get("indels", False),
                                deduplicate=analysis.get("deduplicate", False),
                                receptor_type=analysis["receptor_type"],
-                               use_novel_sequences=analysis.get("use_novel_sequences", True))
+                               use_novel_sequences=analysis.get("use_novel_sequences", True),
+                               collection=analysis.get("collection", None),
+                               contrasts=analysis.get("contrasts", None),
+                               statistical_tests=analysis.get("statistical_tests", False),
+                               donor_pattern=analysis.get("donor_pattern", None))
                 for analysis in data.get("analyses", [])
             ])
 
