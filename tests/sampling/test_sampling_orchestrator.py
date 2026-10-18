@@ -220,3 +220,37 @@ def test_run_sampling_with_p_gens(mocker):
     SamplingOrchestrator.run_sampling(config)
 
     m_copy_p_gens.assert_called_once_with(config, "/tmp/res", "datasetZ")
+
+
+def test_run_sampling_p_gens_only_keeps_sampled_sequences(mocker):
+    config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=0, root_output_dir="/tmp/root", compute_p_gens=True)
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config", return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+    m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_copy.assert_not_called()
+    m_copy_p_gens.assert_called_once_with(config, "/tmp/res", "datasetZ")
+
+
+def test_p_gens_only_writes_to_separate_dirs(tmp_path, mocker):
+    base_cfg = tmp_path / "base.yaml"
+    yaml.safe_dump({"definitions": [], "instructions": {"gen_model": {"ml_config_path": "old.zip"}}},
+                   base_cfg.open("w", encoding="utf-8"))
+    config = make_sampling_config(tmp_path, immuneml_config=str(base_cfg), n_samples=0, compute_p_gens=True)
+    write_ref_sequences(config, "datasetA")
+    mock_run = mocker.patch("gen_airr_bm.sampling.sampling_orchestrator.run_immuneml_command")
+
+    cfg_path = SamplingOrchestrator.prepare_immuneml_sampling_config(config, "datasetA", Path("model.zip"))
+    out_dir = SamplingOrchestrator.run_immuneml_sampling(config, "datasetA", cfg_path)
+
+    root_dir = Path(config.root_output_dir)
+    assert cfg_path.parent == root_dir / "sampling_p_gens_configs"
+    assert yaml.safe_load(cfg_path.read_text())["instructions"]["gen_model"]["gen_examples_count"] == 0
+    assert Path(out_dir) == root_dir / "sampling_p_gens" / config.experiment_name / config.model_name / "datasetA"
+    mock_run.assert_called_once_with(cfg_path, out_dir)
+    assert not (root_dir / "sampling").exists() and not (root_dir / "sampling_configs").exists()

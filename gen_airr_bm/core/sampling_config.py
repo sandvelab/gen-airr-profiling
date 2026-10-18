@@ -8,6 +8,12 @@ class SamplingConfig:
         self.root_output_dir = root_output_dir
         self.compute_p_gens = compute_p_gens
 
+    @property
+    def p_gens_only(self) -> bool:
+        """With n_samples 0, no sequences are generated and only the p_gens of the train and test sequences are
+        computed, e.g. for models whose sequences were already sampled and should be kept."""
+        return self.n_samples == 0 and self.compute_p_gens
+
     def __repr__(self):
         return (f"SamplingConfig(name={self.model_name}, experiment_name={self.experiment_name}, "
                 f"immuneml_config={self.immuneml_config}, n_samples={self.n_samples}, "

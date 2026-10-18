@@ -109,6 +109,9 @@ class MainConfig:
                 experiment_names = sampling.get("experiment_names")
                 if not experiment_names:
                     raise ValueError("Sampling entries must define 'experiment_names' with at least one experiment.")
+                if sampling["n_samples"] == 0 and not sampling.get("compute_p_gens", False):
+                    raise ValueError(f"Sampling entry for {sampling['model_name']} has n_samples 0 and does not "
+                                     f"compute p_gens, so there is nothing to do.")
                 for experiment_name in experiment_names:
                     self.sampling_configs.append(
                         SamplingConfig(model_name=sampling["model_name"],

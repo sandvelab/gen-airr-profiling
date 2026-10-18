@@ -20,7 +20,8 @@ class SamplingOrchestrator:
                                                                                      model_zip_path)
         immuneml_results_path = SamplingOrchestrator.run_immuneml_sampling(sampling_config, dataset_name,
                                                                            immuneml_config_path)
-        SamplingOrchestrator.copy_generated_sequences(sampling_config, immuneml_results_path, dataset_name)
+        if not sampling_config.p_gens_only:
+            SamplingOrchestrator.copy_generated_sequences(sampling_config, immuneml_results_path, dataset_name)
         if sampling_config.compute_p_gens:
             SamplingOrchestrator.copy_p_gens(sampling_config, immuneml_results_path, dataset_name)
 
@@ -41,7 +42,8 @@ class SamplingOrchestrator:
 
     @staticmethod
     def prepare_immuneml_sampling_config(sampling_config: SamplingConfig, dataset_name: str, model_zip_path: Path):
-        sampling_configs_dir = f"{sampling_config.root_output_dir}/sampling_configs"
+        sampling_configs_dir = (f"{sampling_config.root_output_dir}/"
+                                f"{SamplingOrchestrator.get_sampling_dir_name(sampling_config)}_configs")
         os.makedirs(sampling_configs_dir, exist_ok=True)
 
         generic_immuneml_config_path = Path(sampling_config.immuneml_config)
@@ -93,6 +95,12 @@ class SamplingOrchestrator:
         data["instructions"]["gen_model"]["p_gen_datasets"] = [split.value for split in DatasetSplit.train_and_test()]
 
     @staticmethod
+    def get_sampling_dir_name(sampling_config: SamplingConfig) -> str:
+        """p_gen-only runs write their immuneML configs and results to sampling_p_gens(_configs) instead of
+        sampling(_configs), so that the outputs of an earlier sampling run of the same model are kept."""
+        return "sampling_p_gens" if sampling_config.p_gens_only else "sampling"
+
+    @staticmethod
     def get_experiment_number(sampling_config: SamplingConfig) -> str:
         return sampling_config.experiment_name.split("_")[-1]
 
@@ -105,8 +113,9 @@ class SamplingOrchestrator:
 
     @staticmethod
     def run_immuneml_sampling(sampling_config: SamplingConfig, dataset_name, immuneml_config_path: Path):
-        immuneml_results_dir = (f"{sampling_config.root_output_dir}/sampling/{sampling_config.experiment_name}/"
-                                f"{sampling_config.model_name}/{dataset_name}")
+        immuneml_results_dir = (f"{sampling_config.root_output_dir}/"
+                                f"{SamplingOrchestrator.get_sampling_dir_name(sampling_config)}/"
+                                f"{sampling_config.experiment_name}/{sampling_config.model_name}/{dataset_name}")
         os.makedirs(immuneml_results_dir, exist_ok=True)
         run_immuneml_command(immuneml_config_path, immuneml_results_dir)
 
