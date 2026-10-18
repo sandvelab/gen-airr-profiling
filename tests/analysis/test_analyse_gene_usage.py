@@ -119,10 +119,12 @@ def test_compute_usage_distribution_gene_and_family():
     gene_distribution = compute_usage_distribution(gene_calls, ["v_call"], "gene")
     family_distribution = compute_usage_distribution(gene_calls, ["v_call"], "family")
     pairing_distribution = compute_usage_distribution(gene_calls, ["v_call", "j_call"], "gene")
+    family_pairing_distribution = compute_usage_distribution(gene_calls, ["v_call", "j_call"], "family")
 
     assert gene_distribution == {"TRBV6-1": 0.25, "TRBV6-5": 0.25, "TRBV19": 0.5}
     assert family_distribution == {"TRBV6": 0.5, "TRBV19": 0.5}
     assert pairing_distribution == {"TRBV6-1|TRBJ1-1": 0.25, "TRBV6-5|TRBJ1-1": 0.25, "TRBV19|TRBJ2-3": 0.5}
+    assert family_pairing_distribution == {"TRBV6|TRBJ1": 0.5, "TRBV19|TRBJ2": 0.5}
 
 
 def test_compute_usage_distribution_empty():
@@ -152,8 +154,8 @@ def test_model_generates_gene_calls(analysis_config):
 def test_compute_gene_usage_scores_matches_gene_names_across_allele_resolutions(analysis_config):
     scores_df = compute_gene_usage_scores(analysis_config, ["sonnia", "vae"], {})
 
-    # 2 models x 2 references x 2 repertoires x 2 subsets x 5 metrics
-    assert len(scores_df) == 80
+    # 2 models x 2 references x 2 repertoires x 2 subsets x 6 metrics
+    assert len(scores_df) == 96
     assert set(scores_df["subset"]) == {0, 1}
     # The generated gene usage is identical to the reference usage, only written without the allele
     assert scores_df["jsd"].max() == pytest.approx(0.0, abs=1e-12)
@@ -233,6 +235,7 @@ def test_compute_gene_usage_frequencies(analysis_config):
     ("v gene", "V Gene"),
     ("j family", "J Family"),
     ("vj pairing", "VJ Pairing"),
+    ("vj family pairing", "VJ Family Pairing"),
 ])
 def test_get_metric_label(metric_name, expected):
     assert get_metric_label(metric_name) == expected
@@ -272,7 +275,7 @@ def test_run_gene_usage_analysis_writes_outputs(analysis_config):
     assert os.path.exists(f"{output_dir}/gene_usage_jsd_scores.tsv")
     assert os.path.exists(f"{output_dir}/gene_usage_frequencies.tsv")
     assert os.path.exists(f"{output_dir}/skipped_models.txt")
-    for metric_name in ["v_gene", "j_gene", "vj_pairing", "v_family", "j_family"]:
+    for metric_name in ["v_gene", "j_gene", "vj_pairing", "v_family", "j_family", "vj_family_pairing"]:
         assert os.path.exists(f"{output_dir}/train_test/gene_usage_{metric_name}_grouped.tsv")
         assert os.path.exists(f"{output_dir}/train_test/gene_usage_{metric_name}_grouped.png")
         assert os.path.exists(f"{output_dir}/gene_usage_frequencies_{metric_name}.png")
@@ -283,7 +286,7 @@ def test_run_gene_usage_analysis_writes_outputs(analysis_config):
     scores_df = pd.read_csv(f"{output_dir}/gene_usage_jsd_scores.tsv", sep="\t")
     assert set(scores_df["model"]) == {"vae", "sonnia"}
 
-    for metric_name in ["v_gene", "j_gene", "vj_pairing", "v_family", "j_family"]:
+    for metric_name in ["v_gene", "j_gene", "vj_pairing", "v_family", "j_family", "vj_family_pairing"]:
         for table in ["repertoire_scores", "summary", "vs_train_test", "all_pairs"]:
             assert os.path.exists(f"{output_dir}/statistics/gene_usage_{metric_name}_{table}.tsv")
         assert os.path.exists(f"{output_dir}/statistics/gene_usage_{metric_name}_vs_train_test.png")

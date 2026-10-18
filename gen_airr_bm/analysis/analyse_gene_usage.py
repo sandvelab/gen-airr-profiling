@@ -28,6 +28,7 @@ GENE_USAGE_METRICS = {
     "vj pairing": (["v_call", "j_call"], "gene"),
     "v family": (["v_call"], "family"),
     "j family": (["j_call"], "family"),
+    "vj family pairing": (["v_call", "j_call"], "family"),
 }
 
 SUBSET_INDEX_PATTERN = re.compile(r"_(\d+)\.tsv$")
