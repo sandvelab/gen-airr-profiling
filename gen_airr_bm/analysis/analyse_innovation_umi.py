@@ -290,7 +290,8 @@ def plot_innovation_precision_sensitivity(analysis_config: AnalysisConfig, score
             ticktext=ticktext
         )
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     y_axis_text = "Innovation Precision (pseudo-log)" if pseudolog else "Innovation Precision"
     fig.update_layout(
         title={'text': wrap_title(f"Innovation Precision vs Sensitivity for {collection_specification} Repertoires", width=50),
@@ -371,7 +372,8 @@ def plot_innovation_scores_by_n_gen_novel(analysis_config: AnalysisConfig, score
 
     fig.update_traces(marker=dict(size=11))
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     fig.update_layout(
         title={'text': wrap_title(f"Innovation Precision by Number of Generated Novel Sequences for "
                        f"{collection_specification} Repertoires", width=50), 'font': {'size': 20},
@@ -436,7 +438,8 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
 
     fig_pseudo.update_traces(marker=dict(size=12))
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type)
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
     fig_pseudo.update_layout(
         title={'text': wrap_title(f"Innovation Precision (Pseudo-log) by Number of Generated Novel Sequences for "
                        f"{collection_specification} Repertoires", width=50),

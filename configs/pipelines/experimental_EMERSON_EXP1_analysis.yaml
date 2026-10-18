@@ -1,0 +1,16 @@
+n_experiments: 100
+output_dir: "RESULTS_SEP25/EMERSON_EXP1"
+input_dir: "data/experimental/emerson_exp1"
+seed: 42
+
+analyses:
+    - name: "gene_usage"
+      model_names: [ "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
+      default_model_name: "humanTRB"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "gene generating models"
+      receptor_type: "TCR"
+      collection: "D"
+      statistical_tests: True
+      donor_pattern: "^(P\\d+)_"

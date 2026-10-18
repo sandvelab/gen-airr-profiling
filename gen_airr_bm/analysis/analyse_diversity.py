@@ -71,7 +71,7 @@ def compute_and_plot_diversity_scores(analysis_config: AnalysisConfig, reference
             ])
 
     plot_diversity_scatter_plotly(reference_diversities, models_diversities_grouped, output_path, metric_name,
-                                  analysis_config.receptor_type)
+                                  analysis_config.receptor_type, analysis_config.collection)
 
 
 def compute_diversities_for_models(models: list, gen_dir, diversity_function: Callable) -> dict:
@@ -181,7 +181,7 @@ def gini_coefficient(sequences: list) -> float:
 
 
 def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversities: dict, output_path: str,
-                                  metric_name: str, receptor_type: str) -> None:
+                                  metric_name: str, receptor_type: str, collection: str = None) -> None:
     """ Plot diversity scores using Plotly scatter plot.
     Args:
         reference_diversities (dict): Dictionary with reference dataset names and their diversity scores.
@@ -208,7 +208,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, models_diversitie
     if not os.path.exists(output_path + ".tsv"):
         df.to_csv(os.path.join(output_path) + ".tsv", sep="\t", index=False)
 
-    collection_specification = get_collection_specification_for_title(receptor_type)
+    collection_specification = get_collection_specification_for_title(receptor_type, collection)
     title = f"{metric_name} for Generated {collection_specification} Repertoires"
     fig = px.scatter(
         df,

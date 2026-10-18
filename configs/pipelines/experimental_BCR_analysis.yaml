@@ -135,3 +135,12 @@ analyses:
       subfolder_name: "all models"
       receptor_type: "BCR"
       n_subsets: 6
+    - name: "gene_usage"
+      model_names: [ "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "gene generating models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"

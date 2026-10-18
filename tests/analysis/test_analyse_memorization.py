@@ -60,7 +60,8 @@ def test_run_memorization_analysis(mocker, sample_analysis_config):
         None,  # get_mean_reference_memorization_score not called for non-UMI TCR
         "/tmp/test_output/analysis_mem",
         "memorization",
-        "TCR"
+        "TCR",
+        None
     )
 
 
