@@ -222,7 +222,7 @@ def test_run_sampling_with_p_gens(mocker):
     m_copy_p_gens.assert_called_once_with(config, "/tmp/res", "datasetZ")
 
 
-def test_run_sampling_p_gens_only_keeps_sampled_sequences(mocker):
+def test_run_p_gens_only_keeps_sampled_sequences(mocker):
     config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
                             n_samples=0, root_output_dir="/tmp/root", compute_p_gens=True)
     mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
@@ -249,8 +249,8 @@ def test_p_gens_only_writes_to_separate_dirs(tmp_path, mocker):
     out_dir = SamplingOrchestrator.run_immuneml_sampling(config, "datasetA", cfg_path)
 
     root_dir = Path(config.root_output_dir)
-    assert cfg_path.parent == root_dir / "sampling_p_gens_configs"
+    assert cfg_path.parent == root_dir / "p_gen_runs_configs"
     assert yaml.safe_load(cfg_path.read_text())["instructions"]["gen_model"]["gen_examples_count"] == 0
-    assert Path(out_dir) == root_dir / "sampling_p_gens" / config.experiment_name / config.model_name / "datasetA"
+    assert Path(out_dir) == root_dir / "p_gen_runs" / config.experiment_name / config.model_name / "datasetA"
     mock_run.assert_called_once_with(cfg_path, out_dir)
     assert not (root_dir / "sampling").exists() and not (root_dir / "sampling_configs").exists()

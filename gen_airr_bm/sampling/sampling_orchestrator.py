@@ -96,9 +96,9 @@ class SamplingOrchestrator:
 
     @staticmethod
     def get_sampling_dir_name(sampling_config: SamplingConfig) -> str:
-        """p_gen-only runs write their immuneML configs and results to sampling_p_gens(_configs) instead of
+        """p_gen-only runs write their immuneML configs and results to p_gen_runs(_configs) instead of
         sampling(_configs), so that the outputs of an earlier sampling run of the same model are kept."""
-        return "sampling_p_gens" if sampling_config.p_gens_only else "sampling"
+        return "p_gen_runs" if sampling_config.p_gens_only else "sampling"
 
     @staticmethod
     def get_experiment_number(sampling_config: SamplingConfig) -> str:
