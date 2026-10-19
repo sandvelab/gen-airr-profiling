@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import pytest
 import yaml
 
 from gen_airr_bm.core.sampling_config import SamplingConfig
@@ -119,6 +120,7 @@ def test_run_sampling(mocker):
         return_value="/tmp/res",
     )
     m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+    m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
 
     SamplingOrchestrator.run_sampling(config)
 
@@ -126,3 +128,129 @@ def test_run_sampling(mocker):
     m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))
     m_run.assert_called_once_with(config, "datasetZ", Path("out.yaml"))
     m_copy.assert_called_once_with(config, "/tmp/res", "datasetZ")
+    m_copy_p_gens.assert_not_called()
+
+
+def write_ref_sequences(config, dataset_name):
+    experiment_n = config.experiment_name.split("_")[-1]
+    for split in ["train", "test"]:
+        ref_dir = Path(config.root_output_dir) / f"{split}_sequences"
+        ref_dir.mkdir(parents=True)
+        (ref_dir / f"{dataset_name}_{experiment_n}.tsv").write_text("junction_aa\nCASSF\n")
+
+
+def test_prepare_immuneml_sampling_config_with_p_gens(tmp_path):
+    base_cfg = tmp_path / "base.yaml"
+    yaml.safe_dump(
+        {
+            "definitions": [],
+            "instructions": {
+                "gen_model": {
+                    "type": "ApplyGenModel",
+                    "ml_config_path": "old.zip",
+                    "gen_examples_count": 0,
+                    "reports": [],
+                }
+            }
+        },
+        base_cfg.open("w", encoding="utf-8"),
+        sort_keys=False,
+    )
+    config = make_sampling_config(tmp_path, immuneml_config=str(base_cfg), compute_p_gens=True)
+    write_ref_sequences(config, "datasetA")
+
+    cfg_path = SamplingOrchestrator.prepare_immuneml_sampling_config(config, "datasetA", Path("/path/to/model.zip"))
+
+    saved = yaml.safe_load(cfg_path.read_text())
+    assert saved["instructions"]["gen_model"]["p_gen_datasets"] == ["train", "test"]
+    for split in ["train", "test"]:
+        dataset = saved["definitions"]["datasets"][split]
+        assert dataset["format"] == "AIRR"
+        assert dataset["params"]["path"] == str(Path(config.root_output_dir) / f"{split}_sequences" / "datasetA_3.tsv")
+        assert dataset["params"]["is_repertoire"] is False
+        assert dataset["params"]["separator"] == "\t"
+
+
+def test_prepare_immuneml_sampling_config_without_p_gens_adds_no_datasets(tmp_path):
+    base_cfg = tmp_path / "base.yaml"
+    yaml.safe_dump({"definitions": [], "instructions": {"gen_model": {"ml_config_path": "old.zip"}}},
+                   base_cfg.open("w", encoding="utf-8"))
+    config = make_sampling_config(tmp_path, immuneml_config=str(base_cfg))
+
+    cfg_path = SamplingOrchestrator.prepare_immuneml_sampling_config(config, "datasetA", Path("model.zip"))
+
+    saved = yaml.safe_load(cfg_path.read_text())
+    assert saved["definitions"] == []
+    assert "p_gen_datasets" not in saved["instructions"]["gen_model"]
+
+
+def test_add_p_gen_datasets_missing_ref_sequences(tmp_path):
+    config = make_sampling_config(tmp_path, compute_p_gens=True)
+    data = {"definitions": [], "instructions": {"gen_model": {}}}
+
+    with pytest.raises(FileNotFoundError):
+        SamplingOrchestrator.add_p_gen_datasets(data, config, "datasetA")
+
+
+def test_copy_p_gens(tmp_path):
+    config = make_sampling_config(tmp_path, experiment_name="exp_12", compute_p_gens=True)
+    results_dir = tmp_path / "results"
+    p_gens_dir = results_dir / "gen_model" / "datasets_with_p_gens"
+    p_gens_dir.mkdir(parents=True)
+    for split in ["train", "test"]:
+        (p_gens_dir / f"{split}_p_gens.tsv").write_text(
+            f"sequence_id\tjunction_aa\tv_call\tj_call\tlocus\tp_gen_model\n\t{split}\tTRBV1\tTRBJ1\tTRB\t0.1\n")
+
+    SamplingOrchestrator.copy_p_gens(config, str(results_dir), "datasetC")
+
+    for split in ["train", "test"]:
+        out_file = Path(config.root_output_dir) / f"{split}_p_gens" / config.model_name / "datasetC_12.tsv"
+        assert out_file.read_text() == f"junction_aa\tv_call\tj_call\tp_gen_model\n{split}\tTRBV1\tTRBJ1\t0.1\n"
+
+
+def test_run_sampling_with_p_gens(mocker):
+    config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=100, root_output_dir="/tmp/root", compute_p_gens=True)
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config", return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+    m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_copy_p_gens.assert_called_once_with(config, "/tmp/res", "datasetZ")
+
+
+def test_run_p_gens_only_keeps_sampled_sequences(mocker):
+    config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=0, root_output_dir="/tmp/root", compute_p_gens=True)
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config", return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+    m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_copy.assert_not_called()
+    m_copy_p_gens.assert_called_once_with(config, "/tmp/res", "datasetZ")
+
+
+def test_p_gens_only_writes_to_separate_dirs(tmp_path, mocker):
+    base_cfg = tmp_path / "base.yaml"
+    yaml.safe_dump({"definitions": [], "instructions": {"gen_model": {"ml_config_path": "old.zip"}}},
+                   base_cfg.open("w", encoding="utf-8"))
+    config = make_sampling_config(tmp_path, immuneml_config=str(base_cfg), n_samples=0, compute_p_gens=True)
+    write_ref_sequences(config, "datasetA")
+    mock_run = mocker.patch("gen_airr_bm.sampling.sampling_orchestrator.run_immuneml_command")
+
+    cfg_path = SamplingOrchestrator.prepare_immuneml_sampling_config(config, "datasetA", Path("model.zip"))
+    out_dir = SamplingOrchestrator.run_immuneml_sampling(config, "datasetA", cfg_path)
+
+    root_dir = Path(config.root_output_dir)
+    assert cfg_path.parent == root_dir / "p_gen_runs_configs"
+    assert yaml.safe_load(cfg_path.read_text())["instructions"]["gen_model"]["gen_examples_count"] == 0
+    assert Path(out_dir) == root_dir / "p_gen_runs" / config.experiment_name / config.model_name / "datasetA"
+    mock_run.assert_called_once_with(cfg_path, out_dir)
+    assert not (root_dir / "sampling").exists() and not (root_dir / "sampling_configs").exists()
