@@ -7,10 +7,10 @@ sampling:
   - model_name: "ProGen_overlap"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10", "exp_11", "exp_12", "exp_13", "exp_14", "exp_15", "exp_16", "exp_17", "exp_18", "exp_19", "exp_20", "exp_21", "exp_22", "exp_23", "exp_24", "exp_25", "exp_26", "exp_27", "exp_28", "exp_29", "exp_30", "exp_31", "exp_32", "exp_33", "exp_34", "exp_35", "exp_36", "exp_37", "exp_38", "exp_39", "exp_40", "exp_41", "exp_42", "exp_43", "exp_44", "exp_45", "exp_46", "exp_47", "exp_48", "exp_49", "exp_50", "exp_51", "exp_52", "exp_53", "exp_54", "exp_55", "exp_56", "exp_57", "exp_58", "exp_59", "exp_60", "exp_61", "exp_62", "exp_63", "exp_64", "exp_65", "exp_66", "exp_67", "exp_68", "exp_69", "exp_70", "exp_71", "exp_72", "exp_73", "exp_74", "exp_75", "exp_76", "exp_77", "exp_78", "exp_79", "exp_80", "exp_81", "exp_82", "exp_83", "exp_84", "exp_85", "exp_86", "exp_87", "exp_88", "exp_89", "exp_90", "exp_91", "exp_92", "exp_93", "exp_94", "exp_95", "exp_96", "exp_97", "exp_98", "exp_99"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
-    n_samples: 130000
+    n_samples: 20000
     compute_p_gens: True
   - model_name: "ProGen_kmer"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10", "exp_11", "exp_12", "exp_13", "exp_14", "exp_15", "exp_16", "exp_17", "exp_18", "exp_19", "exp_20", "exp_21", "exp_22", "exp_23", "exp_24", "exp_25", "exp_26", "exp_27", "exp_28", "exp_29", "exp_30", "exp_31", "exp_32", "exp_33", "exp_34", "exp_35", "exp_36", "exp_37", "exp_38", "exp_39", "exp_40", "exp_41", "exp_42", "exp_43", "exp_44", "exp_45", "exp_46", "exp_47", "exp_48", "exp_49", "exp_50", "exp_51", "exp_52", "exp_53", "exp_54", "exp_55", "exp_56", "exp_57", "exp_58", "exp_59", "exp_60", "exp_61", "exp_62", "exp_63", "exp_64", "exp_65", "exp_66", "exp_67", "exp_68", "exp_69", "exp_70", "exp_71", "exp_72", "exp_73", "exp_74", "exp_75", "exp_76", "exp_77", "exp_78", "exp_79", "exp_80", "exp_81", "exp_82", "exp_83", "exp_84", "exp_85", "exp_86", "exp_87", "exp_88", "exp_89", "exp_90", "exp_91", "exp_92", "exp_93", "exp_94", "exp_95", "exp_96", "exp_97", "exp_98", "exp_99"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
-    n_samples: 130000
+    n_samples: 20000
     compute_p_gens: True
