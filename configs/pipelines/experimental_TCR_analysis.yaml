@@ -5,14 +5,16 @@ seed: 42
 
 analyses:
     - name: "reduced_dimensionality"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "all models"
       receptor_type: "TCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "memorization"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -22,7 +24,7 @@ analyses:
       subfolder_name: "all models"
       receptor_type: "TCR"
     - name: "network"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -30,8 +32,10 @@ analyses:
       indels: True
       subfolder_name: "all models"
       receptor_type: "TCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "diversity"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
       default_model_name: "humanTRB"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -115,6 +119,34 @@ analyses:
       indels: False
       receptor_type: "TCR"
     - name: "phenotype"
+      model_names: [ "TCRpeg_overlap" ]
+      default_model_name: "humanTRB"
+      subfolder_name: "TCRpeg_overlap"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "TCR"
+    - name: "phenotype"
+      model_names: [ "TCRpeg_kmer" ]
+      default_model_name: "humanTRB"
+      subfolder_name: "TCRpeg_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "TCR"
+    - name: "phenotype"
+      model_names: [ "TCRsep_overlap" ]
+      default_model_name: "humanTRB"
+      subfolder_name: "TCRsep_overlap"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "TCR"
+    - name: "phenotype"
+      model_names: [ "TCRsep_kmer" ]
+      default_model_name: "humanTRB"
+      subfolder_name: "TCRsep_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "TCR"
+    - name: "phenotype"
       model_names: [ "train" ]
       default_model_name: "humanTRB"
       subfolder_name: "train"
@@ -122,7 +154,7 @@ analyses:
       indels: False
       receptor_type: "TCR"
     - name: "innovation"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
       default_model_name: "humanTRB"
       allowed_mismatches: 0
       indels: False
@@ -130,7 +162,7 @@ analyses:
       receptor_type: "TCR"
       n_subsets: 6
     - name: "innovation_diversity"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer", "TCRsep_overlap", "TCRsep_kmer" ]
       default_model_name: "humanTRB"
       subfolder_name: "all models"
       receptor_type: "TCR"
