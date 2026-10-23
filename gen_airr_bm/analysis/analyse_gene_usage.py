@@ -11,7 +11,7 @@ from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name, get_reference_files, get_sequence_files
 from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, plot_grouped_avg_scores,
-                                             plot_paired_comparisons, title_case, wrap_title)
+                                             plot_repertoire_statistics, title_case, wrap_title)
 from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
                                                run_repertoire_statistics, summarise_scores_by_reference)
 
@@ -315,18 +315,9 @@ def run_gene_usage_statistics(analysis_config: AnalysisConfig, scores_df: pd.Dat
     results = run_repertoire_statistics(repertoire_scores, models, output_prefix, analysis_config.statistical_tests,
                                         reference_scores, analysis_config.contrasts, analysis_config.donor_pattern)
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
-                                                                     analysis_config.collection)
-    metric_label = get_metric_label(metric_name)
-    if "vs_train_test" in results:
-        plot_paired_comparisons(results["vs_train_test"], f"{output_prefix}_vs_train_test",
-                                f"{metric_label} JSD to Test: Models Compared with Train vs. Test in "
-                                f"{collection_specification} Repertoires", "Difference in JSD",
-                                results["vs_train_test_differences"])
-    if "contrasts" in results:
-        plot_paired_comparisons(results["contrasts"], f"{output_prefix}_contrasts",
-                                f"{metric_label} JSD to Test: Model Contrasts in {collection_specification} "
-                                f"Repertoires", "Difference in JSD", results["contrasts_differences"])
+    plot_repertoire_statistics(results, output_prefix, get_metric_label(metric_name),
+                               get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                      analysis_config.collection))
 
 
 def compute_gene_usage_frequencies(analysis_config: AnalysisConfig, models: list,

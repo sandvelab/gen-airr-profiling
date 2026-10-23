@@ -1,4 +1,5 @@
 import os
+import re
 from collections import defaultdict
 
 import numpy as np
@@ -9,11 +10,19 @@ from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
 from gen_airr_bm.utils.plotting_utils import (
+    get_collection_specification_for_title,
     plot_avg_scores,
     plot_grouped_avg_scores,
     plot_degree_distribution_by_dataset,
+    plot_repertoire_statistics,
 )
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, deduplicate_single_dataset
+from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
+                                               run_repertoire_statistics, summarise_scores_by_reference)
+
+METRIC_NAME = "connectivity"
+SCORE_COLUMNS = ["metric", "model", "reference", "dataset", "subset", "jsd"]
+SUBSET_INDEX_PATTERN = re.compile(r"_(\d+)\.tsv$")
 
 
 def run_network_analysis(analysis_config: AnalysisConfig) -> None:
@@ -39,7 +48,12 @@ def run_network_analysis(analysis_config: AnalysisConfig) -> None:
 
 def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_output_dir: str,
                                   compairr_helper_dir: str) -> None:
-    """Compute and plot connectivity scores and distributions for the given analysis configuration.
+    """Compute and plot connectivity scores and distributions for the given analysis configuration. The divergence
+    of every generated subset is averaged within its repertoire before the models are summarised over repertoires (see
+    statistics_utils). Against the test sequences, the models are also compared at the repertoire level: with the
+    train vs. test reference, with each other, and in the contrasts given in the config. These comparisons are
+    descriptive, or include confidence intervals and tests if statistical_tests is set, which requires a donor_pattern
+    and one repertoire per donor.
 
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
@@ -52,6 +66,7 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
 
     divergence_scores_all = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     connectivity_distributions_all = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    scores = []
 
     for reference in analysis_config.reference_data:
 
@@ -66,6 +81,9 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
                 divergence_scores = calculate_divergence_scores(ref_degree_dist, gen_degree_dists, reference,
                                                                 model_name)
                 divergence_scores_all[reference][dataset_name][model_name].extend(divergence_scores)
+                scores.extend({"metric": METRIC_NAME, "model": model_name, "reference": reference,
+                               "dataset": dataset_name, "subset": get_subset_index(gen_file), "jsd": score}
+                              for gen_file, score in zip(gen_files, divergence_scores))
 
                 if model_name not in connectivity_distributions_all[dataset_name].keys():
                     connectivity_distributions_all[dataset_name][model_name][model_name].extend(gen_degree_dists)
@@ -76,10 +94,15 @@ def compute_and_plot_connectivity(analysis_config: AnalysisConfig, compairr_outp
             summarize_and_plot_dataset_connectivity(dataset_name, divergence_scores,
                                                     analysis_config.analysis_output_dir, reference)
 
-    mean_reference_divergence_score = get_mean_reference_divergence_score(analysis_config, compairr_helper_dir,
-                                                                          compairr_output_dir)
-    summarize_and_plot_all(analysis_config, divergence_scores_all,
-                           mean_reference_divergence_score)
+    scores_df = pd.DataFrame(scores, columns=SCORE_COLUMNS)
+    scores_df.to_csv(f"{analysis_config.analysis_output_dir}/connectivity_jsd_scores.tsv", sep="\t", index=False)
+    if analysis_config.statistical_tests:
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "jsd", analysis_config.donor_pattern),
+                                       analysis_config.donor_pattern)
+
+    reference_scores = get_reference_divergence_scores(analysis_config, compairr_helper_dir, compairr_output_dir)
+    summarize_and_plot_all(analysis_config, scores_df, reference_scores)
+    run_network_statistics(analysis_config, scores_df, reference_scores)
 
     plot_degree_distribution_by_dataset(analysis_config, connectivity_distributions_all,)
 
@@ -109,6 +132,12 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
                                                                                allowed_mismatches, indels)
 
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
+
+
+def get_subset_index(gen_file: str) -> int | float:
+    """ Returns the index of a generated subset from its file name, e.g. 3 for rep_1_3.tsv, or nan if there is none. """
+    match = SUBSET_INDEX_PATTERN.search(os.path.basename(gen_file))
+    return int(match.group(1)) if match else np.nan
 
 
 def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series],
@@ -165,19 +194,19 @@ def get_node_degree_distributions(ref1_file: str, ref2_or_gen_files: list, compa
     return ref1_degree_dist, ref2_or_gen_degree_dists
 
 
-def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compairr_output_helper_dir: str,
-                                        compairr_output_dir: str) -> float:
-    """ Get mean divergence score (JSD) for the reference data.
+def get_reference_divergence_scores(analysis_config: AnalysisConfig, compairr_output_helper_dir: str,
+                                    compairr_output_dir: str) -> pd.DataFrame:
+    """ Get the divergence score (JSD) between the train and test connectivity of each repertoire, as a reference for
+    how similar two samples of the same repertoire are.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         compairr_output_helper_dir (str): Directory for Compairr helper files.
         compairr_output_dir (str): Directory for Compairr output files.
     Returns:
-        float: Mean divergence score for the reference data.
+        pd.DataFrame: Columns repertoire and score, one row per repertoire.
     """
-    ref_scores = []
-    reference_comparison_files = get_reference_files(analysis_config)
-    for train_file, test_file in reference_comparison_files:
+    rows = []
+    for train_file, test_file in sorted(get_reference_files(analysis_config)):
         dataset_name, train_node_degree, test_node_degree = (
             get_connectivity_distributions_by_dataset(train_file, [test_file], compairr_output_helper_dir,
                                                       compairr_output_dir, DatasetSplit.TEST.value,
@@ -185,10 +214,8 @@ def get_mean_reference_divergence_score(analysis_config: AnalysisConfig, compair
                                                       analysis_config.indels))
         divergence_scores = calculate_divergence_scores(train_node_degree, test_node_degree, DatasetSplit.TRAIN.value,
                                                         DatasetSplit.TEST.value)
-        ref_scores.extend(divergence_scores)
-    mean_ref_divergence_score = np.mean(ref_scores)
-
-    return mean_ref_divergence_score
+        rows.append({"repertoire": dataset_name, "score": divergence_scores[0]})
+    return pd.DataFrame(rows, columns=["repertoire", "score"])
 
 
 def compute_connectivity_with_compairr(input_sequences_path: str, compairr_output_helper_dir: str,
@@ -289,23 +316,19 @@ def summarize_and_plot_dataset_connectivity(dataset_name: str, divergence_scores
     )
 
 
-def summarize_and_plot_all(analysis_config: AnalysisConfig, divergence_scores_all: dict[str, dict[str, dict[str, list]]],
-                           mean_reference_score: float) -> None:
-    """ Aggregate scores across references and plot grouped averages.
+def summarize_and_plot_all(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,
+                           reference_scores: pd.DataFrame) -> None:
+    """ Average the scores over the generated subsets of each repertoire, summarise them over repertoires and plot the
+    grouped averages, with one dot per repertoire.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
-        divergence_scores_all (dict(dict(dict[list]))): Double nested dictionary with divergence scores by reference,
-        dataset and model.
-        mean_reference_score (float): Mean divergence score for the reference data.
+        scores_df (pd.DataFrame): One row per model, reference, dataset and generated subset, with the divergence in jsd.
+        reference_scores (pd.DataFrame): Train vs. test scores per repertoire, with columns repertoire and score.
     Returns:
         None
     """
-    mean_scores, std_scores = {}, {}
-    for reference, dataset_scores in divergence_scores_all.items():
-        model_scores = {model: [score for sample in dataset_scores.values() for score in sample[model]]
-                        for model in next(iter(dataset_scores.values())).keys()}
-        mean_scores[reference] = {m: float(np.mean(scores)) for m, scores in model_scores.items()}
-        std_scores[reference] = {m: float(np.std(scores)) for m, scores in model_scores.items()}
+    mean_scores, std_scores, repertoire_scores, error_bar_caption = \
+        summarise_scores_by_reference(scores_df, METRIC_NAME, analysis_config.donor_pattern)
 
     plot_grouped_avg_scores(
         analysis_config=analysis_config,
@@ -314,8 +337,37 @@ def summarize_and_plot_all(analysis_config: AnalysisConfig, divergence_scores_al
         distribution_type="connectivity",
         file_name="all_datasets_connectivity",
         scoring_method="JSD",
-        reference_score=mean_reference_score
+        reference_score=float(reference_scores["score"].mean()) if len(reference_scores) else None,
+        error_bar_caption=error_bar_caption,
+        repertoire_scores_by_ref=repertoire_scores
     )
+
+
+def run_network_statistics(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,
+                           reference_scores: pd.DataFrame) -> None:
+    """ Runs the repertoire-level comparisons against the test sequences and plots the comparisons with the train vs.
+    test reference and the contrasts from the config. The train sequences are left out, since the models were fitted on
+    them.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores_df (pd.DataFrame): One row per model, reference, dataset and generated subset, with the divergence in jsd.
+        reference_scores (pd.DataFrame): Train vs. test scores per repertoire, with columns repertoire and score.
+    Returns:
+        None
+    """
+    if DatasetSplit.TEST.value not in analysis_config.reference_data:
+        print("Skipping network statistics, since they are computed against the test sequences.")
+        return
+
+    test_scores = scores_df[scores_df["reference"] == DatasetSplit.TEST.value]
+    output_prefix = f"{analysis_config.analysis_output_dir}/statistics/{METRIC_NAME}"
+    repertoire_scores = aggregate_repertoire_scores(test_scores, "jsd", analysis_config.donor_pattern)
+    results = run_repertoire_statistics(repertoire_scores, analysis_config.model_names, output_prefix,
+                                        analysis_config.statistical_tests, reference_scores, analysis_config.contrasts,
+                                        analysis_config.donor_pattern)
+    plot_repertoire_statistics(results, output_prefix, "connectivity",
+                               get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                      analysis_config.collection))
 
 
 def validate_references(reference_datasets: list[str]) -> None:

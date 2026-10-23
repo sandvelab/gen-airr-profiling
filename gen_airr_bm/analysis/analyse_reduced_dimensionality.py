@@ -10,7 +10,7 @@ from gen_airr_bm.constants.distribution_type import DistributionType
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name, get_reference_files
 from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, plot_grouped_avg_scores,
-                                             plot_paired_comparisons, title_case)
+                                             plot_repertoire_statistics)
 from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
                                                correct_across_metrics, run_repertoire_statistics,
                                                summarise_scores_by_reference, write_repertoire_statistics)
@@ -211,19 +211,10 @@ def write_and_plot_reduced_dimensionality_statistics(analysis_config: AnalysisCo
     output_prefix = get_statistics_output_prefix(analysis_config, file_stem)
     write_repertoire_statistics(statistics, output_prefix)
 
-    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
-                                                                     analysis_config.collection)
-    title_label = title_case(metric_label)
-    if "vs_train_test" in statistics:
-        plot_paired_comparisons(statistics["vs_train_test"], f"{output_prefix}_vs_train_test",
-                                f"{title_label} JSD to Test: Models Compared with Train vs. Test in "
-                                f"{collection_specification} Repertoires", "Difference in JSD",
-                                statistics["vs_train_test_differences"], correction_scope)
-    if "contrasts" in statistics:
-        plot_paired_comparisons(statistics["contrasts"], f"{output_prefix}_contrasts",
-                                f"{title_label} JSD to Test: Model Contrasts in {collection_specification} "
-                                f"Repertoires", "Difference in JSD", statistics["contrasts_differences"],
-                                correction_scope)
+    plot_repertoire_statistics(statistics, output_prefix, metric_label,
+                               get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                      analysis_config.collection),
+                               correction_scope)
 
 
 def get_statistics_output_prefix(analysis_config: AnalysisConfig, file_stem: str) -> str:
