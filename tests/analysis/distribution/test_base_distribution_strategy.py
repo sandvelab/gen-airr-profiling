@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from gen_airr_bm.analysis.distribution.base_distribution_strategy import BaseDistributionStrategy
@@ -16,38 +15,15 @@ def test_cannot_instantiate_abstract_class():
         BaseDistributionStrategy()
 
 
-def test_init_mean_std_scores():
+def test_get_metric_scores():
     strategy = DummyStrategyBase()
-    mean, std = strategy.init_mean_std_scores()
-    assert mean == {}
-    assert std == {}
+    assert strategy.get_metric_scores([0.5]) == {"all": 0.5}
 
 
-def test_init_divergence_scores():
+def test_get_metric_label_and_file_stem():
     strategy = DummyStrategyBase()
-    scores = strategy.init_divergence_scores()
-    assert scores == []
-
-
-def test_update_divergence_scores():
-    strategy = DummyStrategyBase()
-    scores = [0.1, 0.2]
-    new = [0.3, 0.4]
-    strategy.update_divergence_scores(scores, new)
-    assert scores == [0.1, 0.2, 0.3, 0.4]
-
-
-def test_update_mean_std_scores():
-    strategy = DummyStrategyBase()
-    mean_scores, std_scores = {}, {}
-    divergence_scores = [0.5, 1.5, 2.5]
-
-    strategy.update_mean_std_scores(divergence_scores, "test_model", mean_scores, std_scores)
-
-    assert "test_model" in mean_scores
-    assert "test_model" in std_scores
-    assert mean_scores["test_model"] == pytest.approx(np.mean(divergence_scores))
-    assert std_scores["test_model"] == pytest.approx(np.std(divergence_scores))
+    assert strategy.get_metric_label("amino acid", "all") == "amino acid"
+    assert strategy.get_file_stem("amino acid", "all") == "aminoacid"
 
 
 def test_plot_scores_calls_plot_jsd_scores(mocker):

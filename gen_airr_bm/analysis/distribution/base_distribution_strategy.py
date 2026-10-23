@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
-from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_reference_files
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_avg_scores
+from gen_airr_bm.utils.plotting_utils import plot_avg_scores
 
 
 class BaseDistributionStrategy(ABC):
+    # What the metrics of a distribution are, for plot footnotes, e.g. "sequence lengths"
+    metric_group_name = "metrics"
+
     @abstractmethod
     def compute_divergence(self, gen_seqs: list[str], ref_seqs: list[str]) -> Any:
         pass
@@ -19,32 +19,18 @@ class BaseDistributionStrategy(ABC):
                                        ref_seqs: list, gen_label, ref_label) -> None:
         pass
 
-    def init_mean_std_scores(self) -> tuple[dict, dict]:
-        return {}, {}
+    def get_metric_scores(self, divergence: Any) -> dict:
+        """ Returns the output of compute_divergence as {metric: score}. Most distributions are compared as a whole,
+        so they have the single metric "all". """
+        return {"all": divergence[0]}
 
-    def init_divergence_scores(self) -> list:
-        return []
+    def get_metric_label(self, distribution_type: str, metric) -> str:
+        """ Returns the label of a metric as used in plot titles. """
+        return distribution_type
 
-    def update_divergence_scores(self, divergence_scores: list[float], new_scores: list[float]) -> None:
-        divergence_scores.extend(new_scores)
-
-    def update_mean_std_scores(self, divergence_scores: list[float], model_name: str,
-                               mean_scores: dict, std_scores: dict) -> None:
-        mean_scores[model_name] = np.mean(divergence_scores)
-        std_scores[model_name] = np.std(divergence_scores)
-
-    def get_mean_reference_score(self, analysis_config: AnalysisConfig) -> float | None:
-        if (DatasetSplit.TRAIN.value in analysis_config.reference_data and
-                DatasetSplit.TEST.value in analysis_config.reference_data):
-            ref_scores = []
-            reference_comparison_files = get_reference_files(analysis_config)
-            for train_file, test_file in reference_comparison_files:
-                train_seqs = self.get_sequences_from_file(train_file)
-                test_seqs = self.get_sequences_from_file(test_file)
-                ref_scores.extend(self.compute_divergence(test_seqs, train_seqs))
-            return np.mean(ref_scores)
-        else:
-            return None
+    def get_file_stem(self, distribution_type: str, metric) -> str:
+        """ Returns the start of the output file names of a metric. """
+        return distribution_type.replace(" ", "")
 
     def get_sequences_from_file(self, file_path) -> list:
         """ Reads sequences from a file and returns them as a list. """
@@ -58,15 +44,3 @@ class BaseDistributionStrategy(ABC):
         plot_avg_scores(mean_scores, std_scores,
                         analysis_config.analysis_output_dir, analysis_config.reference_data,
                         file_name, distribution_type, "JSD")
-
-    def plot_scores_by_reference(self, mean_scores_by_ref: dict, std_scores_by_ref: dict,
-                                 analysis_config: AnalysisConfig, distribution_type: str,
-                                 mean_reference_score: float | None) -> None:
-        """
-        mean_scores_by_ref: {ref_label: {model: mean_score}}
-        std_scores_by_ref: {ref_label: {model: std_score}}
-        """
-        file_name = distribution_type.replace(" ", "") + "_grouped"
-        plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
-                                file_name, distribution_type, "JSD",
-                                mean_reference_score)

@@ -229,6 +229,9 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
         colorway=color_palette,
         showlegend=True,
         scattermode="group",
+        legend=dict(tracegroupgap=0),
+        # The donor legend entries are added to the reference entries, so the figure grows with the legend
+        height=max(500, 300 + 30 * sum(trace.showlegend is not False for trace in data)),
     )
     if error_bar_caption is not None:
         fig.add_annotation(text=error_bar_caption, xref="paper", yref="paper", x=1, y=1.02, showarrow=False,
@@ -275,7 +278,8 @@ def get_repertoire_dot_traces(repertoire_scores_by_ref: dict, refs: list, models
 
 
 def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, title: str, x_label: str,
-                            differences_df: pd.DataFrame = None) -> None:
+                            differences_df: pd.DataFrame = None,
+                            correction_scope: str = "the comparisons in this plot only") -> None:
     """ Plots paired comparisons as a forest plot, one row per comparison, labelled with the number of repertoires
     (and donors) in which the first source is lower. The labels assume lower scores are better, as for divergences.
     With statistical tests (comparisons_df has p-values), each row shows the mean difference with its confidence
@@ -287,6 +291,7 @@ def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, titl
         x_label (str): Label of the x-axis, e.g. "Difference in JSD".
         differences_df (pd.DataFrame): Per-repertoire differences as returned by statistics_utils.compare_paired,
             plotted as dots without statistical tests.
+        correction_scope (str): The comparisons the p-values were corrected across, for the footnote.
     Returns:
         None
     """
@@ -330,18 +335,23 @@ def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, titl
     for label, annotation in zip(labels, annotations):
         fig.add_annotation(text=annotation, x=1.02, xref="paper", y=label, yref="y", xanchor="left",
                            showarrow=False, font=dict(size=13))
+    height = max(400, 60 * len(plotting_df) + 260)
+    margin = dict(t=100, r=320, b=150)
+    # The footnote and the legend are placed a fixed distance in pixels below the x-axis title, since a fraction of the
+    # plot height would overlap the title in plots with few comparisons
+    below_axis_title = -80 / (height - margin["t"] - margin["b"])
     if statistical_tests:
         correction = title_case(str(comparisons_df["correction"].iloc[0]))
-        fig.add_annotation(text=f"Error bars: unadjusted 95% CI across repertoires. p<sub>adj</sub>: {correction}-"
-                                f"corrected across the comparisons in this plot only.",
-                           x=0, xref="paper", y=-0.2, yref="paper", xanchor="left", yanchor="top", showarrow=False,
-                           font=dict(size=13))
+        fig.add_annotation(text=wrap_title(f"Error bars: unadjusted 95% CI across repertoires. p<sub>adj</sub>: "
+                                           f"{correction}-corrected across {correction_scope}.", width=110),
+                           align="left", x=0, xref="paper", y=below_axis_title, yref="paper", xanchor="left",
+                           yanchor="top", showarrow=False, font=dict(size=13))
     fig.update_layout(title={'text': wrap_title(title, width=80), 'font': {'size': 18}},
                       xaxis=dict(title=dict(text=x_label, font=dict(size=16)), tickfont=dict(size=14)),
                       yaxis=dict(tickfont=dict(size=14), categoryorder="array", categoryarray=labels),
-                      template="plotly_white", showlegend=not statistical_tests, margin=dict(r=320, b=130),
-                      legend=dict(orientation="h", x=0, xanchor="left", y=-0.25, yanchor="top"),
-                      height=max(400, 60 * len(plotting_df) + 260), width=1300)
+                      template="plotly_white", showlegend=not statistical_tests, margin=margin,
+                      legend=dict(orientation="h", x=0, xanchor="left", y=below_axis_title, yanchor="top"),
+                      height=height, width=1300)
     fig.write_image(output_path + ".png", scale=2)
     print(f"Plot saved as png at: {output_path}.png")
 
