@@ -18,6 +18,10 @@ class SamplingOrchestrator:
     def run_sampling(sampling_config: SamplingConfig):
         print("Running sampling...")
         model_zip_path, dataset_name = SamplingOrchestrator.find_paths(sampling_config)
+        if SamplingOrchestrator.is_sampling_done(sampling_config, dataset_name):
+            print(f"Skipping sampling of {sampling_config.model_name} for {sampling_config.experiment_name}: "
+                  f"outputs already exist.")
+            return
         if sampling_config.device:
             SamplingOrchestrator.set_model_device(model_zip_path, sampling_config.device)
         immuneml_config_path = SamplingOrchestrator.prepare_immuneml_sampling_config(sampling_config, dataset_name,
@@ -43,6 +47,26 @@ class SamplingOrchestrator:
         dataset_name = zip_path.parts[-5]
 
         return zip_path, dataset_name
+
+    @staticmethod
+    def get_output_paths(sampling_config: SamplingConfig, dataset_name: str) -> list:
+        """Returns the files a finished sampling run writes: the generated sequences (unless only p_gens are computed)
+        and the train and test p_gens (if computed)."""
+        experiment_n = SamplingOrchestrator.get_experiment_number(sampling_config)
+        root_dir = Path(sampling_config.root_output_dir)
+        file_name = f"{dataset_name}_{experiment_n}.tsv"
+        paths = []
+        if not sampling_config.p_gens_only:
+            paths.append(root_dir / "resampled_sequences_raw" / sampling_config.model_name / file_name)
+        if sampling_config.compute_p_gens:
+            paths.extend(root_dir / f"{split.value}_p_gens" / sampling_config.model_name / file_name
+                         for split in DatasetSplit.train_and_test())
+        return paths
+
+    @staticmethod
+    def is_sampling_done(sampling_config: SamplingConfig, dataset_name: str) -> bool:
+        """The outputs are only copied after immuneML finished, so a run with all of them in place is complete."""
+        return all(path.is_file() for path in SamplingOrchestrator.get_output_paths(sampling_config, dataset_name))
 
     @staticmethod
     def set_model_device(model_zip_path: Path, device: str):

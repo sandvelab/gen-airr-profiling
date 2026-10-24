@@ -329,3 +329,57 @@ def test_run_sampling_sets_device(mocker):
 
     m_set_device.assert_called_once_with(Path("model.zip"), "cuda")
     m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))
+
+
+def write_outputs(paths):
+    for path in paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("junction_aa\nCASSF\n")
+
+
+def test_get_output_paths(tmp_path):
+    root_dir = Path(tmp_path)
+    config = SamplingConfig(model_name="modelA", experiment_name="exp_3", immuneml_config="config.yaml",
+                            n_samples=50, root_output_dir=str(root_dir), compute_p_gens=True)
+
+    paths = SamplingOrchestrator.get_output_paths(config, "datasetA")
+
+    assert paths == [root_dir / "resampled_sequences_raw" / "modelA" / "datasetA_3.tsv",
+                     root_dir / "train_p_gens" / "modelA" / "datasetA_3.tsv",
+                     root_dir / "test_p_gens" / "modelA" / "datasetA_3.tsv"]
+
+
+def test_get_output_paths_p_gens_only_and_no_p_gens(tmp_path):
+    p_gens_only = SamplingConfig(model_name="modelA", experiment_name="exp_3", immuneml_config="config.yaml",
+                                 n_samples=0, root_output_dir=str(tmp_path), compute_p_gens=True)
+    no_p_gens = SamplingConfig(model_name="modelA", experiment_name="exp_3", immuneml_config="config.yaml",
+                               n_samples=50, root_output_dir=str(tmp_path))
+
+    assert [path.parent.parent.name for path in SamplingOrchestrator.get_output_paths(p_gens_only, "d")] == \
+           ["train_p_gens", "test_p_gens"]
+    assert [path.parent.parent.name for path in SamplingOrchestrator.get_output_paths(no_p_gens, "d")] == \
+           ["resampled_sequences_raw"]
+
+
+def test_is_sampling_done_needs_all_outputs(tmp_path):
+    config = make_sampling_config(tmp_path, compute_p_gens=True)
+    sequences_path, train_p_gens_path, test_p_gens_path = SamplingOrchestrator.get_output_paths(config, "datasetA")
+
+    write_outputs([sequences_path, train_p_gens_path])
+    assert not SamplingOrchestrator.is_sampling_done(config, "datasetA")
+
+    write_outputs([test_p_gens_path])
+    assert SamplingOrchestrator.is_sampling_done(config, "datasetA")
+
+
+def test_run_sampling_skips_finished_run(tmp_path, mocker):
+    config = make_sampling_config(tmp_path, device="cuda")
+    write_outputs(SamplingOrchestrator.get_output_paths(config, "datasetZ"))
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_device")
+    m_run = mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_device.assert_not_called()
+    m_run.assert_not_called()
