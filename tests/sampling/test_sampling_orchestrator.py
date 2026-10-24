@@ -383,3 +383,17 @@ def test_run_sampling_skips_finished_run(tmp_path, mocker):
 
     m_set_device.assert_not_called()
     m_run.assert_not_called()
+
+
+def test_run_immuneml_sampling_removes_unfinished_results(tmp_path, mocker):
+    config = make_sampling_config(tmp_path)
+    mock_run = mocker.patch("gen_airr_bm.sampling.sampling_orchestrator.run_immuneml_command")
+    results_dir = Path(config.root_output_dir) / "sampling" / config.experiment_name / config.model_name / "datasetB"
+    (results_dir / "gen_model").mkdir(parents=True)
+    (results_dir / "log.txt").write_text("unfinished")
+
+    out_dir = SamplingOrchestrator.run_immuneml_sampling(config, "datasetB", tmp_path / "config.yaml")
+
+    assert Path(out_dir) == results_dir
+    assert results_dir.is_dir() and list(results_dir.iterdir()) == []
+    mock_run.assert_called_once_with(tmp_path / "config.yaml", str(results_dir))

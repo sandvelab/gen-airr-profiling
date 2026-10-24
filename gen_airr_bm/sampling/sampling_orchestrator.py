@@ -181,6 +181,11 @@ class SamplingOrchestrator:
         immuneml_results_dir = (f"{sampling_config.root_output_dir}/"
                                 f"{SamplingOrchestrator.get_sampling_dir_name(sampling_config)}/"
                                 f"{sampling_config.experiment_name}/{sampling_config.model_name}/{dataset_name}")
+        # Left over from an earlier run that did not finish (finished runs are skipped before). immuneML would write
+        # to a new timestamped directory instead of a non-empty one, and the outputs would then not be found here.
+        if os.path.isdir(immuneml_results_dir):
+            print(f"Removing the results of an unfinished earlier run in {immuneml_results_dir}.")
+            shutil.rmtree(immuneml_results_dir)
         os.makedirs(immuneml_results_dir, exist_ok=True)
         run_immuneml_command(immuneml_config_path, immuneml_results_dir)
 
