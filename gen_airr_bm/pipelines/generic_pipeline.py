@@ -66,12 +66,6 @@ def main(config_path, break_main=False, parallel=True):
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 for _ in executor.map(
-                        lambda tuning: run_tuning(tuning, tuning_orchestrator),
-                        config.tuning_configs):
-                    pass
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                for _ in executor.map(
                         lambda sampling: run_sampling(sampling, sampling_orchestrator),
                         config.sampling_configs):
                     pass
@@ -88,6 +82,12 @@ def main(config_path, break_main=False, parallel=True):
                         config.analysis_configs):
                     pass
 
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for _ in executor.map(
+                        lambda tuning: run_tuning(tuning, tuning_orchestrator),
+                        config.tuning_configs):
+                    pass
+
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 executor.map(
@@ -98,11 +98,6 @@ def main(config_path, break_main=False, parallel=True):
                 executor.map(
                     lambda model: run_training(model, training_orchestrator, config.output_dir),
                     config.model_configs)
-
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                executor.map(
-                    lambda tuning: run_tuning(tuning, tuning_orchestrator),
-                    config.tuning_configs)
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 executor.map(
@@ -119,15 +114,17 @@ def main(config_path, break_main=False, parallel=True):
                     lambda analysis: run_analysis(analysis, analysis_orchestrator),
                     config.analysis_configs)
 
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.map(
+                    lambda tuning: run_tuning(tuning, tuning_orchestrator),
+                    config.tuning_configs)
+
     else:
         for data_generation in config.data_generation_configs:
             run_data_generation(data_generation, data_generation_orchestrator)
 
         for model in config.model_configs:
             run_training(model, training_orchestrator, config.output_dir)
-
-        for tuning in config.tuning_configs:
-            run_tuning(tuning, tuning_orchestrator)
 
         for sampling in config.sampling_configs:
             run_sampling(sampling, sampling_orchestrator)
@@ -137,6 +134,9 @@ def main(config_path, break_main=False, parallel=True):
 
         for analysis in config.analysis_configs:
             run_analysis(analysis, analysis_orchestrator)
+
+        for tuning in config.tuning_configs:
+            run_tuning(tuning, tuning_orchestrator)
 
 
 if __name__ == "__main__":
