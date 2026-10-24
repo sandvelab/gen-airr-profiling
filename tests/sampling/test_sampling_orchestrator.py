@@ -1,4 +1,5 @@
 import os
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -121,10 +122,12 @@ def test_run_sampling(mocker):
     )
     m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
     m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_device")
 
     SamplingOrchestrator.run_sampling(config)
 
     m_find.assert_called_once_with(config)
+    m_set_device.assert_not_called()
     m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))
     m_run.assert_called_once_with(config, "datasetZ", Path("out.yaml"))
     m_copy.assert_called_once_with(config, "/tmp/res", "datasetZ")
@@ -254,3 +257,75 @@ def test_p_gens_only_writes_to_separate_dirs(tmp_path, mocker):
     assert Path(out_dir) == root_dir / "p_gen_runs" / config.experiment_name / config.model_name / "datasetA"
     mock_run.assert_called_once_with(cfg_path, out_dir)
     assert not (root_dir / "sampling").exists() and not (root_dir / "sampling_configs").exists()
+
+
+def write_model_zip(zip_path, model_overview):
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_path, "w") as zip_file:
+        zip_file.writestr("model_overview.yaml", yaml.safe_dump(model_overview, sort_keys=False))
+        zip_file.writestr("state_dict.pt", b"weights")
+
+
+def read_model_overview(zip_path):
+    with zipfile.ZipFile(zip_path) as zip_file:
+        return yaml.safe_load(zip_file.read("model_overview.yaml"))
+
+
+def test_set_model_device_keeps_original_zip(tmp_path):
+    zip_path = tmp_path / "trained_model_model" / "trained_model_model.zip"
+    write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cpu", "hidden_size": 64})
+
+    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+
+    assert read_model_overview(zip_path) == {"type": "SakaLSTM", "device": "cuda", "hidden_size": 64}
+    with zipfile.ZipFile(zip_path) as zip_file:
+        assert zip_file.read("state_dict.pt") == b"weights"
+    backup_path = zip_path.with_name("trained_model_model.zip.orig")
+    assert read_model_overview(backup_path)["device"] == "cpu"
+    assert sorted(path.name for path in zip_path.parent.glob("*.zip")) == ["trained_model_model.zip"]
+
+
+def test_set_model_device_twice_keeps_first_backup(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cpu"})
+
+    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+    SamplingOrchestrator.set_model_device(zip_path, "cuda:1")
+
+    assert read_model_overview(zip_path)["device"] == "cuda:1"
+    assert read_model_overview(tmp_path / "model.zip.orig")["device"] == "cpu"
+
+
+def test_set_model_device_same_device_does_not_change_zip(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cuda"})
+
+    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+
+    assert not (tmp_path / "model.zip.orig").exists()
+
+
+def test_set_model_device_without_device_parameter(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "PWM", "locus": "beta"})
+
+    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+
+    assert read_model_overview(zip_path) == {"type": "PWM", "locus": "beta"}
+    assert not (tmp_path / "model.zip.orig").exists()
+
+
+def test_run_sampling_sets_device(mocker):
+    config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=100, root_output_dir="/tmp/root", device="cuda")
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_device")
+    m_prepare = mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config",
+                                    return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_device.assert_called_once_with(Path("model.zip"), "cuda")
+    m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))

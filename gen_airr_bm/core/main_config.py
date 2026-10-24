@@ -119,7 +119,8 @@ class MainConfig:
                                        immuneml_config=sampling["immuneml_config"],
                                        n_samples=sampling["n_samples"],
                                        root_output_dir=self.output_dir,
-                                       compute_p_gens=sampling.get("compute_p_gens", False))
+                                       compute_p_gens=sampling.get("compute_p_gens", False),
+                                       device=sampling.get("device", None))
                     )
 
         if "postprocessing" in data:

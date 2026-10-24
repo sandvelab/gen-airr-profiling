@@ -1,4 +1,6 @@
 import os
+import shutil
+import zipfile
 from glob import glob
 from pathlib import Path
 
@@ -16,6 +18,8 @@ class SamplingOrchestrator:
     def run_sampling(sampling_config: SamplingConfig):
         print("Running sampling...")
         model_zip_path, dataset_name = SamplingOrchestrator.find_paths(sampling_config)
+        if sampling_config.device:
+            SamplingOrchestrator.set_model_device(model_zip_path, sampling_config.device)
         immuneml_config_path = SamplingOrchestrator.prepare_immuneml_sampling_config(sampling_config, dataset_name,
                                                                                      model_zip_path)
         immuneml_results_path = SamplingOrchestrator.run_immuneml_sampling(sampling_config, dataset_name,
@@ -39,6 +43,43 @@ class SamplingOrchestrator:
         dataset_name = zip_path.parts[-5]
 
         return zip_path, dataset_name
+
+    @staticmethod
+    def set_model_device(model_zip_path: Path, device: str):
+        """Sets the device in the model_overview.yaml of the trained model zip, since immuneML loads the model for
+        sampling with the device it was trained with and ApplyGenModel has no device parameter. Before the first change,
+        the original zip is kept as <name>.zip.orig next to it, which find_paths does not pick up. Models without a
+        device parameter (e.g. PWM, SoNNia) are left unchanged.
+        """
+        with zipfile.ZipFile(model_zip_path) as zip_file:
+            entries = [(info, zip_file.read(info.filename)) for info in zip_file.infolist()]
+
+        overview_index = next((i for i, (info, _) in enumerate(entries) if info.filename == "model_overview.yaml"),
+                              None)
+        if overview_index is None:
+            raise FileNotFoundError(f"{model_zip_path} has no model_overview.yaml, so its device cannot be set.")
+        overview_info, overview_content = entries[overview_index]
+        model_overview = yaml.safe_load(overview_content)
+
+        if "device" not in model_overview:
+            print(f"{model_overview.get('type')} in {model_zip_path} has no device parameter, keeping it unchanged.")
+            return
+        if model_overview["device"] == device:
+            return
+
+        backup_path = model_zip_path.with_name(f"{model_zip_path.name}.orig")
+        if not backup_path.exists():
+            shutil.copy2(model_zip_path, backup_path)
+
+        model_overview["device"] = device
+        entries[overview_index] = (overview_info, yaml.safe_dump(model_overview, sort_keys=False).encode("utf-8"))
+
+        tmp_path = model_zip_path.with_name(f"{model_zip_path.name}.tmp")
+        with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for info, content in entries:
+                zip_file.writestr(info, content)
+        os.replace(tmp_path, model_zip_path)
+        print(f"Set device of {model_zip_path} to {device} (original kept as {backup_path}).")
 
     @staticmethod
     def prepare_immuneml_sampling_config(sampling_config: SamplingConfig, dataset_name: str, model_zip_path: Path):
