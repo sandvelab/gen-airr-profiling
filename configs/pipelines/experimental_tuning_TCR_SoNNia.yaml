@@ -139,9 +139,10 @@ analyses:
                    "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
     default_model_name: "humanTRB"
     reference_data: [ "train", "test" ]
-    subfolder_name: "all SoNNia models"
     n_subsets: 6
+    subfolder_name: "all SoNNia models"
     receptor_type: "TCR"
+    use_novel_sequences: False
   - name: "precision_recall"
     model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
                    "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
@@ -154,6 +155,7 @@ analyses:
     deduplicate: True
     subfolder_name: "all SoNNia models"
     receptor_type: "TCR"
+    use_novel_sequences: False
   - name: "memorization"
     model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
                    "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
@@ -166,17 +168,7 @@ analyses:
     deduplicate: False
     subfolder_name: "all SoNNia models"
     receptor_type: "TCR"
-  - name: "network"
-    model_names: [ "sonnia_01", "sonnia_02", "sonnia_03", "sonnia_04", "sonnia_05", "sonnia_06", "sonnia_07", "sonnia_08",
-                   "sonnia_09", "sonnia_10", "sonnia_11", "sonnia_12", "sonnia_13", "sonnia_14", "sonnia_15", "sonnia_16",
-                   "sonnia_17", "sonnia_18", "sonnia_19", "sonnia_20", "sonnia_21", "sonnia_22", "sonnia_23", "sonnia_24" ]
-    default_model_name: "humanTRB"
-    reference_data: [ "train", "test" ]
-    n_subsets: 6
-    subfolder_name: "all SoNNia models"
-    receptor_type: "TCR"
-    allowed_mismatches: 1
-    indels: True
+    use_novel_sequences: False
 
 tuning:
   - tuning_method: "reduced_dimensionality"
