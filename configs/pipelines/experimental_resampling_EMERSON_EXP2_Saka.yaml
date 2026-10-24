@@ -9,8 +9,10 @@ sampling:
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 470000
     compute_p_gens: True
+    device: "cuda"
   - model_name: "Saka_kmer"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10", "exp_11", "exp_12", "exp_13", "exp_14", "exp_15", "exp_16", "exp_17", "exp_18", "exp_19"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 470000
     compute_p_gens: True
+    device: "cuda"
