@@ -16,7 +16,7 @@ definitions:
         default_model_name: 'humanTRB'
         deep: False
         include_joint_genes: True
-        n_gen_seqs: 1000000
+        n_gen_seqs: 100000
         num_processes: 1
 
 instructions:
