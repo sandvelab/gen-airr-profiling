@@ -22,8 +22,8 @@ class SamplingOrchestrator:
             print(f"Skipping sampling of {sampling_config.model_name} for {sampling_config.experiment_name}: "
                   f"outputs already exist.")
             return
-        if sampling_config.device:
-            SamplingOrchestrator.set_model_device(model_zip_path, sampling_config.device)
+        if sampling_config.model_parameters:
+            SamplingOrchestrator.set_model_parameters(model_zip_path, sampling_config.model_parameters)
         immuneml_config_path = SamplingOrchestrator.prepare_immuneml_sampling_config(sampling_config, dataset_name,
                                                                                      model_zip_path)
         immuneml_results_path = SamplingOrchestrator.run_immuneml_sampling(sampling_config, dataset_name,
@@ -69,11 +69,12 @@ class SamplingOrchestrator:
         return all(path.is_file() for path in SamplingOrchestrator.get_output_paths(sampling_config, dataset_name))
 
     @staticmethod
-    def set_model_device(model_zip_path: Path, device: str):
-        """Sets the device in the model_overview.yaml of the trained model zip, since immuneML loads the model for
-        sampling with the device it was trained with and ApplyGenModel has no device parameter. Before the first change,
-        the original zip is kept as <name>.zip.orig next to it, which find_paths does not pick up. Models without a
-        device parameter (e.g. PWM, SoNNia) are left unchanged.
+    def set_model_parameters(model_zip_path: Path, parameters: dict):
+        """Sets parameters in the model_overview.yaml of the trained model zip, since immuneML loads the model for
+        sampling with the parameters it was trained with and ApplyGenModel cannot change them, e.g. the device or the
+        number of importance samples for the VAE p_gens (iter_count_prob_estimation). Before the first change, the
+        original zip is kept as <name>.zip.orig next to it, which find_paths does not pick up. Parameters the model does
+        not have (e.g. device for PWM or SoNNia) are left out, since the model could not be loaded with them.
         """
         with zipfile.ZipFile(model_zip_path) as zip_file:
             entries = [(info, zip_file.read(info.filename)) for info in zip_file.infolist()]
@@ -81,21 +82,23 @@ class SamplingOrchestrator:
         overview_index = next((i for i, (info, _) in enumerate(entries) if info.filename == "model_overview.yaml"),
                               None)
         if overview_index is None:
-            raise FileNotFoundError(f"{model_zip_path} has no model_overview.yaml, so its device cannot be set.")
+            raise FileNotFoundError(f"{model_zip_path} has no model_overview.yaml, so its parameters cannot be set.")
         overview_info, overview_content = entries[overview_index]
         model_overview = yaml.safe_load(overview_content)
 
-        if "device" not in model_overview:
-            print(f"{model_overview.get('type')} in {model_zip_path} has no device parameter, keeping it unchanged.")
-            return
-        if model_overview["device"] == device:
+        missing = [name for name in parameters if name not in model_overview]
+        if missing:
+            print(f"{model_overview.get('type')} in {model_zip_path} has no parameter(s) {missing}, leaving them out.")
+        changes = {name: value for name, value in parameters.items()
+                   if name in model_overview and model_overview[name] != value}
+        if not changes:
             return
 
         backup_path = model_zip_path.with_name(f"{model_zip_path.name}.orig")
         if not backup_path.exists():
             shutil.copy2(model_zip_path, backup_path)
 
-        model_overview["device"] = device
+        model_overview.update(changes)
         entries[overview_index] = (overview_info, yaml.safe_dump(model_overview, sort_keys=False).encode("utf-8"))
 
         tmp_path = model_zip_path.with_name(f"{model_zip_path.name}.tmp")
@@ -103,7 +106,7 @@ class SamplingOrchestrator:
             for info, content in entries:
                 zip_file.writestr(info, content)
         os.replace(tmp_path, model_zip_path)
-        print(f"Set device of {model_zip_path} to {device} (original kept as {backup_path}).")
+        print(f"Set {changes} in {model_zip_path} (original kept as {backup_path}).")
 
     @staticmethod
     def prepare_immuneml_sampling_config(sampling_config: SamplingConfig, dataset_name: str, model_zip_path: Path):

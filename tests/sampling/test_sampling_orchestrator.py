@@ -122,7 +122,7 @@ def test_run_sampling(mocker):
     )
     m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
     m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
-    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_device")
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
 
     SamplingOrchestrator.run_sampling(config)
 
@@ -271,11 +271,11 @@ def read_model_overview(zip_path):
         return yaml.safe_load(zip_file.read("model_overview.yaml"))
 
 
-def test_set_model_device_keeps_original_zip(tmp_path):
+def test_set_model_parameters_keeps_original_zip(tmp_path):
     zip_path = tmp_path / "trained_model_model" / "trained_model_model.zip"
     write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cpu", "hidden_size": 64})
 
-    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
 
     assert read_model_overview(zip_path) == {"type": "SakaLSTM", "device": "cuda", "hidden_size": 64}
     with zipfile.ZipFile(zip_path) as zip_file:
@@ -285,31 +285,31 @@ def test_set_model_device_keeps_original_zip(tmp_path):
     assert sorted(path.name for path in zip_path.parent.glob("*.zip")) == ["trained_model_model.zip"]
 
 
-def test_set_model_device_twice_keeps_first_backup(tmp_path):
+def test_set_model_parameters_twice_keeps_first_backup(tmp_path):
     zip_path = tmp_path / "model.zip"
     write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cpu"})
 
-    SamplingOrchestrator.set_model_device(zip_path, "cuda")
-    SamplingOrchestrator.set_model_device(zip_path, "cuda:1")
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda:1"})
 
     assert read_model_overview(zip_path)["device"] == "cuda:1"
     assert read_model_overview(tmp_path / "model.zip.orig")["device"] == "cpu"
 
 
-def test_set_model_device_same_device_does_not_change_zip(tmp_path):
+def test_set_model_parameters_same_value_does_not_change_zip(tmp_path):
     zip_path = tmp_path / "model.zip"
     write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cuda"})
 
-    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
 
     assert not (tmp_path / "model.zip.orig").exists()
 
 
-def test_set_model_device_without_device_parameter(tmp_path):
+def test_set_model_parameters_without_device_parameter(tmp_path):
     zip_path = tmp_path / "model.zip"
     write_model_zip(zip_path, {"type": "PWM", "locus": "beta"})
 
-    SamplingOrchestrator.set_model_device(zip_path, "cuda")
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
 
     assert read_model_overview(zip_path) == {"type": "PWM", "locus": "beta"}
     assert not (tmp_path / "model.zip.orig").exists()
@@ -319,7 +319,7 @@ def test_run_sampling_sets_device(mocker):
     config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
                             n_samples=100, root_output_dir="/tmp/root", device="cuda")
     mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
-    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_device")
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
     m_prepare = mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config",
                                     return_value=Path("out.yaml"))
     mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
@@ -327,7 +327,7 @@ def test_run_sampling_sets_device(mocker):
 
     SamplingOrchestrator.run_sampling(config)
 
-    m_set_device.assert_called_once_with(Path("model.zip"), "cuda")
+    m_set_device.assert_called_once_with(Path("model.zip"), {"device": "cuda"})
     m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))
 
 
@@ -376,7 +376,7 @@ def test_run_sampling_skips_finished_run(tmp_path, mocker):
     config = make_sampling_config(tmp_path, device="cuda")
     write_outputs(SamplingOrchestrator.get_output_paths(config, "datasetZ"))
     mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
-    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_device")
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
     m_run = mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling")
 
     SamplingOrchestrator.run_sampling(config)
@@ -397,3 +397,38 @@ def test_run_immuneml_sampling_removes_unfinished_results(tmp_path, mocker):
     assert Path(out_dir) == results_dir
     assert results_dir.is_dir() and list(results_dir.iterdir()) == []
     mock_run.assert_called_once_with(tmp_path / "config.yaml", str(results_dir))
+
+
+def test_set_model_parameters_with_overrides(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "SimpleVAE", "device": "cpu", "iter_count_prob_estimation": 5})
+
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda", "iter_count_prob_estimation": 500,
+                                                         "not_a_parameter": 1})
+
+    assert read_model_overview(zip_path) == {"type": "SimpleVAE", "device": "cuda", "iter_count_prob_estimation": 500}
+    assert read_model_overview(tmp_path / "model.zip.orig")["iter_count_prob_estimation"] == 5
+
+
+def test_model_parameters():
+    base = dict(model_name="m", experiment_name="exp_0", immuneml_config="c.yaml", n_samples=1, root_output_dir="r")
+
+    assert SamplingConfig(**base).model_parameters == {}
+    assert SamplingConfig(**base, device="cuda").model_parameters == {"device": "cuda"}
+    assert SamplingConfig(**base, device="cuda", model_overrides={"iter_count_prob_estimation": 500}).model_parameters \
+           == {"device": "cuda", "iter_count_prob_estimation": 500}
+
+
+def test_run_sampling_sets_model_overrides(mocker):
+    config = SamplingConfig(model_name="VAE", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=0, root_output_dir="/tmp/root", compute_p_gens=True,
+                            model_overrides={"iter_count_prob_estimation": 500})
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_parameters = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
+    mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config", return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_parameters.assert_called_once_with(Path("model.zip"), {"iter_count_prob_estimation": 500})

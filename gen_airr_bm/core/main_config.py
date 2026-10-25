@@ -120,7 +120,8 @@ class MainConfig:
                                        n_samples=sampling["n_samples"],
                                        root_output_dir=self.output_dir,
                                        compute_p_gens=sampling.get("compute_p_gens", False),
-                                       device=sampling.get("device", None))
+                                       device=sampling.get("device", None),
+                                       model_overrides=sampling.get("model_overrides", None))
                     )
 
         if "postprocessing" in data:
