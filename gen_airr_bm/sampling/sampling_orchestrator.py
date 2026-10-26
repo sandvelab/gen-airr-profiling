@@ -1,4 +1,6 @@
 import os
+import shutil
+import zipfile
 from glob import glob
 from pathlib import Path
 
@@ -16,6 +18,12 @@ class SamplingOrchestrator:
     def run_sampling(sampling_config: SamplingConfig):
         print("Running sampling...")
         model_zip_path, dataset_name = SamplingOrchestrator.find_paths(sampling_config)
+        if SamplingOrchestrator.is_sampling_done(sampling_config, dataset_name):
+            print(f"Skipping sampling of {sampling_config.model_name} for {sampling_config.experiment_name}: "
+                  f"outputs already exist.")
+            return
+        if sampling_config.model_parameters:
+            SamplingOrchestrator.set_model_parameters(model_zip_path, sampling_config.model_parameters)
         immuneml_config_path = SamplingOrchestrator.prepare_immuneml_sampling_config(sampling_config, dataset_name,
                                                                                      model_zip_path)
         immuneml_results_path = SamplingOrchestrator.run_immuneml_sampling(sampling_config, dataset_name,
@@ -39,6 +47,66 @@ class SamplingOrchestrator:
         dataset_name = zip_path.parts[-5]
 
         return zip_path, dataset_name
+
+    @staticmethod
+    def get_output_paths(sampling_config: SamplingConfig, dataset_name: str) -> list:
+        """Returns the files a finished sampling run writes: the generated sequences (unless only p_gens are computed)
+        and the train and test p_gens (if computed)."""
+        experiment_n = SamplingOrchestrator.get_experiment_number(sampling_config)
+        root_dir = Path(sampling_config.root_output_dir)
+        file_name = f"{dataset_name}_{experiment_n}.tsv"
+        paths = []
+        if not sampling_config.p_gens_only:
+            paths.append(root_dir / "resampled_sequences_raw" / sampling_config.model_name / file_name)
+        if sampling_config.compute_p_gens:
+            paths.extend(root_dir / f"{split.value}_p_gens" / sampling_config.model_name / file_name
+                         for split in DatasetSplit.train_and_test())
+        return paths
+
+    @staticmethod
+    def is_sampling_done(sampling_config: SamplingConfig, dataset_name: str) -> bool:
+        """The outputs are only copied after immuneML finished, so a run with all of them in place is complete."""
+        return all(path.is_file() for path in SamplingOrchestrator.get_output_paths(sampling_config, dataset_name))
+
+    @staticmethod
+    def set_model_parameters(model_zip_path: Path, parameters: dict):
+        """Sets parameters in the model_overview.yaml of the trained model zip, since immuneML loads the model for
+        sampling with the parameters it was trained with and ApplyGenModel cannot change them, e.g. the device or the
+        number of importance samples for the VAE p_gens (iter_count_prob_estimation). Before the first change, the
+        original zip is kept as <name>.zip.orig next to it, which find_paths does not pick up. Parameters the model does
+        not have (e.g. device for PWM or SoNNia) are left out, since the model could not be loaded with them.
+        """
+        with zipfile.ZipFile(model_zip_path) as zip_file:
+            entries = [(info, zip_file.read(info.filename)) for info in zip_file.infolist()]
+
+        overview_index = next((i for i, (info, _) in enumerate(entries) if info.filename == "model_overview.yaml"),
+                              None)
+        if overview_index is None:
+            raise FileNotFoundError(f"{model_zip_path} has no model_overview.yaml, so its parameters cannot be set.")
+        overview_info, overview_content = entries[overview_index]
+        model_overview = yaml.safe_load(overview_content)
+
+        missing = [name for name in parameters if name not in model_overview]
+        if missing:
+            print(f"{model_overview.get('type')} in {model_zip_path} has no parameter(s) {missing}, leaving them out.")
+        changes = {name: value for name, value in parameters.items()
+                   if name in model_overview and model_overview[name] != value}
+        if not changes:
+            return
+
+        backup_path = model_zip_path.with_name(f"{model_zip_path.name}.orig")
+        if not backup_path.exists():
+            shutil.copy2(model_zip_path, backup_path)
+
+        model_overview.update(changes)
+        entries[overview_index] = (overview_info, yaml.safe_dump(model_overview, sort_keys=False).encode("utf-8"))
+
+        tmp_path = model_zip_path.with_name(f"{model_zip_path.name}.tmp")
+        with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for info, content in entries:
+                zip_file.writestr(info, content)
+        os.replace(tmp_path, model_zip_path)
+        print(f"Set {changes} in {model_zip_path} (original kept as {backup_path}).")
 
     @staticmethod
     def prepare_immuneml_sampling_config(sampling_config: SamplingConfig, dataset_name: str, model_zip_path: Path):
@@ -116,6 +184,11 @@ class SamplingOrchestrator:
         immuneml_results_dir = (f"{sampling_config.root_output_dir}/"
                                 f"{SamplingOrchestrator.get_sampling_dir_name(sampling_config)}/"
                                 f"{sampling_config.experiment_name}/{sampling_config.model_name}/{dataset_name}")
+        # Left over from an earlier run that did not finish (finished runs are skipped before). immuneML would write
+        # to a new timestamped directory instead of a non-empty one, and the outputs would then not be found here.
+        if os.path.isdir(immuneml_results_dir):
+            print(f"Removing the results of an unfinished earlier run in {immuneml_results_dir}.")
+            shutil.rmtree(immuneml_results_dir)
         os.makedirs(immuneml_results_dir, exist_ok=True)
         run_immuneml_command(immuneml_config_path, immuneml_results_dir)
 

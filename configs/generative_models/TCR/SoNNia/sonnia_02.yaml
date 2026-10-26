@@ -12,11 +12,11 @@ definitions:
     model:
       SoNNia:
         batch_size: 1000
-        epochs: 100
-        default_model_name: 'humanIGH'
+        epochs: 30
+        default_model_name: 'humanTRB'
         deep: False
         include_joint_genes: True
-        n_gen_seqs: 1000000
+        n_gen_seqs: 100000
         num_processes: 1
 
 instructions:
@@ -25,6 +25,6 @@ instructions:
     export_combined_dataset: True
     dataset: dataset
     method: model
-    gen_examples_count: 60000
+    gen_examples_count: 130000
     number_of_processes: 1
     training_percentage: 1

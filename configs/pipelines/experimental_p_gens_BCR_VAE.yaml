@@ -11,8 +11,12 @@ sampling:
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 0
     compute_p_gens: True
+    model_overrides:
+      iter_count_prob_estimation: 500
   - model_name: "VAE_kmer"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
     immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
     n_samples: 0
     compute_p_gens: True
+    model_overrides:
+      iter_count_prob_estimation: 500

@@ -11,8 +11,8 @@ definitions:
   ml_methods:
     model:
       SoNNia:
-        batch_size: 1000
-        epochs: 50
+        batch_size: 500
+        epochs: 30
         default_model_name: 'humanTRB'
         deep: False
         include_joint_genes: True

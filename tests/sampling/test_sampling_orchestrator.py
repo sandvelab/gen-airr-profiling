@@ -1,4 +1,5 @@
 import os
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -121,10 +122,12 @@ def test_run_sampling(mocker):
     )
     m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
     m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
 
     SamplingOrchestrator.run_sampling(config)
 
     m_find.assert_called_once_with(config)
+    m_set_device.assert_not_called()
     m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))
     m_run.assert_called_once_with(config, "datasetZ", Path("out.yaml"))
     m_copy.assert_called_once_with(config, "/tmp/res", "datasetZ")
@@ -254,3 +257,178 @@ def test_p_gens_only_writes_to_separate_dirs(tmp_path, mocker):
     assert Path(out_dir) == root_dir / "p_gen_runs" / config.experiment_name / config.model_name / "datasetA"
     mock_run.assert_called_once_with(cfg_path, out_dir)
     assert not (root_dir / "sampling").exists() and not (root_dir / "sampling_configs").exists()
+
+
+def write_model_zip(zip_path, model_overview):
+    zip_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(zip_path, "w") as zip_file:
+        zip_file.writestr("model_overview.yaml", yaml.safe_dump(model_overview, sort_keys=False))
+        zip_file.writestr("state_dict.pt", b"weights")
+
+
+def read_model_overview(zip_path):
+    with zipfile.ZipFile(zip_path) as zip_file:
+        return yaml.safe_load(zip_file.read("model_overview.yaml"))
+
+
+def test_set_model_parameters_keeps_original_zip(tmp_path):
+    zip_path = tmp_path / "trained_model_model" / "trained_model_model.zip"
+    write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cpu", "hidden_size": 64})
+
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
+
+    assert read_model_overview(zip_path) == {"type": "SakaLSTM", "device": "cuda", "hidden_size": 64}
+    with zipfile.ZipFile(zip_path) as zip_file:
+        assert zip_file.read("state_dict.pt") == b"weights"
+    backup_path = zip_path.with_name("trained_model_model.zip.orig")
+    assert read_model_overview(backup_path)["device"] == "cpu"
+    assert sorted(path.name for path in zip_path.parent.glob("*.zip")) == ["trained_model_model.zip"]
+
+
+def test_set_model_parameters_twice_keeps_first_backup(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cpu"})
+
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda:1"})
+
+    assert read_model_overview(zip_path)["device"] == "cuda:1"
+    assert read_model_overview(tmp_path / "model.zip.orig")["device"] == "cpu"
+
+
+def test_set_model_parameters_same_value_does_not_change_zip(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "SakaLSTM", "device": "cuda"})
+
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
+
+    assert not (tmp_path / "model.zip.orig").exists()
+
+
+def test_set_model_parameters_without_device_parameter(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "PWM", "locus": "beta"})
+
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda"})
+
+    assert read_model_overview(zip_path) == {"type": "PWM", "locus": "beta"}
+    assert not (tmp_path / "model.zip.orig").exists()
+
+
+def test_run_sampling_sets_device(mocker):
+    config = SamplingConfig(model_name="modelB", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=100, root_output_dir="/tmp/root", device="cuda")
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
+    m_prepare = mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config",
+                                    return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_device.assert_called_once_with(Path("model.zip"), {"device": "cuda"})
+    m_prepare.assert_called_once_with(config, "datasetZ", Path("model.zip"))
+
+
+def write_outputs(paths):
+    for path in paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("junction_aa\nCASSF\n")
+
+
+def test_get_output_paths(tmp_path):
+    root_dir = Path(tmp_path)
+    config = SamplingConfig(model_name="modelA", experiment_name="exp_3", immuneml_config="config.yaml",
+                            n_samples=50, root_output_dir=str(root_dir), compute_p_gens=True)
+
+    paths = SamplingOrchestrator.get_output_paths(config, "datasetA")
+
+    assert paths == [root_dir / "resampled_sequences_raw" / "modelA" / "datasetA_3.tsv",
+                     root_dir / "train_p_gens" / "modelA" / "datasetA_3.tsv",
+                     root_dir / "test_p_gens" / "modelA" / "datasetA_3.tsv"]
+
+
+def test_get_output_paths_p_gens_only_and_no_p_gens(tmp_path):
+    p_gens_only = SamplingConfig(model_name="modelA", experiment_name="exp_3", immuneml_config="config.yaml",
+                                 n_samples=0, root_output_dir=str(tmp_path), compute_p_gens=True)
+    no_p_gens = SamplingConfig(model_name="modelA", experiment_name="exp_3", immuneml_config="config.yaml",
+                               n_samples=50, root_output_dir=str(tmp_path))
+
+    assert [path.parent.parent.name for path in SamplingOrchestrator.get_output_paths(p_gens_only, "d")] == \
+           ["train_p_gens", "test_p_gens"]
+    assert [path.parent.parent.name for path in SamplingOrchestrator.get_output_paths(no_p_gens, "d")] == \
+           ["resampled_sequences_raw"]
+
+
+def test_is_sampling_done_needs_all_outputs(tmp_path):
+    config = make_sampling_config(tmp_path, compute_p_gens=True)
+    sequences_path, train_p_gens_path, test_p_gens_path = SamplingOrchestrator.get_output_paths(config, "datasetA")
+
+    write_outputs([sequences_path, train_p_gens_path])
+    assert not SamplingOrchestrator.is_sampling_done(config, "datasetA")
+
+    write_outputs([test_p_gens_path])
+    assert SamplingOrchestrator.is_sampling_done(config, "datasetA")
+
+
+def test_run_sampling_skips_finished_run(tmp_path, mocker):
+    config = make_sampling_config(tmp_path, device="cuda")
+    write_outputs(SamplingOrchestrator.get_output_paths(config, "datasetZ"))
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_device = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
+    m_run = mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_device.assert_not_called()
+    m_run.assert_not_called()
+
+
+def test_run_immuneml_sampling_removes_unfinished_results(tmp_path, mocker):
+    config = make_sampling_config(tmp_path)
+    mock_run = mocker.patch("gen_airr_bm.sampling.sampling_orchestrator.run_immuneml_command")
+    results_dir = Path(config.root_output_dir) / "sampling" / config.experiment_name / config.model_name / "datasetB"
+    (results_dir / "gen_model").mkdir(parents=True)
+    (results_dir / "log.txt").write_text("unfinished")
+
+    out_dir = SamplingOrchestrator.run_immuneml_sampling(config, "datasetB", tmp_path / "config.yaml")
+
+    assert Path(out_dir) == results_dir
+    assert results_dir.is_dir() and list(results_dir.iterdir()) == []
+    mock_run.assert_called_once_with(tmp_path / "config.yaml", str(results_dir))
+
+
+def test_set_model_parameters_with_overrides(tmp_path):
+    zip_path = tmp_path / "model.zip"
+    write_model_zip(zip_path, {"type": "SimpleVAE", "device": "cpu", "iter_count_prob_estimation": 5})
+
+    SamplingOrchestrator.set_model_parameters(zip_path, {"device": "cuda", "iter_count_prob_estimation": 500,
+                                                         "not_a_parameter": 1})
+
+    assert read_model_overview(zip_path) == {"type": "SimpleVAE", "device": "cuda", "iter_count_prob_estimation": 500}
+    assert read_model_overview(tmp_path / "model.zip.orig")["iter_count_prob_estimation"] == 5
+
+
+def test_model_parameters():
+    base = dict(model_name="m", experiment_name="exp_0", immuneml_config="c.yaml", n_samples=1, root_output_dir="r")
+
+    assert SamplingConfig(**base).model_parameters == {}
+    assert SamplingConfig(**base, device="cuda").model_parameters == {"device": "cuda"}
+    assert SamplingConfig(**base, device="cuda", model_overrides={"iter_count_prob_estimation": 500}).model_parameters \
+           == {"device": "cuda", "iter_count_prob_estimation": 500}
+
+
+def test_run_sampling_sets_model_overrides(mocker):
+    config = SamplingConfig(model_name="VAE", experiment_name="exp_7", immuneml_config="config.yaml",
+                            n_samples=0, root_output_dir="/tmp/root", compute_p_gens=True,
+                            model_overrides={"iter_count_prob_estimation": 500})
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_parameters = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
+    mocker.patch.object(SamplingOrchestrator, "prepare_immuneml_sampling_config", return_value=Path("out.yaml"))
+    mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling", return_value="/tmp/res")
+    mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_parameters.assert_called_once_with(Path("model.zip"), {"iter_count_prob_estimation": 500})
