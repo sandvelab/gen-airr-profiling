@@ -1,6 +1,6 @@
 import os
 import textwrap
-from collections import Counter, defaultdict
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -9,9 +9,17 @@ from scipy.spatial import distance
 from scipy.stats import spearmanr, pearsonr
 
 from gen_airr_bm.analysis.analyse_innovation_umi import symlog_transform
+from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
-from gen_airr_bm.utils.plotting_utils import plot_grouped_avg_scores
+from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, plot_grouped_avg_scores,
+                                             plot_repertoire_statistics)
+from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
+                                               run_repertoire_statistics, summarise_scores_by_reference)
+
+METRIC_NAME = "clone_frequency"
+SCORE_COLUMNS = ["metric", "model", "reference", "dataset", "subset", "jsd"]
+REFERENCE_PREFIX = "reference_"
 
 
 def run_clone_frequencies_analysis(analysis_config: AnalysisConfig) -> None:
@@ -30,14 +38,18 @@ def run_clone_frequencies_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_dir: str) -> None:
-    """ Collects clone frequency data and generates plots.
+    """ Collects clone frequency data and generates plots. The JSD of every generated subset is averaged within its
+    repertoire before the models are summarised over repertoires (see statistics_utils). Against the test sequences,
+    the models are also compared at the repertoire level: with the train vs. test reference, with each other, and in
+    the contrasts given in the config. These comparisons are descriptive, or include confidence intervals and tests if
+    statistical_tests is set, which requires a donor_pattern and one repertoire per donor.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         output_dir (str): Directory to save the generated plots.
     Returns:
         None
     """
-    jsd_scores_by_ref = defaultdict(lambda: defaultdict(list))
+    scores = []
 
     for model_name in analysis_config.model_names:
         for reference in analysis_config.reference_data:
@@ -47,8 +59,11 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
             os.makedirs(model_output_dir, exist_ok=True)
 
             jsd_scores = plot_frequencies_by_dataset(frequencies_dfs, model_output_dir, reference, model_name)
-            jsd_scores_by_ref[reference][model_name].extend(jsd_scores)
-            jsd_scores_avg = np.mean(jsd_scores)
+            for subset_name, jsd in jsd_scores.items():
+                repertoire, subset = split_subset_name(subset_name)
+                scores.append({"metric": METRIC_NAME, "model": model_name, "reference": reference,
+                               "dataset": repertoire, "subset": subset, "jsd": jsd})
+            jsd_scores_avg = np.mean(list(jsd_scores.values()))
 
             plot_frequencies_combined(frequencies_dfs, model_output_dir, reference, model_name, jsd_scores_avg)
 
@@ -56,27 +71,84 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
     ref_output_dir = os.path.join(output_dir, "reference_comparison")
     os.makedirs(ref_output_dir, exist_ok=True)
     ref_jsd_scores = plot_frequencies_by_dataset(ref_frequencies, ref_output_dir, "train", "test")
-    reference_score = np.mean(ref_jsd_scores) if ref_jsd_scores else None
+    reference_scores = pd.DataFrame([{"repertoire": name.removeprefix(REFERENCE_PREFIX), "score": jsd}
+                                     for name, jsd in sorted(ref_jsd_scores.items())],
+                                    columns=["repertoire", "score"])
+    reference_score = float(reference_scores["score"].mean()) if len(reference_scores) else None
     plot_frequencies_combined(ref_frequencies, ref_output_dir, "train", "test", reference_score,
                               filter_combined_rep=False)
 
-    mean_scores_by_ref = {}
-    std_scores_by_ref = {}
+    scores_df = pd.DataFrame(scores, columns=SCORE_COLUMNS)
+    scores_df.to_csv(f"{output_dir}/clone_frequency_jsd_scores.tsv", sep="\t", index=False)
+    if scores_df.empty:
+        return
+    if analysis_config.statistical_tests:
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "jsd", analysis_config.donor_pattern),
+                                       analysis_config.donor_pattern)
 
-    for ref_type, model_scores in jsd_scores_by_ref.items():
-        mean_scores_by_ref[ref_type] = {model: np.mean(scores) for model, scores in model_scores.items()}
-        std_scores_by_ref[ref_type] = {model: np.std(scores) for model, scores in model_scores.items()}
+    summarize_and_plot_all(analysis_config, scores_df, reference_score)
+    run_clone_frequency_statistics(analysis_config, scores_df, reference_scores)
 
-    if mean_scores_by_ref:
-        plot_grouped_avg_scores(
-            analysis_config=analysis_config,
-            mean_scores_by_ref=mean_scores_by_ref,
-            std_scores_by_ref=std_scores_by_ref,
-            file_name="clone_frequency_jsd_comparison",
-            distribution_type="clone frequency",
-            scoring_method="JSD",
-            reference_score=reference_score
-        )
+
+def split_subset_name(name: str) -> tuple[str, int]:
+    """ Splits the name of a generated subset into its repertoire and subset index, e.g. ("rep_1", 3) for rep_1_3. """
+    repertoire, subset = name.rsplit("_", 1)
+    return repertoire, int(subset)
+
+
+def summarize_and_plot_all(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,
+                           reference_score: float | None) -> None:
+    """ Average the JSDs over the generated subsets of each repertoire, summarise them over repertoires and plot the
+    grouped averages, with one dot per repertoire.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores_df (pd.DataFrame): One row per model, reference, dataset and generated subset, with the JSD in jsd.
+        reference_score (float | None): Mean train vs. test JSD over repertoires, plotted as a reference line.
+    Returns:
+        None
+    """
+    mean_scores, std_scores, repertoire_scores, error_bar_caption = \
+        summarise_scores_by_reference(scores_df, METRIC_NAME, analysis_config.donor_pattern)
+
+    plot_grouped_avg_scores(
+        analysis_config=analysis_config,
+        mean_scores_by_ref=mean_scores,
+        std_scores_by_ref=std_scores,
+        file_name="clone_frequency_jsd_comparison",
+        distribution_type="clone frequency",
+        scoring_method="JSD",
+        reference_score=reference_score,
+        error_bar_caption=error_bar_caption,
+        repertoire_scores_by_ref=repertoire_scores
+    )
+
+
+def run_clone_frequency_statistics(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,
+                                   reference_scores: pd.DataFrame) -> None:
+    """ Runs the repertoire-level comparisons against the test sequences and plots the comparisons with the train vs.
+    test reference and the contrasts from the config. The train sequences are left out, since the models were fitted on
+    them.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores_df (pd.DataFrame): One row per model, reference, dataset and generated subset, with the JSD in jsd.
+        reference_scores (pd.DataFrame): Train vs. test scores per repertoire, with columns repertoire and score.
+    Returns:
+        None
+    """
+    if DatasetSplit.TEST.value not in analysis_config.reference_data:
+        print("Skipping clone frequency statistics, since they are computed against the test sequences.")
+        return
+
+    test_scores = scores_df[scores_df["reference"] == DatasetSplit.TEST.value]
+    output_prefix = f"{analysis_config.analysis_output_dir}/statistics/{METRIC_NAME}"
+    repertoire_scores = aggregate_repertoire_scores(test_scores, "jsd", analysis_config.donor_pattern)
+    results = run_repertoire_statistics(repertoire_scores, analysis_config.model_names, output_prefix,
+                                        analysis_config.statistical_tests,
+                                        reference_scores if len(reference_scores) else None,
+                                        analysis_config.contrasts, analysis_config.donor_pattern)
+    plot_repertoire_statistics(results, output_prefix, "clone frequency",
+                               get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                      analysis_config.collection))
 
 
 def collect_clone_frequencies_models(analysis_config: AnalysisConfig, model_name: str, reference: str) -> dict:
@@ -119,7 +191,7 @@ def collect_clone_frequencies_reference(analysis_config: AnalysisConfig) -> dict
         test_seqs = get_sequences_from_file(test_file)
 
         df = get_frequencies_df(train_seqs, test_seqs, "train", "test")
-        dfs[f"reference_{os.path.basename(train_file).split('.')[0]}"] = df
+        dfs[f"{REFERENCE_PREFIX}{os.path.basename(train_file).split('.')[0]}"] = df
 
     return dfs
 
@@ -243,7 +315,7 @@ def create_scatter_plot(combined_df: pd.DataFrame, name1: str, name2: str, title
     return fig
 
 
-def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, name2: str) -> list:
+def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, name2: str) -> dict:
     """ Plots the clone frequencies for the generated and reference sequences.
     Args:
         frequencies (dict): Dictionary of DataFrames containing clone frequencies.
@@ -251,9 +323,9 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
         name1 (str): The reference dataset label.
         name2 (str): The generative model label.
     Returns:
-        list: List of JSD scores for all datasets (excluding _all)
+        dict: The JSD score of every dataset (excluding _all), keyed by dataset name.
     """
-    jsd_scores = []
+    jsd_scores = {}
 
     for dataset_name, freq_df in frequencies.items():
         df_copy = freq_df.copy()
@@ -264,7 +336,7 @@ def plot_frequencies_by_dataset(frequencies: dict, output_dir: str, name1: str, 
         jsd = distance.jensenshannon(df_copy[f"freq_{name1}"], df_copy[f"freq_{name2}"], base=2) ** 2
 
         if '_all' not in dataset_name:
-            jsd_scores.append(jsd)
+            jsd_scores[dataset_name] = jsd
 
         rho, p = spearmanr(df_copy[f"pseudo_freq_{name1}"], df_copy[f"pseudo_freq_{name2}"])
         title_text = f"Clone Frequencies: {name2.upper()} vs {name1.upper()} ({dataset_name}), ρ = {rho:.3f}"
