@@ -77,3 +77,5 @@ analyses:
       subfolder_name: "all models"
       receptor_type: "TCR"
       collection: "D"
+      statistical_tests: True
+      donor_pattern: "^(P\\d+)_"

@@ -188,3 +188,5 @@ analyses:
       reference_data: [ "train", "test" ]
       subfolder_name: "all models"
       receptor_type: "TCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"

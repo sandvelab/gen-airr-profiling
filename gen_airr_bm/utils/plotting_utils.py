@@ -348,24 +348,25 @@ def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, titl
     # The statistics are written in a column to the right of the plot, so they never overlap the intervals
     for label, annotation in zip(labels, annotations):
         fig.add_annotation(text=annotation, x=1.02, xref="paper", y=label, yref="y", xanchor="left",
-                           showarrow=False, font=dict(size=13))
-    height = max(400, 60 * len(plotting_df) + 260)
-    margin = dict(t=100, r=320, b=150)
+                           showarrow=False, font=dict(size=17))
+    height = max(450, 70 * len(plotting_df) + 300)
+    margin = dict(t=110, r=420, b=170)
     # The footnote and the legend are placed a fixed distance in pixels below the x-axis title, since a fraction of the
     # plot height would overlap the title in plots with few comparisons
-    below_axis_title = -80 / (height - margin["t"] - margin["b"])
+    below_axis_title = -95 / (height - margin["t"] - margin["b"])
     if statistical_tests:
         correction = title_case(str(comparisons_df["correction"].iloc[0]))
         fig.add_annotation(text=wrap_title(f"Error bars: unadjusted 95% CI across repertoires. p<sub>adj</sub>: "
                                            f"{correction}-corrected across {correction_scope}.", width=110),
                            align="left", x=0, xref="paper", y=below_axis_title, yref="paper", xanchor="left",
-                           yanchor="top", showarrow=False, font=dict(size=13))
-    fig.update_layout(title={'text': wrap_title(title, width=80), 'font': {'size': 18}},
-                      xaxis=dict(title=dict(text=x_label, font=dict(size=16)), tickfont=dict(size=14)),
-                      yaxis=dict(tickfont=dict(size=14), categoryorder="array", categoryarray=labels),
+                           yanchor="top", showarrow=False, font=dict(size=16))
+    fig.update_layout(title={'text': wrap_title(title, width=80), 'font': {'size': 22}},
+                      xaxis=dict(title=dict(text=x_label, font=dict(size=20)), tickfont=dict(size=18)),
+                      yaxis=dict(tickfont=dict(size=18), categoryorder="array", categoryarray=labels),
                       template="plotly_white", showlegend=not statistical_tests, margin=margin,
-                      legend=dict(orientation="h", x=0, xanchor="left", y=below_axis_title, yanchor="top"),
-                      height=height, width=1300)
+                      legend=dict(orientation="h", x=0, xanchor="left", y=below_axis_title, yanchor="top",
+                                  font=dict(size=16)),
+                      height=height, width=1550)
     fig.write_image(output_path + ".png", scale=2)
     print(f"Plot saved as png at: {output_path}.png")
 

@@ -1,10 +1,12 @@
+import os
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from gen_airr_bm.analysis.analyse_p_gen import collect_p_gens, compute_auc, summarize_p_gens, run_p_gen_analysis, \
     compute_density, get_density_grid, get_grid_shape, get_family_colors, plot_p_gen_distributions, \
-    plot_per_repertoire_scores
+    plot_per_repertoire_scores, run_p_gen_statistics
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
@@ -101,7 +103,7 @@ def test_plot_p_gen_distributions_grid(analysis_config, mocker):
 
     fig = m_write.call_args.args[0]
     # 7 panels wrap into 2 rows of at most 5, with a train and a test curve per panel plus 2 legend traces
-    assert fig.layout.height == 100 + 450 * 2
+    assert fig.layout.height == 150 + 480 * 2
     assert len(fig.data) == 7 * 2 + 2
     # all models are of different families, so every panel has its own color
     assert len({trace.line.color for trace in fig.data if trace.showlegend is False}) == 7
@@ -152,3 +154,53 @@ def test_run_p_gen_analysis(analysis_config, mocker):
     assert "membership_auc" in summary_df.columns
     m_dist.assert_called_once()
     assert [call.args[1] for call in m_scores.call_args_list] == ["median_log10_p_gen_gap", "membership_auc"]
+
+
+def make_summary_df(scores: dict) -> pd.DataFrame:
+    """ Scores as {(model, repertoire): (gap, auc)}, in the format of summarize_p_gens. """
+    return pd.DataFrame([{"model": model, "file": repertoire, "median_log10_p_gen_gap": gap, "membership_auc": auc}
+                         for (model, repertoire), (gap, auc) in scores.items()])
+
+
+@pytest.mark.parametrize("statistical_tests", [False, True])
+def test_run_p_gen_statistics(analysis_config, statistical_tests):
+    analysis_config.statistical_tests = statistical_tests
+    analysis_config.donor_pattern = "^(rep_\\d+)$"
+    analysis_config.contrasts = [["modelB", "modelA"]]
+    summary_df = make_summary_df({
+        ("modelA", "rep_1"): (0.5, 0.60), ("modelA", "rep_2"): (0.7, 0.62), ("modelA", "rep_3"): (np.inf, 0.65),
+        ("modelB", "rep_1"): (0.1, 0.50), ("modelB", "rep_2"): (0.0, 0.52), ("modelB", "rep_3"): (0.2, 0.51),
+    })
+
+    run_p_gen_statistics(analysis_config, summary_df)
+
+    prefix = f"{analysis_config.analysis_output_dir}/statistics/p_gen"
+    # Both scores are compared with their value if train and test are scored alike
+    gap_vs_null = pd.read_csv(f"{prefix}_median_log10_p_gen_gap_vs_null.tsv", sep="\t", dtype={"second": str})
+    assert gap_vs_null[["first", "second"]].values.tolist() == [["modelA", "0"], ["modelB", "0"]]
+    # The infinite gap is left out
+    assert gap_vs_null["n_repertoires"].tolist() == [2, 3]
+    assert gap_vs_null["mean_difference"].tolist() == pytest.approx([0.6, 0.1])
+    auc_vs_null = pd.read_csv(f"{prefix}_membership_auc_vs_null.tsv", sep="\t", dtype={"second": str})
+    assert auc_vs_null[["first", "second", "n_first_higher"]].values.tolist() == [["modelA", "0.5", 3],
+                                                                                  ["modelB", "0.5", 2]]
+    assert ("p_adjusted" in auc_vs_null.columns) == statistical_tests
+    for score in ["median_log10_p_gen_gap", "membership_auc"]:
+        assert os.path.exists(f"{prefix}_{score}_vs_null.png")
+        assert os.path.exists(f"{prefix}_{score}_summary.tsv")
+    # Only the AUC is compared between models, since the gap is on a different scale for each model type
+    contrasts = pd.read_csv(f"{prefix}_membership_auc_contrasts.tsv", sep="\t")
+    assert contrasts[["first", "second", "n_repertoires"]].values.tolist() == [["modelB", "modelA", 3]]
+    assert not os.path.exists(f"{prefix}_median_log10_p_gen_gap_contrasts.tsv")
+    assert not os.path.exists(f"{prefix}_median_log10_p_gen_gap_all_pairs.tsv")
+
+
+def test_run_p_gen_analysis_with_tests_requires_one_repertoire_per_donor(analysis_config, mocker):
+    analysis_config.statistical_tests = True
+    analysis_config.donor_pattern = "^(rep)_"
+    mocker.patch("gen_airr_bm.analysis.analyse_p_gen.summarize_p_gens",
+                 return_value=make_summary_df({("modelA", "rep_1"): (0.5, 0.6), ("modelA", "rep_2"): (0.4, 0.6)}))
+    mocker.patch("gen_airr_bm.analysis.analyse_p_gen.collect_p_gens")
+
+    with pytest.raises(ValueError, match="one repertoire per donor"):
+        run_p_gen_analysis(analysis_config)
