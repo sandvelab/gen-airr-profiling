@@ -47,7 +47,8 @@ def test_run_precision_recall_analysis(mocker, sample_analysis_config):
     mock_compute.assert_called_once()
 
 
-def test_compute_and_plot_precision_recall_scores(mocker, sample_analysis_config):
+def test_compute_and_plot_precision_recall_scores(mocker, tmp_path, sample_analysis_config):
+    sample_analysis_config.analysis_output_dir = str(tmp_path)
     # Mocks for low-level helpers and plotting
     mock_collect = mocker.patch(
         "gen_airr_bm.analysis.analyse_precision_recall.collect_model_scores", autospec=True
