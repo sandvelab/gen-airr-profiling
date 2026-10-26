@@ -1,7 +1,12 @@
 import os
 import re
 from collections import defaultdict
+
+import numpy as np
+
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+
+SUBSET_INDEX_PATTERN = re.compile(r"_(\d+)\.tsv$")
 
 
 def get_generated_sequences_dir_name(analysis_config: AnalysisConfig, split: bool = True) -> str:
@@ -68,3 +73,9 @@ def get_reference_files(analysis_config: AnalysisConfig):
         comparison_files_dir.append((os.path.join(train_dir, file), os.path.join(test_dir, base_name + ".tsv")))
 
     return comparison_files_dir
+
+
+def get_subset_index(gen_file: str) -> int | float:
+    """ Returns the index of a generated subset from its file name, e.g. 3 for rep_1_3.tsv, or nan if there is none. """
+    match = SUBSET_INDEX_PATTERN.search(os.path.basename(gen_file))
+    return int(match.group(1)) if match else np.nan

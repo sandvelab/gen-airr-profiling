@@ -1,3 +1,6 @@
+import os
+
+import numpy as np
 import pytest
 import pandas as pd
 
@@ -9,6 +12,8 @@ from gen_airr_bm.analysis.analyse_precision_recall import (
     get_precision_recall_scores,
     get_precision_recall_reference,
     compute_compairr_overlap_ratio,
+    plot_precision_recall_scores,
+    run_precision_recall_statistics,
     PrecisionRecallScores,
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
@@ -112,6 +117,10 @@ def test_collect_model_scores(mocker, sample_analysis_config):
     collect_model_scores(sample_analysis_config, "modelA", "test", "/tmp/compairr_out", storage)
     assert storage.mean_precision["ds1"]["modelA"] == 0.9
     assert storage.std_recall["ds2"]["modelA"] == 0.0  # Only one value, std=0
+    # One row per metric, repertoire and generated subset, with the subset index from the file name
+    assert sorted((row["metric"], row["dataset"], row["subset"], row["score"]) for row in storage.scores) == [
+        ("precision", "ds1", 0, 0.9), ("precision", "ds2", 0, 0.9), ("recall", "ds1", 0, 0.8),
+        ("recall", "ds2", 0, 0.8)]
 
 
 def test_add_upper_reference(mocker, sample_analysis_config):
@@ -163,3 +172,64 @@ def test_compute_compairr_overlap_ratio(mocker, tmp_path, sample_analysis_config
     )
     assert ratio == pytest.approx(2 / 3, 0.01)
 
+
+def make_scores_df(scores: dict) -> pd.DataFrame:
+    """ Scores as {(metric, repertoire, model): [score per subset]}, in the format of the precision recall scores. """
+    return pd.DataFrame([{"metric": metric, "model": model, "reference": "test", "dataset": repertoire,
+                          "subset": subset, "score": score}
+                         for (metric, repertoire, model), subset_scores in scores.items()
+                         for subset, score in enumerate(subset_scores)])
+
+
+def test_plot_precision_recall_scores_recall_over_repertoires(mocker, sample_analysis_config):
+    mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_grouped_bar_precision_recall")
+    mock_plot_avg = mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.plot_avg_innovation_scores")
+    scores_df = make_scores_df({("recall", "ds1", "modelA"): [0.1, 0.3], ("recall", "ds2", "modelA"): [0.5, 0.7],
+                                ("precision", "ds1", "modelA"): [0.9, 0.9]})
+
+    plot_precision_recall_scores(sample_analysis_config, PrecisionRecallScores(), "test", scores_df)
+
+    args, kwargs = mock_plot_avg.call_args
+    mean_scores, std_scores = args[1], args[2]
+    # Repertoire means 0.2 and 0.6: the error bar is their SD, not the mean of the within-repertoire SDs
+    assert mean_scores["modelA"] == pytest.approx(0.4)
+    assert std_scores["modelA"] == pytest.approx(np.std([0.2, 0.6], ddof=1))
+    assert kwargs["repertoire_scores"]["modelA"] == [("ds1", pytest.approx(0.2)), ("ds2", pytest.approx(0.6))]
+    assert kwargs["error_bar_caption"].startswith("Error bars: SD across repertoires (n=2)")
+
+
+@pytest.mark.parametrize("statistical_tests", [False, True])
+def test_run_precision_recall_statistics(tmp_path, sample_analysis_config, statistical_tests):
+    sample_analysis_config.analysis_output_dir = str(tmp_path)
+    sample_analysis_config.statistical_tests = statistical_tests
+    sample_analysis_config.donor_pattern = "^(ds\\d+)$"
+    sample_analysis_config.contrasts = [["modelB", "modelA"]]
+    scores_df = make_scores_df({(metric, f"ds{i}", model): [base + 0.01 * i, base + 0.02 * i]
+                                for metric in ["precision", "recall"] for i in range(1, 4)
+                                for model, base in [("modelA", 0.2), ("modelB", 0.3)]})
+
+    run_precision_recall_statistics(sample_analysis_config, scores_df)
+
+    for metric in ["precision", "recall"]:
+        prefix = f"{tmp_path}/statistics/{metric}"
+        contrasts = pd.read_csv(f"{prefix}_contrasts.tsv", sep="\t")
+        assert contrasts[["first", "second", "n_repertoires"]].values.tolist() == [["modelB", "modelA", 3]]
+        assert ("p_adjusted" in contrasts.columns) == statistical_tests
+        assert os.path.exists(f"{prefix}_contrasts.png")
+        # There is no train vs. test reference to compare with
+        assert not os.path.exists(f"{prefix}_vs_train_test.tsv")
+
+
+def test_compute_and_plot_with_tests_requires_one_repertoire_per_donor(mocker, tmp_path, sample_analysis_config):
+    sample_analysis_config.analysis_output_dir = str(tmp_path)
+    sample_analysis_config.statistical_tests = True
+    sample_analysis_config.donor_pattern = "^(ds)"
+
+    def collect(analysis_config, model, test_reference, compairr_output_dir, scores):
+        scores.scores.extend(make_scores_df({("recall", f"ds{i}", model): [0.5] for i in range(1, 3)})
+                             .to_dict("records"))
+
+    mocker.patch("gen_airr_bm.analysis.analyse_precision_recall.collect_model_scores", side_effect=collect)
+
+    with pytest.raises(ValueError, match="one repertoire per donor"):
+        compute_and_plot_precision_recall_scores(sample_analysis_config, "fake_compairr_out_dir")

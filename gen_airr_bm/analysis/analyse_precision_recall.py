@@ -5,10 +5,15 @@ import pandas as pd
 from collections import defaultdict
 from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_subset_index
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
-from gen_airr_bm.utils.plotting_utils import plot_avg_scores, plot_grouped_bar_precision_recall, \
-    plot_avg_innovation_scores
+from gen_airr_bm.utils.plotting_utils import plot_grouped_bar_precision_recall, plot_avg_innovation_scores, \
+    get_collection_specification_for_title, plot_repertoire_statistics, title_case
+from gen_airr_bm.utils.statistics_utils import aggregate_repertoire_scores, check_one_repertoire_per_donor, \
+    run_repertoire_statistics, summarise_scores_by_reference
+
+METRICS = ["precision", "recall"]
+SCORE_COLUMNS = ["metric", "model", "reference", "dataset", "subset", "score"]
 
 
 @dataclass
@@ -20,6 +25,7 @@ class PrecisionRecallScores:
     std_recall: dict = field(default_factory=lambda: defaultdict(dict))
     precision_all: dict = field(default_factory=lambda: defaultdict(dict))
     recall_all: dict = field(default_factory=lambda: defaultdict(dict))
+    scores: list = field(default_factory=list)
 
 
 def run_precision_recall_analysis(analysis_config: AnalysisConfig) -> None:
@@ -41,7 +47,11 @@ def run_precision_recall_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def compute_and_plot_precision_recall_scores(analysis_config: AnalysisConfig, compairr_output_dir: str) -> None:
-    """ Compute precision and recall scores and plot them.
+    """ Compute precision and recall scores and plot them. The scores of every generated subset are averaged within its
+    repertoire before the models are summarised over repertoires (see statistics_utils). The models are also compared
+    at the repertoire level: with each other and in the contrasts given in the config. These comparisons are
+    descriptive, or include confidence intervals and tests if statistical_tests is set, which requires a donor_pattern
+    and one repertoire per donor.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -61,7 +71,14 @@ def compute_and_plot_precision_recall_scores(analysis_config: AnalysisConfig, co
     for model in analysis_config.model_names:
         collect_model_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
 
-    plot_precision_recall_scores(analysis_config, scores, test_reference)
+    scores_df = pd.DataFrame(scores.scores, columns=SCORE_COLUMNS)
+    scores_df.to_csv(f"{analysis_config.analysis_output_dir}/precision_recall_scores.tsv", sep="\t", index=False)
+    if analysis_config.statistical_tests:
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "score", analysis_config.donor_pattern),
+                                       analysis_config.donor_pattern)
+
+    plot_precision_recall_scores(analysis_config, scores, test_reference, scores_df)
+    run_precision_recall_statistics(analysis_config, scores_df)
 
 
 def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_reference: str, compairr_output_dir: str,
@@ -94,6 +111,11 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
 
         scores.precision_all[dataset_name][model] = precision_scores
         scores.recall_all[dataset_name][model] = recall_scores
+
+        for gen_file, precision, recall in zip(gen_files, precision_scores, recall_scores):
+            for metric, score in [("precision", precision), ("recall", recall)]:
+                scores.scores.append({"metric": metric, "model": model, "reference": test_reference,
+                                      "dataset": dataset_name, "subset": get_subset_index(gen_file), "score": score})
 
 
 def add_upper_reference(analysis_config: AnalysisConfig, train_reference: str, test_reference: str,
@@ -199,12 +221,13 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
 
 #TODO: Refactor recall plotting hack
 def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: PrecisionRecallScores,
-                                 test_reference: str) -> None:
-    """ Plot precision and recall scores for each dataset and model.
+                                 test_reference: str, scores_df: pd.DataFrame) -> None:
+    """ Plot precision and recall scores for each dataset and model, and the recall of each model over repertoires.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         scores (PrecisionRecallScores): Storage class for precision and recall scores.
         test_reference (str): Reference dataset for testing.
+        scores_df (pd.DataFrame): One row per metric, model, dataset and generated subset, with the score in score.
     Returns:
         None
     """
@@ -223,35 +246,36 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
                                       analysis_config.analysis_output_dir, test_reference,
                                       analysis_config.receptor_type, analysis_config.allowed_mismatches)
 
-    mean_recall, std_recall =collapse_mean_std_across_datasets(scores.mean_recall, scores.std_recall)
+    mean_recall, std_recall, repertoire_recall, error_bar_caption = summarise_scores_by_reference(
+        scores_df, "recall", analysis_config.donor_pattern, score_column="score")
+    if test_reference not in mean_recall:
+        return
 
-    plot_avg_innovation_scores(analysis_config, mean_recall, std_recall,
+    plot_avg_innovation_scores(analysis_config, mean_recall[test_reference], std_recall[test_reference],
                                analysis_config.analysis_output_dir, "recall",
                                f"recall_{analysis_config.receptor_type}", "recall",
-                               scoring_method="recall")
+                               scoring_method="recall", error_bar_caption=error_bar_caption,
+                               repertoire_scores=repertoire_recall[test_reference])
 
 
-def collapse_mean_std_across_datasets(mean_dict, std_dict):
-    """
-    mean_dict: {dataset: {model: mean_value}}
-    std_dict:  {dataset: {model: std_value}}
-
+def run_precision_recall_statistics(analysis_config: AnalysisConfig, scores_df: pd.DataFrame) -> None:
+    """ Runs the repertoire-level comparisons of the precision and recall against the test sequences and plots the
+    contrasts from the config. There is no train vs. test reference, since the upper reference is no longer computed.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores_df (pd.DataFrame): One row per metric, model, dataset and generated subset, with the score in score.
     Returns:
-        final_mean: {model: float}
-        final_std:  {model: float}
+        None
     """
-
-    # Collect values across datasets
-    mean_values = defaultdict(list)
-    std_values = defaultdict(list)
-
-    for dataset in mean_dict:
-        for model in mean_dict[dataset]:
-            mean_values[model].append(mean_dict[dataset][model])
-            std_values[model].append(std_dict[dataset][model])
-
-    # Compute final aggregated mean + std
-    final_mean = {model: float(np.mean(vals)) for model, vals in mean_values.items()}
-    final_std  = {model: float(np.mean(vals)) for model, vals in std_values.items()}
-
-    return final_mean, final_std
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
+    for metric in METRICS:
+        output_prefix = f"{analysis_config.analysis_output_dir}/statistics/{metric}"
+        repertoire_scores = aggregate_repertoire_scores(scores_df[scores_df["metric"] == metric], "score",
+                                                        analysis_config.donor_pattern)
+        results = run_repertoire_statistics(repertoire_scores, analysis_config.model_names, output_prefix,
+                                            analysis_config.statistical_tests, None, analysis_config.contrasts,
+                                            analysis_config.donor_pattern)
+        plot_repertoire_statistics(results, output_prefix, metric, collection_specification,
+                                   score_description=f"{title_case(metric)} on Test",
+                                   x_label=f"Difference in {title_case(metric)}")

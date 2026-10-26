@@ -1,5 +1,4 @@
 import os
-import re
 
 import numpy as np
 import pandas as pd
@@ -8,14 +7,12 @@ import plotly.graph_objects as go
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
-from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files, get_subset_index
 from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, get_repertoire_dot_traces,
                                              plot_repertoire_statistics)
 from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
                                                describe_error_bars, run_repertoire_statistics,
                                                summarise_repertoire_scores)
-
-SUBSET_INDEX_PATTERN = re.compile(r"_(\d+)\.tsv$")
 
 
 def run_memorization_analysis(analysis_config: AnalysisConfig) -> None:
@@ -86,12 +83,6 @@ def get_model_memorization_scores(analysis_config: AnalysisConfig, output_dir: s
     model_memorization_scores_df.to_csv(f"{output_dir}/memorization_scores.tsv", sep="\t", index=False, header=True)
 
     return model_memorization_scores_df
-
-
-def get_subset_index(gen_file: str) -> int | float:
-    """ Returns the index of a generated subset from its file name, e.g. 3 for rep_1_3.tsv, or nan if there is none. """
-    match = SUBSET_INDEX_PATTERN.search(os.path.basename(gen_file))
-    return int(match.group(1)) if match else np.nan
 
 
 def get_reference_memorization_scores(analysis_config: AnalysisConfig, output_dir: str) -> pd.DataFrame:

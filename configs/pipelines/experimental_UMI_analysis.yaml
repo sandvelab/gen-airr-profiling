@@ -55,6 +55,8 @@ analyses:
       deduplicate: False
       subfolder_name: "all models with distance 0"
       receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
     - name: "precision_recall"
       model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
@@ -65,6 +67,8 @@ analyses:
       deduplicate: False
       subfolder_name: "all models with distance 1"
       receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
     - name: "diversity"
       model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
@@ -136,6 +140,8 @@ analyses:
       indels: False
       subfolder_name: "all models excluding train"
       receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
     - name: "gene_usage"
       model_names: [ "VAE_kmer", "SoNNia_kmer", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"

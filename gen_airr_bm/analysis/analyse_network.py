@@ -1,5 +1,4 @@
 import os
-import re
 from collections import defaultdict
 
 import numpy as np
@@ -8,7 +7,7 @@ from scipy.spatial.distance import jensenshannon
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.constants.dataset_split import DatasetSplit
-from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files, get_subset_index
 from gen_airr_bm.utils.plotting_utils import (
     get_collection_specification_for_title,
     plot_avg_scores,
@@ -22,7 +21,6 @@ from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, che
 
 METRIC_NAME = "connectivity"
 SCORE_COLUMNS = ["metric", "model", "reference", "dataset", "subset", "jsd"]
-SUBSET_INDEX_PATTERN = re.compile(r"_(\d+)\.tsv$")
 
 
 def run_network_analysis(analysis_config: AnalysisConfig) -> None:
@@ -132,12 +130,6 @@ def get_connectivity_distributions_by_dataset(ref1_file: str, ref2_or_gen_files:
                                                                                allowed_mismatches, indels)
 
     return dataset_name, ref1_degree_dist, ref2_or_gen_degree_dists
-
-
-def get_subset_index(gen_file: str) -> int | float:
-    """ Returns the index of a generated subset from its file name, e.g. 3 for rep_1_3.tsv, or nan if there is none. """
-    match = SUBSET_INDEX_PATTERN.search(os.path.basename(gen_file))
-    return int(match.group(1)) if match else np.nan
 
 
 def calculate_divergence_scores(ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series],

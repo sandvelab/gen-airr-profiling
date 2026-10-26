@@ -86,7 +86,7 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
 
 #TODO: Refactor this function (Dirty coding)
 def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
-                    distribution_type, scoring_method="JSD"):
+                    distribution_type, scoring_method="JSD", error_bar_caption=None, repertoire_scores=None):
     """ Plots a bar chart for mean scores across models.
     Args:
         mean_scores_dict: dict of {model: mean_score}
@@ -96,6 +96,9 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         file_name: output file name without extension
         distribution_type: used for titles. e.g. "connectivity"
         scoring_method: used for titles. e.g. "JSD"
+        error_bar_caption: optional caption that explains the error bars
+        repertoire_scores: optional dict of {model: list of (donor, score)}, plotted as one dot per repertoire, with
+            one marker symbol per donor if donors have several repertoires
     Returns:
         None
     """
@@ -111,18 +114,21 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
     })
     plotting_df = plotting_df.sort_values("Mean_Score", ascending=False)
 
-    if not os.path.exists(plotting_data_file):
-        plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
+    plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
     color_palette = px.colors.qualitative.Safe
 
-    fig = go.Figure(
+    dot_traces = get_repertoire_dot_traces({reference_data: repertoire_scores}, [reference_data],
+                                           plotting_df["Model"].tolist()) if repertoire_scores is not None else []
+    fig = go.Figure([
         go.Bar(
             x=plotting_df["Model"],
             y=plotting_df["Mean_Score"],
             error_y=dict(type="data", array=plotting_df["Std_Dev"], visible=True),
             marker=dict(color="skyblue"),
+            offsetgroup=reference_data,
+            showlegend=False,
         )
-    )
+    ] + dot_traces)
 
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
                                                                      analysis_config.collection)
@@ -132,8 +138,16 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         yaxis_title=f"Mean Unique Innovation Score",
         xaxis_tickangle=-45,
         template="plotly_white",
-        colorway=color_palette
+        colorway=color_palette,
+        legend=dict(tracegroupgap=0),
+        # The figure grows with the donor legend, which is only shown if donors have several repertoires
+        height=max(500, 300 + 30 * sum(trace.showlegend is not False for trace in dot_traces)),
     )
+    if error_bar_caption is not None:
+        fig.add_annotation(text=error_bar_caption, xref="paper", yref="paper", x=1, y=1.02, showarrow=False,
+                           xanchor="right", yanchor="bottom", font=dict(size=14))
+        # Room for the two-line title and the error bar caption above the plot
+        fig.update_layout(margin=dict(t=150))
 
     fig.write_image(png_path, scale=3)
     print(f"Plot saved as png at: {png_path}.png")
@@ -498,8 +512,9 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
 
     df = pd.DataFrame(data)
 
-    # Compute mean and std for each (Dataset, Model) pair
-    grouped = df.groupby(['Model']).agg(
+    # Average the subsets within each repertoire, so that the std is the SD across repertoires (see statistics_utils)
+    repertoire_df = df.groupby(['Model', 'Dataset'], sort=False)[['Precision', 'Recall']].mean().reset_index()
+    grouped = repertoire_df.groupby(['Model']).agg(
         Precision_mean=('Precision', 'mean'),
         Precision_std=('Precision', 'std'),
         Recall_mean=('Recall', 'mean'),
@@ -507,11 +522,10 @@ def plot_grouped_bar_precision_recall(precision_scores_dict, recall_scores_dict,
     ).reset_index()
 
     plotting_data_file = os.path.join(fig_dir, "precision_recall_data.tsv")
-    if not os.path.exists(plotting_data_file):
-        grouped.to_csv(plotting_data_file, sep="\t", index=False)
+    grouped.to_csv(plotting_data_file, sep="\t", index=False)
 
     # Calculate average precision for each model across all datasets
-    model_avg_precision = df.groupby('Model')['Precision'].mean().sort_values(ascending=False)
+    model_avg_precision = repertoire_df.groupby('Model')['Precision'].mean().sort_values(ascending=False)
     all_models = list(model_avg_precision.index)
 
     # Plot precision
