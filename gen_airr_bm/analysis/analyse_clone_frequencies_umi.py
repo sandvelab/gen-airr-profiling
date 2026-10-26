@@ -11,7 +11,7 @@ from scipy.stats import spearmanr, pearsonr
 from gen_airr_bm.analysis.analyse_innovation_umi import symlog_transform
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files, split_subset_name
 from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, plot_grouped_avg_scores,
                                              plot_repertoire_statistics)
 from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
@@ -88,12 +88,6 @@ def collect_and_plot_clone_frequencies(analysis_config: AnalysisConfig, output_d
 
     summarize_and_plot_all(analysis_config, scores_df, reference_score)
     run_clone_frequency_statistics(analysis_config, scores_df, reference_scores)
-
-
-def split_subset_name(name: str) -> tuple[str, int]:
-    """ Splits the name of a generated subset into its repertoire and subset index, e.g. ("rep_1", 3) for rep_1_3. """
-    repertoire, subset = name.rsplit("_", 1)
-    return repertoire, int(subset)
 
 
 def summarize_and_plot_all(analysis_config: AnalysisConfig, scores_df: pd.DataFrame,

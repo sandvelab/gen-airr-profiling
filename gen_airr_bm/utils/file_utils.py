@@ -79,3 +79,9 @@ def get_subset_index(gen_file: str) -> int | float:
     """ Returns the index of a generated subset from its file name, e.g. 3 for rep_1_3.tsv, or nan if there is none. """
     match = SUBSET_INDEX_PATTERN.search(os.path.basename(gen_file))
     return int(match.group(1)) if match else np.nan
+
+
+def split_subset_name(name: str) -> tuple[str, int]:
+    """ Splits the name of a generated subset into its repertoire and subset index, e.g. ("rep_1", 3) for rep_1_3. """
+    repertoire, subset = name.rsplit("_", 1)
+    return repertoire, int(subset)

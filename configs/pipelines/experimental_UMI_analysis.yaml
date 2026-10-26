@@ -76,6 +76,8 @@ analyses:
       n_subsets: 3
       subfolder_name: "all models"
       receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
     - name: "phenotype"
       model_names: [ "train" ]
       default_model_name: "humanIGH"

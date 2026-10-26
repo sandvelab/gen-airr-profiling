@@ -3,11 +3,13 @@ import os
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import pytest
 
 from gen_airr_bm.analysis.analyse_diversity import run_diversity_analysis, compute_and_plot_diversity_scores, \
     compute_diversities_for_models, compute_diversity, shannon_entropy, gini_simpson_index, pielou_evenness, \
-    gini_coefficient, plot_diversity_scatter_plotly
+    gini_coefficient, plot_diversity_scatter_plotly, \
+    run_diversity_statistics
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
 
@@ -69,55 +71,52 @@ def test_run_diversity_analysis_empty_reference(mocker, sample_analysis_config):
 def test_compute_and_plot_diversity_scores(mocker, sample_analysis_config):
     mock_compute_diversity = mocker.patch(
         'gen_airr_bm.analysis.analyse_diversity.compute_diversity',
-        side_effect=lambda ref_dir, func: 0.5
+        side_effect=lambda ref_dir, func: {"6174_pLN_CD8_0": 0.5}
     )
     mock_compute_diversities_for_models = mocker.patch(
         'gen_airr_bm.analysis.analyse_diversity.compute_diversities_for_models',
         return_value={
-            "model1": {"dataset1_0": 0.1, "dataset1_1": 0.3},
-            "model2": {"dataset1_0": 0.2, "dataset1_1": 0.4},
+            "model1": {"6174_pLN_CD8_0_0": 0.1, "6174_pLN_CD8_0_1": 0.3},
+            "model2": {"6174_pLN_CD8_0_0": 0.2, "6174_pLN_CD8_0_1": 0.4},
         }
     )
-    mock_plot = mocker.patch(
-        'gen_airr_bm.analysis.analyse_diversity.plot_diversity_scatter_plotly'
-    )
-
-    # Prepare inputs
-    reference_dirs = {"test": "/some/fake/path"}
-    output_path = "/fake/output/plot.png"
-    metric_name = "Dummy Metric"
+    mock_plot = mocker.patch('gen_airr_bm.analysis.analyse_diversity.plot_diversity_scatter_plotly')
+    mock_statistics = mocker.patch('gen_airr_bm.analysis.analyse_diversity.run_diversity_statistics')
 
     compute_and_plot_diversity_scores(
         analysis_config=sample_analysis_config,
-        reference_dirs=reference_dirs,
-        output_path=output_path,
+        reference_dirs={"test": "/some/fake/path"},
+        output_path="/fake/output/plot",
         diversity_function=dummy_diversity_func,
-        metric_name=metric_name
+        metric_name="Dummy Metric"
     )
 
-    # Check compute_diversity called correctly
     mock_compute_diversity.assert_called_once_with("/some/fake/path", dummy_diversity_func)
-
-    # Check compute_diversities_for_models called with correct args
     expected_model_dir = "/tmp/test_output/novel_generated_compairr_sequences_split"
     mock_compute_diversities_for_models.assert_called_once_with(
         ["model1", "model2"], expected_model_dir, dummy_diversity_func
     )
 
-    # Check plot function call
-    expected_reference_diversities = {"test": 0.5}
-    expected_models_diversities_grouped = {
-        "model1": {"dataset1": np.mean([0.1, 0.3])},
-        "model2": {"dataset1": np.mean([0.2, 0.4])},
-    }
-    mock_plot.assert_called_once_with(
-        expected_reference_diversities,
-        expected_models_diversities_grouped,
-        output_path,
-        metric_name,
-        sample_analysis_config.receptor_type,
-        sample_analysis_config.collection
-    )
+    # One row per model and generated subset, with the repertoire (ending with the experiment index) and the subset
+    reference_diversities, scores_df, output_path, metric_name = mock_plot.call_args.args[:4]
+    assert reference_diversities == {"test": {"6174_pLN_CD8_0": 0.5}}
+    assert scores_df.values.tolist() == [["model1", "6174_pLN_CD8_0", 0, 0.1], ["model1", "6174_pLN_CD8_0", 1, 0.3],
+                                         ["model2", "6174_pLN_CD8_0", 0, 0.2], ["model2", "6174_pLN_CD8_0", 1, 0.4]]
+    assert (output_path, metric_name) == ("/fake/output/plot", "Dummy Metric")
+    mock_statistics.assert_called_once_with(sample_analysis_config, scores_df, "Dummy Metric")
+
+
+def test_compute_and_plot_diversity_scores_with_tests_requires_one_repertoire_per_donor(mocker,
+                                                                                        sample_analysis_config):
+    sample_analysis_config.statistical_tests = True
+    sample_analysis_config.donor_pattern = "^([^_]+)_"
+    mocker.patch('gen_airr_bm.analysis.analyse_diversity.compute_diversity', return_value={})
+    mocker.patch('gen_airr_bm.analysis.analyse_diversity.compute_diversities_for_models',
+                 return_value={"model1": {"6174_pLN_CD8_0_0": 0.1, "6174_pLN_Treg_1_0": 0.3}, "model2": {}})
+
+    with pytest.raises(ValueError, match="one repertoire per donor"):
+        compute_and_plot_diversity_scores(sample_analysis_config, {"test": "/some/fake/path"}, "/fake/output/plot",
+                                          dummy_diversity_func, "Dummy Metric")
 
 
 def test_compute_diversities_for_models_with_config(mocker, sample_analysis_config):
@@ -232,31 +231,105 @@ def test_gini_coefficient_variations(sequences, expected_gini):
     assert pytest.approx(result, rel=1e-9) == expected_gini
 
 
+def make_scores_df(scores: dict) -> pd.DataFrame:
+    """ Scores as {(repertoire, model): [score per subset]}, in the format of compute_and_plot_diversity_scores. """
+    return pd.DataFrame([{"model": model, "dataset": repertoire, "subset": subset, "score": score}
+                         for (repertoire, model), subset_scores in scores.items()
+                         for subset, score in enumerate(subset_scores)])
+
+
 def test_plot_diversity_scatter_plotly(mocker, tmp_path):
-    mock_fig = mocker.Mock()
-    mock_px_scatter = mocker.patch("gen_airr_bm.analysis.analyse_diversity.px.scatter", return_value=mock_fig)
-
-    reference_diversities = {
-        "train": {"ds1": 0.1, "ds2": 0.2}
-    }
-    models_diversities = {
-        "modelA": {"ds1": 0.15, "ds2": 0.25}
-    }
+    mock_write = mocker.patch.object(go.Figure, "write_image", autospec=True)
+    reference_diversities = {"train": {"6174_pLN_CD8_0": 0.9, "6174_pLN_Treg_1": 0.9}}
+    scores_df = make_scores_df({("6174_pLN_CD8_0", "modelA"): [0.1, 0.3], ("6174_pLN_Treg_1", "modelA"): [0.5, 0.7]})
     output_path = str(tmp_path / "path")
-    metric_name = "Gini Coefficient"
-    receptor_type = "TCR"
 
-    plot_diversity_scatter_plotly(reference_diversities, models_diversities, output_path, metric_name, receptor_type)
+    plot_diversity_scatter_plotly(reference_diversities, scores_df, output_path, "Gini Coefficient", "TCR",
+                                  donor_pattern="^([^_]+)_")
 
-    expected_df = pd.DataFrame([
-        {"dataset": "ds1", "gini coefficient": 0.15, "source": "modelA"},
-        {"dataset": "ds2", "gini coefficient": 0.25, "source": "modelA"},
-    ])
-    actual_df = mock_px_scatter.call_args[0][0]
+    # One row per generated subset, labelled by repertoire without the experiment index added in training
+    plotting_df = pd.read_csv(output_path + ".tsv", sep="\t")
+    assert plotting_df.columns.tolist() == ["dataset", "subset", "gini coefficient", "source"]
+    assert plotting_df["dataset"].tolist() == ["6174_pLN_CD8", "6174_pLN_CD8", "6174_pLN_Treg", "6174_pLN_Treg"]
 
-    pd.testing.assert_frame_equal(
-        actual_df.reset_index(drop=True).sort_values(by=["source", "dataset"]).reset_index(drop=True),
-        expected_df.sort_values(by=["source", "dataset"]).reset_index(drop=True)
-    )
+    fig = mock_write.call_args.args[0]
+    # One dot per subset, coloured by repertoire
+    assert {trace.name: len(trace.y) for trace in fig.data if trace.name != "Mean"} == {"6174_pLN_CD8": 2,
+                                                                                         "6174_pLN_Treg": 2}
+    # The mean over repertoires, with the SD across the repertoire means as error bars
+    mean_trace = next(trace for trace in fig.data if trace.name == "Mean")
+    assert list(mean_trace.y) == pytest.approx([0.4])
+    assert list(mean_trace.error_y.array) == pytest.approx([np.std([0.2, 0.6], ddof=1)])
+    assert fig.layout.annotations[0].text == ("Error bars: SD across repertoires (n=2 from 1 donors); "
+                                              "dots: generated subsets")
+    # The train sequences are all unique, so their diversity is a reference line
+    assert fig.layout.shapes[0].y0 == pytest.approx(0.9)
+    mock_write.assert_called_once_with(fig, output_path + ".png", scale=3)
 
-    mock_fig.write_image.assert_called_once_with(output_path + ".png", scale=3)
+
+def test_plot_diversity_scatter_plotly_umi_references(mocker, tmp_path):
+    mock_write = mocker.patch.object(go.Figure, "write_image", autospec=True)
+    reference_diversities = {"train": {"IGK_s1_m6_0": 0.8, "IGK_s2_m6_1": 0.6},
+                             "test": {"IGK_s1_m6_0": 0.7, "IGK_s2_m6_1": 0.5}}
+    scores_df = make_scores_df({("IGK_s1_m6_0", "modelA"): [0.1, 0.3], ("IGK_s2_m6_1", "modelA"): [0.5, 0.7]})
+
+    plot_diversity_scatter_plotly(reference_diversities, scores_df, str(tmp_path / "path"), "Shannon Entropy",
+                                  "BCR UMI", donor_pattern="^[^_]+_([^_]+)_")
+
+    fig = mock_write.call_args.args[0]
+    # Train and test are sources with one dot per repertoire, with their own mean
+    mean_trace = next(trace for trace in fig.data if trace.name == "Mean")
+    assert list(mean_trace.x) == ["train", "test", "modelA"]
+    assert list(mean_trace.y) == pytest.approx([0.7, 0.6, 0.4])
+    assert fig.layout.annotations[0].text.endswith("dots: generated subsets<br>Train and test dots: repertoires")
+    assert not fig.layout.shapes
+
+
+@pytest.mark.parametrize("statistical_tests", [False, True])
+def test_run_diversity_statistics(tmp_path, sample_analysis_config, statistical_tests):
+    sample_analysis_config.analysis_output_dir = str(tmp_path)
+    sample_analysis_config.statistical_tests = statistical_tests
+    sample_analysis_config.donor_pattern = "^(rep_\\d+)$"
+    sample_analysis_config.contrasts = [["model2", "model1"]]
+    scores_df = make_scores_df({(f"rep_{i}", model): [base + 0.01 * i, base + 0.02 * i]
+                                for i in range(1, 4) for model, base in [("model1", 0.2), ("model2", 0.3)]})
+
+    run_diversity_statistics(sample_analysis_config, scores_df, "Shannon Entropy")
+
+    prefix = f"{tmp_path}/statistics/diversity_shannon_entropy"
+    contrasts = pd.read_csv(f"{prefix}_contrasts.tsv", sep="\t")
+    assert contrasts[["first", "second", "n_repertoires"]].values.tolist() == [["model2", "model1", 3]]
+    assert ("p_adjusted" in contrasts.columns) == statistical_tests
+    assert os.path.exists(f"{prefix}_contrasts.png")
+    assert not os.path.exists(f"{prefix}_vs_train_test.tsv")
+
+
+def test_plot_diversity_scatter_plotly_keeps_names_without_experiment_index(mocker, tmp_path):
+    mocker.patch.object(go.Figure, "write_image", autospec=True)
+    scores_df = make_scores_df({("6174_pLN_CD8", "modelA"): [0.1, 0.3], ("6174_pLN_Treg", "modelA"): [0.5, 0.7]})
+
+    plot_diversity_scatter_plotly({"train": {"6174_pLN_CD8": 0.9}}, scores_df, str(tmp_path / "path"),
+                                  "Gini Coefficient", "TCR")
+
+    plotting_df = pd.read_csv(tmp_path / "path.tsv", sep="\t")
+    assert plotting_df["dataset"].unique().tolist() == ["6174_pLN_CD8", "6174_pLN_Treg"]
+
+
+def test_plot_diversity_scatter_plotly_many_repertoires(mocker, tmp_path):
+    mock_write = mocker.patch.object(go.Figure, "write_image", autospec=True)
+    mocker.patch("gen_airr_bm.analysis.analyse_diversity.MAX_COLOURED_REPERTOIRES", 2)
+    scores_df = make_scores_df({(f"P0000{i}_neg_0", "modelA"): [0.1 * i, 0.1 * i + 0.2] for i in range(1, 4)})
+
+    plot_diversity_scatter_plotly({"train": {"P00001_neg_0": 0.9}}, scores_df, str(tmp_path / "path"),
+                                  "Shannon Entropy", "TCR", donor_pattern="^(P\\d+)_")
+
+    fig = mock_write.call_args.args[0]
+    # One uncoloured dot per repertoire: the mean over its subsets, without a legend
+    dots = [trace for trace in fig.data if trace.name != "Mean"]
+    assert len(dots) == 1
+    assert sorted(dots[0].y) == pytest.approx([0.2, 0.3, 0.4])
+    assert dots[0].marker.color == "grey"
+    assert not fig.layout.showlegend
+    assert fig.layout.annotations[0].text == "Error bars: SD across repertoires (n=3); dots: repertoire means"
+    # The tsv still has one row per generated subset
+    assert len(pd.read_csv(tmp_path / "path.tsv", sep="\t")) == 6
