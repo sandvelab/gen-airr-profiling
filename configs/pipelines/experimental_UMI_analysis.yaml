@@ -30,6 +30,8 @@ analyses:
       deduplicate: False
       subfolder_name: "all models"
       receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
     - name: "network"
       model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"

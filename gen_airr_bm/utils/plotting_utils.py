@@ -357,7 +357,8 @@ def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, titl
 
 
 def plot_repertoire_statistics(results: dict, output_prefix: str, metric_label: str, collection_specification: str,
-                               correction_scope: str = "the comparisons in this plot only") -> None:
+                               correction_scope: str = "the comparisons in this plot only",
+                               score_description: str = None, x_label: str = "Difference in JSD") -> None:
     """ Plots the comparisons of a metric with the train vs. test reference and the contrasts from the config, as
     returned by statistics_utils.run_repertoire_statistics, as forest plots.
     Args:
@@ -366,20 +367,23 @@ def plot_repertoire_statistics(results: dict, output_prefix: str, metric_label: 
         metric_label (str): Label of the metric as used in plot titles, e.g. "V gene".
         collection_specification (str): The collection as used in plot titles, e.g. "Collection B (TCR)".
         correction_scope (str): The comparisons the p-values were corrected across, for the plot footnote.
+        score_description (str): What the scores are, as the start of the plot titles. Defaults to the JSD of the
+            metric to the test sequences, e.g. "V Gene JSD to Test".
+        x_label (str): Label of the x-axis.
     Returns:
         None
     """
-    title_label = title_case(metric_label)
+    if score_description is None:
+        score_description = f"{title_case(metric_label)} JSD to Test"
     if "vs_train_test" in results:
         plot_paired_comparisons(results["vs_train_test"], f"{output_prefix}_vs_train_test",
-                                f"{title_label} JSD to Test: Models Compared with Train vs. Test in "
-                                f"{collection_specification} Repertoires", "Difference in JSD",
+                                f"{score_description}: Models Compared with Train vs. Test in "
+                                f"{collection_specification} Repertoires", x_label,
                                 results["vs_train_test_differences"], correction_scope)
     if "contrasts" in results:
         plot_paired_comparisons(results["contrasts"], f"{output_prefix}_contrasts",
-                                f"{title_label} JSD to Test: Model Contrasts in {collection_specification} "
-                                f"Repertoires", "Difference in JSD", results["contrasts_differences"],
-                                correction_scope)
+                                f"{score_description}: Model Contrasts in {collection_specification} Repertoires",
+                                x_label, results["contrasts_differences"], correction_scope)
 
 
 def wrap_title(text, width=60):
