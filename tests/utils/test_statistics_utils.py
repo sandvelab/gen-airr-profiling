@@ -150,6 +150,11 @@ def test_describe_error_bars(n_repertoires, n_donors, expected):
     assert describe_error_bars(n_repertoires, n_donors) == expected
 
 
+def test_describe_error_bars_with_other_dots():
+    assert describe_error_bars(3, 3, dots="generated subsets") == \
+           "Error bars: SD across repertoires (n=3); dots: generated subsets"
+
+
 @pytest.mark.parametrize("statistical_tests", [False, True])
 def test_run_repertoire_statistics(tmp_path, statistical_tests):
     repertoire_scores = make_repertoire_scores({"a": [0.2, 0.3, 0.4], "b": [0.3, 0.4, 0.6], "c": [0.5, 0.5, 0.5]})

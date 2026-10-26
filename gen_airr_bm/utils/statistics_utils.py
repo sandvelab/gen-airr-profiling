@@ -211,10 +211,10 @@ def validate_contrasts(contrasts: list, sources: list) -> list:
     return validated
 
 
-def describe_error_bars(n_repertoires: int, n_donors: int) -> str:
-    """ Returns the caption that explains the standard deviation error bars of a bar plot. """
+def describe_error_bars(n_repertoires: int, n_donors: int, dots: str = "repertoires") -> str:
+    """ Returns the caption that explains the standard deviation error bars of a bar plot, and what its dots are. """
     sample = f"n={n_repertoires}" if n_repertoires == n_donors else f"n={n_repertoires} from {n_donors} donors"
-    return f"Error bars: SD across repertoires ({sample}); dots: repertoires"
+    return f"Error bars: SD across repertoires ({sample}); dots: {dots}"
 
 
 def summarise_scores_by_reference(scores_df: pd.DataFrame, metric, donor_pattern: str | None,
