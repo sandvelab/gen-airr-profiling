@@ -432,3 +432,42 @@ def test_run_sampling_sets_model_overrides(mocker):
     SamplingOrchestrator.run_sampling(config)
 
     m_set_parameters.assert_called_once_with(Path("model.zip"), {"iter_count_prob_estimation": 500})
+
+
+def write_finished_immuneml_run(results_dir, finished=True, with_p_gens=True):
+    (results_dir / "gen_model" / "generated_sequences").mkdir(parents=True)
+    (results_dir / "gen_model" / "generated_sequences" / "seqs.tsv").write_text("junction_aa\nCASSF\n")
+    if with_p_gens:
+        (results_dir / "gen_model" / "datasets_with_p_gens").mkdir(parents=True)
+        for split in ["train", "test"]:
+            (results_dir / "gen_model" / "datasets_with_p_gens" / f"{split}_p_gens.tsv").write_text("p_gen\n0.1\n")
+    log = "Generated valid sequence 1/1\n" * 10000
+    (results_dir / "log.txt").write_text(log + ("INFO: ImmuneML: finished analysis.\n" if finished else ""))
+
+
+@pytest.mark.parametrize("finished, with_p_gens, expected", [(True, True, True), (False, True, False),
+                                                             (True, False, False)])
+def test_is_immuneml_run_finished(tmp_path, finished, with_p_gens, expected):
+    config = make_sampling_config(tmp_path, compute_p_gens=True)
+    results_dir = Path(SamplingOrchestrator.get_immuneml_results_dir(config, "datasetA"))
+    write_finished_immuneml_run(results_dir, finished=finished, with_p_gens=with_p_gens)
+
+    assert SamplingOrchestrator.is_immuneml_run_finished(config, str(results_dir)) is expected
+
+
+def test_run_sampling_copies_finished_immuneml_run(tmp_path, mocker):
+    config = make_sampling_config(tmp_path, compute_p_gens=True, device="cuda")
+    results_dir = Path(SamplingOrchestrator.get_immuneml_results_dir(config, "datasetZ"))
+    write_finished_immuneml_run(results_dir)
+    mocker.patch.object(SamplingOrchestrator, "find_paths", return_value=(Path("model.zip"), "datasetZ"))
+    m_set_parameters = mocker.patch.object(SamplingOrchestrator, "set_model_parameters")
+    m_run = mocker.patch.object(SamplingOrchestrator, "run_immuneml_sampling")
+    m_copy = mocker.patch.object(SamplingOrchestrator, "copy_generated_sequences")
+    m_copy_p_gens = mocker.patch.object(SamplingOrchestrator, "copy_p_gens")
+
+    SamplingOrchestrator.run_sampling(config)
+
+    m_set_parameters.assert_not_called()
+    m_run.assert_not_called()
+    m_copy.assert_called_once_with(config, str(results_dir), "datasetZ")
+    m_copy_p_gens.assert_called_once_with(config, str(results_dir), "datasetZ")

@@ -22,12 +22,16 @@ class SamplingOrchestrator:
             print(f"Skipping sampling of {sampling_config.model_name} for {sampling_config.experiment_name}: "
                   f"outputs already exist.")
             return
-        if sampling_config.model_parameters:
-            SamplingOrchestrator.set_model_parameters(model_zip_path, sampling_config.model_parameters)
-        immuneml_config_path = SamplingOrchestrator.prepare_immuneml_sampling_config(sampling_config, dataset_name,
-                                                                                     model_zip_path)
-        immuneml_results_path = SamplingOrchestrator.run_immuneml_sampling(sampling_config, dataset_name,
-                                                                           immuneml_config_path)
+        immuneml_results_path = SamplingOrchestrator.get_immuneml_results_dir(sampling_config, dataset_name)
+        if SamplingOrchestrator.is_immuneml_run_finished(sampling_config, immuneml_results_path):
+            print(f"immuneML already finished in {immuneml_results_path}, copying its outputs.")
+        else:
+            if sampling_config.model_parameters:
+                SamplingOrchestrator.set_model_parameters(model_zip_path, sampling_config.model_parameters)
+            immuneml_config_path = SamplingOrchestrator.prepare_immuneml_sampling_config(sampling_config, dataset_name,
+                                                                                         model_zip_path)
+            immuneml_results_path = SamplingOrchestrator.run_immuneml_sampling(sampling_config, dataset_name,
+                                                                               immuneml_config_path)
         if not sampling_config.p_gens_only:
             SamplingOrchestrator.copy_generated_sequences(sampling_config, immuneml_results_path, dataset_name)
         if sampling_config.compute_p_gens:
@@ -180,10 +184,34 @@ class SamplingOrchestrator:
                 f"{dataset_name}_{experiment_n}.tsv")
 
     @staticmethod
+    def get_immuneml_results_dir(sampling_config: SamplingConfig, dataset_name: str) -> str:
+        return (f"{sampling_config.root_output_dir}/{SamplingOrchestrator.get_sampling_dir_name(sampling_config)}/"
+                f"{sampling_config.experiment_name}/{sampling_config.model_name}/{dataset_name}")
+
+    @staticmethod
+    def is_immuneml_run_finished(sampling_config: SamplingConfig, immuneml_results_dir: str) -> bool:
+        """Whether immuneML finished in this directory and wrote all outputs, while their copies are missing, e.g. if
+        the pipeline was stopped while immuneML kept running. Its outputs can then be copied without sampling again."""
+        results_dir = Path(immuneml_results_dir)
+        log_path = results_dir / "log.txt"
+        if not log_path.is_file():
+            return False
+        # the log can be very large (e.g. one line per generated sequence), and immuneML logs this at the very end
+        with log_path.open("rb") as log_file:
+            log_file.seek(max(0, log_path.stat().st_size - 64 * 1024))
+            if b"finished analysis" not in log_file.read():
+                return False
+        if not sampling_config.p_gens_only and not any((results_dir / "gen_model/generated_sequences").glob("*.tsv")):
+            return False
+        if sampling_config.compute_p_gens and not all(
+                (results_dir / "gen_model/datasets_with_p_gens" / f"{split.value}_p_gens.tsv").is_file()
+                for split in DatasetSplit.train_and_test()):
+            return False
+        return True
+
+    @staticmethod
     def run_immuneml_sampling(sampling_config: SamplingConfig, dataset_name, immuneml_config_path: Path):
-        immuneml_results_dir = (f"{sampling_config.root_output_dir}/"
-                                f"{SamplingOrchestrator.get_sampling_dir_name(sampling_config)}/"
-                                f"{sampling_config.experiment_name}/{sampling_config.model_name}/{dataset_name}")
+        immuneml_results_dir = SamplingOrchestrator.get_immuneml_results_dir(sampling_config, dataset_name)
         # Left over from an earlier run that did not finish (finished runs are skipped before). immuneML would write
         # to a new timestamped directory instead of a non-empty one, and the outputs would then not be found here.
         if os.path.isdir(immuneml_results_dir):
