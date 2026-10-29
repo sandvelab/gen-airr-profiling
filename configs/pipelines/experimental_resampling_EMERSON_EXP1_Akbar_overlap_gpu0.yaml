@@ -1,0 +1,14 @@
+# Akbar_overlap EXP1 resampling on GPU, exp_78-88 (part 1 of 2).
+# The CPU run (experimental_resampling_EMERSON_EXP1_Akbar.yaml) has to be stopped and these jobs killed first.
+n_experiments: 100
+output_dir: "RESULTS_SEP25/EMERSON_EXP1"
+input_dir: "data/experimental/emerson_exp1"
+seed: 42
+
+sampling:
+  - model_name: "Akbar_overlap"
+    experiment_names: ["exp_78", "exp_79", "exp_80", "exp_81", "exp_82", "exp_83", "exp_84", "exp_85", "exp_86", "exp_87", "exp_88"]
+    immuneml_config: "configs/pipelines/experimental_sampling_immuneml.yaml"
+    n_samples: 500000
+    compute_p_gens: True
+    device: "cuda"
