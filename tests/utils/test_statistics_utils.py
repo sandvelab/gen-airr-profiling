@@ -10,8 +10,9 @@ from gen_airr_bm.core.main_config import MainConfig
 from gen_airr_bm.utils.statistics_utils import (DESCRIPTIVE_COMPARISON_COLUMNS, TRAIN_TEST_REFERENCE,
                                                 aggregate_repertoire_scores, check_one_repertoire_per_donor,
                                                 compare_paired, describe_error_bars, get_donor, paired_t_test,
-                                                run_repertoire_statistics, summarise_repertoire_scores,
-                                                t_confidence_interval, validate_contrasts)
+                                                correct_across_metrics, run_repertoire_statistics,
+                                                summarise_repertoire_scores, t_confidence_interval,
+                                                validate_contrasts, write_repertoire_statistics)
 
 
 def make_repertoire_scores(scores_by_source: dict, donors: list = None) -> pd.DataFrame:
@@ -149,6 +150,11 @@ def test_describe_error_bars(n_repertoires, n_donors, expected):
     assert describe_error_bars(n_repertoires, n_donors) == expected
 
 
+def test_describe_error_bars_with_other_dots():
+    assert describe_error_bars(3, 3, dots="generated subsets") == \
+           "Error bars: SD across repertoires (n=3); dots: generated subsets"
+
+
 @pytest.mark.parametrize("statistical_tests", [False, True])
 def test_run_repertoire_statistics(tmp_path, statistical_tests):
     repertoire_scores = make_repertoire_scores({"a": [0.2, 0.3, 0.4], "b": [0.3, 0.4, 0.6], "c": [0.5, 0.5, 0.5]})
@@ -213,3 +219,40 @@ def test_main_config_reads_statistics_fields(tmp_path, analysis_fields, expected
     config = MainConfig(str(config_path)).analysis_configs[0]
 
     assert (config.contrasts, config.statistical_tests, config.donor_pattern) == expected
+
+
+def test_run_repertoire_statistics_without_writing(tmp_path):
+    repertoire_scores = make_repertoire_scores({"a": [0.2, 0.3, 0.4], "b": [0.3, 0.4, 0.6]})
+    output_prefix = str(tmp_path / "statistics" / "metric")
+
+    results = run_repertoire_statistics(repertoire_scores, ["a", "b"], output_prefix, False, write=False)
+
+    assert not os.path.exists(tmp_path / "statistics")
+    write_repertoire_statistics(results, output_prefix)
+    for table in ["repertoire_scores", "summary", "all_pairs", "all_pairs_differences"]:
+        assert os.path.exists(f"{output_prefix}_{table}.tsv")
+
+
+def test_correct_across_metrics_makes_one_family_per_comparison_set(tmp_path):
+    results_by_metric = {
+        metric: run_repertoire_statistics(make_repertoire_scores(scores), ["a", "b", "c"],
+                                          str(tmp_path / str(metric)), True, donor_pattern="^(rep_\\d+)$",
+                                          write=False)
+        for metric, scores in {10: {"a": [0.2, 0.3, 0.4], "b": [0.3, 0.5, 0.6], "c": [0.5, 0.5, 0.7]},
+                               11: {"a": [0.1, 0.2, 0.2], "b": [0.4, 0.4, 0.5], "c": [0.3, 0.6, 0.6]}}.items()}
+    p_values = {metric: results["all_pairs"]["p_value"].to_numpy() for metric, results in results_by_metric.items()}
+
+    correct_across_metrics(results_by_metric)
+
+    # Bonferroni over the 3 pairs of both metrics, instead of over the 3 pairs of each metric
+    for metric, results in results_by_metric.items():
+        assert results["all_pairs"]["p_adjusted"].to_numpy() == pytest.approx(np.minimum(p_values[metric] * 6, 1))
+
+
+def test_correct_across_metrics_leaves_descriptive_results(tmp_path):
+    results = run_repertoire_statistics(make_repertoire_scores({"a": [0.2, 0.3], "b": [0.3, 0.4]}), ["a", "b"],
+                                        str(tmp_path / "metric"), False, write=False)
+
+    correct_across_metrics({10: results, 11: results})
+
+    assert "p_adjusted" not in results["all_pairs"].columns

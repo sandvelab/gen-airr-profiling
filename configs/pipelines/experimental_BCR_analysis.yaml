@@ -5,14 +5,16 @@ seed: 42
 
 analyses:
     - name: "reduced_dimensionality"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "all models"
       receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "memorization"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -21,8 +23,10 @@ analyses:
       deduplicate: False
       subfolder_name: "all models"
       receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "network"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 6
@@ -30,13 +34,17 @@ analyses:
       indels: True
       subfolder_name: "all models"
       receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "diversity"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
       reference_data: [ "train", "test" ]
       n_subsets: 6
       subfolder_name: "all models"
       receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "phenotype"
       model_names: [ "PWM" ]
       default_model_name: "humanIGH"
@@ -115,6 +123,20 @@ analyses:
       indels: False
       receptor_type: "BCR"
     - name: "phenotype"
+      model_names: [ "TCRpeg_overlap" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "TCRpeg_overlap"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR"
+    - name: "phenotype"
+      model_names: [ "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "TCRpeg_kmer"
+      allowed_mismatches: 0
+      indels: False
+      receptor_type: "BCR"
+    - name: "phenotype"
       model_names: [ "train" ]
       default_model_name: "humanIGH"
       subfolder_name: "train"
@@ -122,15 +144,17 @@ analyses:
       indels: False
       receptor_type: "BCR"
     - name: "innovation"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
       allowed_mismatches: 0
       indels: False
       subfolder_name: "all models"
       receptor_type: "BCR"
       n_subsets: 6
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
     - name: "innovation_diversity"
-      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer" ]
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
       default_model_name: "humanIGH"
       subfolder_name: "all models"
       receptor_type: "BCR"
@@ -150,3 +174,5 @@ analyses:
       reference_data: [ "train", "test" ]
       subfolder_name: "all models"
       receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"

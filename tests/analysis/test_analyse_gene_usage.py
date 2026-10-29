@@ -9,8 +9,9 @@ from gen_airr_bm.analysis.analyse_gene_usage import (compute_gene_usage_frequenc
                                                     compute_usage_distribution, get_gene_family,
                                                     get_gene_usage_plotting_data, get_metric_label,
                                                     model_generates_gene_calls, normalise_gene_call, read_gene_calls,
-                                                    run_gene_usage_analysis, summarise_scores_by_reference)
+                                                    run_gene_usage_analysis)
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+from gen_airr_bm.utils.statistics_utils import summarise_scores_by_reference
 
 # The models generate gene names without the allele
 V_GENERATED = ["TRBV6-1", "TRBV6-5", "TRBV19", "TRBV20"]
@@ -171,7 +172,7 @@ SUMMARY_SCORES = pd.DataFrame([
 
 def test_summarise_scores_by_reference_descriptive(analysis_config):
     mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, caption = \
-        summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
+        summarise_scores_by_reference(SUMMARY_SCORES, "v gene", analysis_config.donor_pattern)
 
     # The two subsets of rep_1 are averaged first, so the repertoire scores are 0.2 and 0.6
     assert repertoire_scores_by_ref == {"train": {"vae": [("rep_1", pytest.approx(0.2)),
@@ -185,7 +186,8 @@ def test_summarise_scores_by_reference_descriptive(analysis_config):
 def test_summarise_scores_by_reference_uses_sd_with_tests(analysis_config):
     analysis_config.statistical_tests = True
 
-    _, std_scores_by_ref, _, caption = summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
+    _, std_scores_by_ref, _, caption = summarise_scores_by_reference(SUMMARY_SCORES, "v gene",
+                                                                     analysis_config.donor_pattern)
 
     # The error bars are the standard deviation also with statistical tests, so they are comparable across collections
     assert std_scores_by_ref == {"train": {"vae": pytest.approx(np.std([0.2, 0.6], ddof=1))}}
@@ -195,7 +197,8 @@ def test_summarise_scores_by_reference_uses_sd_with_tests(analysis_config):
 def test_summarise_scores_by_reference_counts_donors(analysis_config):
     analysis_config.donor_pattern = "^(rep)_"
 
-    *_, repertoire_scores_by_ref, caption = summarise_scores_by_reference(analysis_config, SUMMARY_SCORES, "v gene")
+    *_, repertoire_scores_by_ref, caption = summarise_scores_by_reference(SUMMARY_SCORES, "v gene",
+                                                                          analysis_config.donor_pattern)
 
     assert [donor for donor, _ in repertoire_scores_by_ref["train"]["vae"]] == ["rep", "rep"]
     assert "(n=2 from 1 donors)" in caption

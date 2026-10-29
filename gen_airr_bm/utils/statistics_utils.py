@@ -18,8 +18,10 @@ There are two modes, set per analysis with statistical_tests:
   exactly when the interval excludes zero. The p-values are corrected with Bonferroni within each metric and comparison
   set (with the train vs. test reference, the contrasts from the config, all pairs of models): each such set is a
   separate multiple testing family, and Bonferroni controls the probability of any false positive within it (family-wise
-  error rate). There is no correction across metrics or comparison sets. The confidence intervals are not adjusted for
-  multiple comparisons, so an interval can exclude zero while the adjusted p-value is above ALPHA.
+  error rate). By default there is no correction across metrics or comparison sets. Metrics that are presented together
+  as one result, such as the amino acid distributions of the sequence lengths, can instead be corrected jointly with
+  correct_across_metrics, which makes each comparison set across all of them one family. The confidence intervals are
+  not adjusted for multiple comparisons, so an interval can exclude zero while the adjusted p-value is above ALPHA.
 
 Donors are derived from the repertoire names with donor_pattern, a regular expression whose first group (or whole
 match) is the donor, e.g. "^([^_]+)_" for 6271_pLN_CD8. Without a pattern, every repertoire is its own donor.
@@ -37,6 +39,7 @@ CONFIDENCE_LEVEL = 0.95
 ALPHA = 0.05
 CORRECTION = "bonferroni"
 TRAIN_TEST_REFERENCE = "train vs. test"
+COMPARISON_SETS = ["vs_train_test", "contrasts", "all_pairs"]
 
 DESCRIPTIVE_COMPARISON_COLUMNS = ["first", "second", "n_repertoires", "n_donors", "mean_difference", "sd_difference",
                                   "n_first_higher", "n_first_lower", "n_donors_first_higher",
@@ -208,15 +211,47 @@ def validate_contrasts(contrasts: list, sources: list) -> list:
     return validated
 
 
-def describe_error_bars(n_repertoires: int, n_donors: int) -> str:
-    """ Returns the caption that explains the standard deviation error bars of a bar plot. """
+def describe_error_bars(n_repertoires: int, n_donors: int, dots: str = "repertoires") -> str:
+    """ Returns the caption that explains the standard deviation error bars of a bar plot, and what its dots are. """
     sample = f"n={n_repertoires}" if n_repertoires == n_donors else f"n={n_repertoires} from {n_donors} donors"
-    return f"Error bars: SD across repertoires ({sample}); dots: repertoires"
+    return f"Error bars: SD across repertoires ({sample}); dots: {dots}"
+
+
+def summarise_scores_by_reference(scores_df: pd.DataFrame, metric, donor_pattern: str | None,
+                                  score_column: str = "jsd") -> tuple[dict, dict, dict, str]:
+    """ Averages the scores of a metric over the generated subsets of each repertoire, and summarises them over
+    repertoires, so that the repertoires and not the generated subsets are the observations. The error bars are the
+    standard deviation in every collection, so that they are comparable across collections. With statistical tests,
+    the confidence intervals of the means are reported by run_repertoire_statistics instead.
+    Args:
+        scores_df (pd.DataFrame): One row per metric, model, reference, dataset and generated subset.
+        metric: The metric to summarise, as in the metric column.
+        donor_pattern (str | None): Regular expression that extracts the donor from the repertoire name.
+        score_column (str): Column with the scores.
+    Returns:
+        tuple[dict, dict, dict, str]: As {reference: {model: value}}: the mean and the standard deviation over
+        repertoires, and the (donor, score) pairs of the repertoires; and the error bar caption.
+    """
+    mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref = {}, {}, {}
+    n_repertoires, n_donors = 0, 0
+    metric_scores = scores_df[scores_df["metric"] == metric]
+    for reference, reference_scores in metric_scores.groupby("reference"):
+        repertoire_scores = aggregate_repertoire_scores(reference_scores, score_column, donor_pattern)
+        summary = summarise_repertoire_scores(repertoire_scores, statistical_tests=False)
+        mean_scores_by_ref[reference] = dict(zip(summary["source"], summary["mean"]))
+        std_scores_by_ref[reference] = dict(zip(summary["source"], summary["sd"]))
+        n_repertoires = max(n_repertoires, summary["n_repertoires"].max())
+        n_donors = max(n_donors, summary["n_donors"].max())
+        repertoire_scores_by_ref[reference] = {
+            model: list(zip(model_scores["donor"], model_scores["score"]))
+            for model, model_scores in repertoire_scores.dropna(subset=["score"]).groupby("source")}
+    return mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, describe_error_bars(n_repertoires,
+                                                                                                n_donors)
 
 
 def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, output_prefix: str,
                               statistical_tests: bool, reference_scores: pd.DataFrame = None,
-                              contrasts: list = None, donor_pattern: str | None = None) -> dict:
+                              contrasts: list = None, donor_pattern: str | None = None, write: bool = True) -> dict:
     """ Summarises and compares the models for one metric and writes the results to tsv files.
     Args:
         repertoire_scores (pd.DataFrame): Model scores as returned by aggregate_repertoire_scores.
@@ -228,11 +263,12 @@ def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, out
             score. Every model is compared to them.
         contrasts (list): Optional pre-specified pairs of models to compare, e.g. from the analysis config.
         donor_pattern (str | None): Regular expression that extracts the donor from the repertoire name.
+        write (bool): Whether to write the results, or leave that to write_repertoire_statistics, e.g. after
+            correct_across_metrics.
     Returns:
-        dict: The summary table, and for each set of comparisons ("vs_train_test", "contrasts", "all_pairs") the
+        dict: The repertoire scores and the summary table, and for each set of comparisons (COMPARISON_SETS) the
         comparisons table and the per-repertoire differences (keyed by the set name plus "_differences").
     """
-    os.makedirs(os.path.dirname(output_prefix), exist_ok=True)
     models = [model for model in models if model in set(repertoire_scores["source"])]
     scores = repertoire_scores[repertoire_scores["source"].isin(models)]
     if statistical_tests:
@@ -250,11 +286,40 @@ def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, out
         comparison_sets["contrasts"] = validate_contrasts(contrasts, models)
     comparison_sets["all_pairs"] = list(combinations(models, 2))
 
-    results = {"summary": summarise_repertoire_scores(scores, statistical_tests)}
+    results = {"repertoire_scores": scores, "summary": summarise_repertoire_scores(scores, statistical_tests)}
     for name, comparisons in comparison_sets.items():
         results[name], results[f"{name}_differences"] = compare_paired(scores, comparisons, statistical_tests)
 
-    scores.to_csv(f"{output_prefix}_repertoire_scores.tsv", sep="\t", index=False)
+    if write:
+        write_repertoire_statistics(results, output_prefix)
+    return results
+
+
+def write_repertoire_statistics(results: dict, output_prefix: str) -> None:
+    """ Writes the tables returned by run_repertoire_statistics to tsv files named by output_prefix and the table. """
+    os.makedirs(os.path.dirname(output_prefix), exist_ok=True)
     for name, table in results.items():
         table.to_csv(f"{output_prefix}_{name}.tsv", sep="\t", index=False)
-    return results
+
+
+def correct_across_metrics(results_by_metric: dict) -> None:
+    """ Corrects the p-values of each comparison set jointly across metrics, so that the set over all metrics is one
+    multiple testing family instead of one family per metric. Replaces p_adjusted in place. Results without
+    statistical tests are left as they are.
+    Args:
+        results_by_metric (dict): {metric: results as returned by run_repertoire_statistics}.
+    Returns:
+        None
+    """
+    for name in COMPARISON_SETS:
+        tables = [results[name] for results in results_by_metric.values()
+                  if name in results and "p_value" in results[name].columns]
+        if not tables:
+            continue
+        p_values = pd.concat([table["p_value"] for table in tables], keys=range(len(tables)))
+        adjusted = pd.Series(np.nan, index=p_values.index)
+        tested = p_values.notna()
+        if tested.any():
+            adjusted[tested] = multipletests(p_values[tested], alpha=ALPHA, method=CORRECTION)[1]
+        for i, table in enumerate(tables):
+            table["p_adjusted"] = adjusted.loc[i].to_numpy()

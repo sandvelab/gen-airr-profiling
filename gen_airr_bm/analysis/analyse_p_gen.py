@@ -10,7 +10,18 @@ from scipy.stats import gaussian_kde
 
 from gen_airr_bm.constants.dataset_split import DatasetSplit
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, plot_paired_comparisons, \
+    plot_repertoire_statistics
+from gen_airr_bm.utils.statistics_utils import aggregate_repertoire_scores, check_one_repertoire_per_donor, \
+    compare_paired, run_repertoire_statistics, summarise_repertoire_scores, write_repertoire_statistics
+
+# The per-repertoire scores: their description in plot titles, a short label for the axes, their value if a model
+# scores its train and test sequences alike, and whether they can be compared between models. The gap in log10 p_gen
+# cannot, since p_gens of different model types are on different scales; the AUC only depends on ranks.
+P_GEN_SCORES = {
+    "median_log10_p_gen_gap": ("Train - Test Gap in Median log10 p_gen", "Gap in Median log10 p_gen", 0.0, False),
+    "membership_auc": ("Membership Inference AUC from p_gen", "Membership AUC", 0.5, True),
+}
 
 
 def run_p_gen_analysis(analysis_config: AnalysisConfig) -> None:
@@ -20,7 +31,9 @@ def run_p_gen_analysis(analysis_config: AnalysisConfig) -> None:
     Train and test sequences do not overlap, so the two sets are compared as distributions, not pairwise. p_gens of
     different model types are not directly comparable, so two per-repertoire, within-model quantities are plotted as
     well: the gap between median train and test log10 p_gen, and the AUC of separating train from test sequences by
-    p_gen, which only depends on ranks and is therefore comparable across models.
+    p_gen, which only depends on ranks and is therefore comparable across models. Both are compared with their value
+    if train and test are scored alike, and the AUC also between models, at the repertoire level (see
+    run_p_gen_statistics).
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
@@ -34,6 +47,11 @@ def run_p_gen_analysis(analysis_config: AnalysisConfig) -> None:
     p_gens_df = collect_p_gens(analysis_config)
     summary_df = summarize_p_gens(p_gens_df)
     summary_df.to_csv(f"{output_dir}/p_gen_summary.tsv", sep="\t", index=False)
+    if analysis_config.statistical_tests:
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(summary_df, "membership_auc",
+                                                                   analysis_config.donor_pattern,
+                                                                   repertoire_column="file"),
+                                       analysis_config.donor_pattern)
 
     plot_p_gen_distributions(p_gens_df, analysis_config.model_names, output_dir, analysis_config.receptor_type,
                              analysis_config.collection)
@@ -46,6 +64,7 @@ def run_p_gen_analysis(analysis_config: AnalysisConfig) -> None:
                                "P(train p_gen > test p_gen)", "Membership Inference AUC from p_gen",
                                "p_gen_membership_auc", analysis_config.model_names, output_dir,
                                analysis_config.receptor_type, analysis_config.collection)
+    run_p_gen_statistics(analysis_config, summary_df)
 
 
 def collect_p_gens(analysis_config: AnalysisConfig) -> pd.DataFrame:
@@ -162,7 +181,7 @@ def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_
     subplot_titles = [f"{model_name}<br><sup>p_gen = 0: train {zero_shares.get((model_name, 'train'), 0):.1f}% / "
                       f"test {zero_shares.get((model_name, 'test'), 0):.1f}%</sup>" for model_name in model_names]
     fig = make_subplots(rows=n_rows, cols=n_cols, subplot_titles=subplot_titles, horizontal_spacing=0.05,
-                        vertical_spacing=0.3 / n_rows)
+                        vertical_spacing=0.4 / n_rows)
 
     nonzero_df = p_gens_df[p_gens_df["p_gen"] > 0].assign(log10_p_gen=lambda df: np.log10(df["p_gen"]))
     family_colors = get_family_colors(model_names)
@@ -187,18 +206,18 @@ def plot_p_gen_distributions(p_gens_df: pd.DataFrame, model_names: list, output_
         fig.add_trace(go.Scatter(x=[None], y=[None], mode="lines", name=split,
                                  line=dict(color="grey", dash=dash, width=3)), row=1, col=1)
 
-    fig.update_xaxes(title=dict(text="log10 p_gen", font=dict(size=18)), tickfont=dict(size=16))
-    fig.update_yaxes(tickfont=dict(size=16))
-    fig.update_yaxes(title=dict(text="Density", font=dict(size=18)), col=1)
-    fig.update_annotations(font=dict(size=18))
+    fig.update_xaxes(title=dict(text="log10 p_gen", font=dict(size=24)), tickfont=dict(size=20))
+    fig.update_yaxes(tickfont=dict(size=20))
+    fig.update_yaxes(title=dict(text="Density", font=dict(size=24)), col=1)
+    fig.update_annotations(font=dict(size=24))
     fig.update_layout(
         title=dict(text=f"Generation Probabilities of Train and Test Sequences<br>"
-                        f"{get_title_specification(receptor_type, collection)}", font=dict(size=20)),
-        legend=dict(font=dict(size=18)),
+                        f"{get_title_specification(receptor_type, collection)}", font=dict(size=28)),
+        legend=dict(font=dict(size=24)),
         template="plotly_white",
         width=max(700, 450 * n_cols),
-        height=100 + 450 * n_rows,
-        margin=dict(t=160),
+        height=150 + 480 * n_rows,
+        margin=dict(t=230),
     )
 
     png_path = os.path.join(output_dir, "p_gen_distributions.png")
@@ -270,17 +289,23 @@ def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, refe
         print(f"{file_name}: left out {len(summary_df) - len(finite_df)} repertoire(s) with a non-finite "
               f"{score_column}, see p_gen_summary.tsv.")
 
+    colour = px.colors.qualitative.Safe[0]
     fig = go.Figure(go.Box(
         x=finite_df["model"],
         y=finite_df[score_column],
         boxpoints="all",
         jitter=0.3,
         pointpos=0,
-        marker=dict(color=px.colors.qualitative.Safe[0]),
+        width=0.5,
+        line=dict(width=1.2, color=colour),
+        fillcolor="rgba(136, 204, 238, 0.25)",
+        marker=dict(color=colour, size=5, opacity=0.7),
         showlegend=False,
     ))
-    fig.add_hline(y=reference_value, line=dict(color="black", dash="dash"), annotation_text=reference_label,
-                  annotation_position="top left", annotation_font=dict(size=16, color="black"))
+    # The reference is explained above the plot, so that the label does not cover the boxes
+    fig.add_hline(y=reference_value, line=dict(color="black", dash="dash", width=1.5))
+    fig.add_annotation(text=f"Dashed line: {reference_label}", xref="paper", yref="paper", x=1, y=1.02,
+                       xanchor="right", yanchor="bottom", showarrow=False, font=dict(size=16))
 
     fig.update_layout(
         title=dict(text=f"{title}<br>{get_title_specification(receptor_type, collection)}, one point per repertoire",
@@ -289,8 +314,56 @@ def plot_per_repertoire_scores(summary_df: pd.DataFrame, score_column: str, refe
                    categoryorder="array", categoryarray=model_names),
         yaxis=dict(title=dict(text=y_title, font=dict(size=20)), tickfont=dict(size=18)),
         template="plotly_white",
+        # Room for the two-line title and the reference caption above the plot
+        margin=dict(t=150),
+        # The figure grows with the number of models, so that the boxes are not squeezed together
+        width=max(700, 200 + 90 * len(model_names)),
+        height=650,
     )
 
     png_path = os.path.join(output_dir, f"{file_name}.png")
     fig.write_image(png_path, scale=3)
     print(f"Plot saved as png at: {png_path}")
+
+
+def run_p_gen_statistics(analysis_config: AnalysisConfig, summary_df: pd.DataFrame) -> None:
+    """ Runs the repertoire-level comparisons of the per-repertoire p_gen scores. Each model is compared with the
+    value the score takes if train and test are scored alike (a gap of 0, an AUC of 0.5), which pairs every repertoire
+    with that constant, so that the test is a one-sample t-test across repertoires. The AUC is also compared between
+    models, in the contrasts from the config and for all pairs. These comparisons are descriptive, or include
+    confidence intervals and tests if statistical_tests is set. Repertoires with a non-finite gap are left out.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        summary_df (pd.DataFrame): Summary table from summarize_p_gens.
+    Returns:
+        None
+    """
+    collection_specification = get_title_specification(analysis_config.receptor_type, analysis_config.collection)
+    for score_column, (description, label, null_value, comparable) in P_GEN_SCORES.items():
+        output_prefix = f"{analysis_config.analysis_output_dir}/statistics/p_gen_{score_column}"
+        finite_df = summary_df.assign(score=summary_df[score_column].where(np.isfinite(summary_df[score_column])))
+        repertoire_scores = aggregate_repertoire_scores(finite_df, "score", analysis_config.donor_pattern,
+                                                        repertoire_column="file")
+        models = [model for model in analysis_config.model_names if model in set(repertoire_scores["source"])]
+        if comparable:
+            results = run_repertoire_statistics(repertoire_scores, models, output_prefix,
+                                                analysis_config.statistical_tests, None, analysis_config.contrasts,
+                                                analysis_config.donor_pattern)
+            plot_repertoire_statistics(results, output_prefix, score_column, collection_specification,
+                                       score_description=description, x_label=f"Difference in {label}")
+        else:
+            write_repertoire_statistics({"repertoire_scores": repertoire_scores,
+                                         "summary": summarise_repertoire_scores(repertoire_scores,
+                                                                                analysis_config.statistical_tests)},
+                                        output_prefix)
+
+        null_source = f"{null_value:g}"
+        null_scores = repertoire_scores.drop_duplicates("repertoire").assign(source=null_source, score=null_value)
+        comparisons_df, differences_df = compare_paired(pd.concat([repertoire_scores, null_scores], ignore_index=True),
+                                                        [(model, null_source) for model in models],
+                                                        analysis_config.statistical_tests)
+        comparisons_df.to_csv(f"{output_prefix}_vs_null.tsv", sep="\t", index=False)
+        differences_df.to_csv(f"{output_prefix}_vs_null_differences.tsv", sep="\t", index=False)
+        plot_paired_comparisons(comparisons_df, f"{output_prefix}_vs_null",
+                                f"{description}: Models Compared with {null_source} (Train and Test Scored Alike) in "
+                                f"{collection_specification} Repertoires", f"{label} − {null_source}", differences_df)

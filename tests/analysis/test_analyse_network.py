@@ -10,12 +10,14 @@ from gen_airr_bm.analysis.analyse_network import (
     compute_and_plot_connectivity,
     get_connectivity_distributions_by_dataset,
     get_node_degree_distributions,
-    get_mean_reference_divergence_score,
+    get_reference_divergence_scores,
     compute_connectivity_with_compairr,
     get_node_degree_from_compairr_output,
     calculate_jsd,
     summarize_and_plot_dataset_connectivity,
     summarize_and_plot_all, calculate_divergence_scores,
+    get_subset_index,
+    run_network_statistics,
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
@@ -86,10 +88,13 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     mock_gcd = mocker.patch("gen_airr_bm.analysis.analyse_network.get_connectivity_distributions_by_dataset")
     mock_calc_div = mocker.patch("gen_airr_bm.analysis.analyse_network.calculate_divergence_scores")
     mock_plot_dataset = mocker.patch("gen_airr_bm.analysis.analyse_network.summarize_and_plot_dataset_connectivity")
+    reference_scores = pd.DataFrame({"repertoire": ["ref1", "ref2"], "score": [0.4, 0.44]})
     mock_get_ref_score = mocker.patch(
-        "gen_airr_bm.analysis.analyse_network.get_mean_reference_divergence_score", return_value=0.42
+        "gen_airr_bm.analysis.analyse_network.get_reference_divergence_scores", return_value=reference_scores
     )
     mock_plot_all = mocker.patch("gen_airr_bm.analysis.analyse_network.summarize_and_plot_all")
+    mock_statistics = mocker.patch("gen_airr_bm.analysis.analyse_network.run_network_statistics")
+    mocker.patch("pandas.DataFrame.to_csv")
 
     # Mock the file structure returned for each model/reference
     mock_get_files.return_value = {
@@ -162,21 +167,18 @@ def test_compute_and_plot_connectivity(mocker, sample_analysis_config):
     # Both datasets should have been plotted for each reference (order not guaranteed)
     assert {"ref1", "ref2"}.issubset(set(called_datasets))
 
-    # Overall summary plotted once
+    # Overall summary plotted once, from one row per subset, with the per-repertoire reference scores
     assert mock_get_ref_score.call_count == 1
     mock_plot_all.assert_called_once()
-    all_args = mock_plot_all.call_args[0]
-    sample_analysis_config, divergence_scores_all, mean_ref_score = all_args
+    _, scores_df, plotted_reference_scores = mock_plot_all.call_args[0]
+    assert plotted_reference_scores is reference_scores
+    mock_statistics.assert_called_once()
 
-    assert mean_ref_score == 0.42
-
-    # Light structure checks on divergence_scores_all
-    # Expect entries for both references and both datasets with both models
-    for reference in sample_analysis_config.reference_data:
-        assert set(divergence_scores_all[reference].keys()) == {"ref1", "ref2"}
-        for ds in ["ref1", "ref2"]:
-            for model in sample_analysis_config.model_names:
-                assert divergence_scores_all[reference][ds][model] == [0.1, 0.2]
+    # 2 references x 2 models x 2 datasets x 2 subsets, with the subset index from the generated file name
+    assert len(scores_df) == 16
+    assert set(scores_df["dataset"]) == {"ref1", "ref2"}
+    assert set(scores_df["subset"]) == {1, 2}
+    assert scores_df.groupby("subset")["jsd"].first().to_dict() == {1: 0.1, 2: 0.2}
 
 
 def test_get_connectivity_distributions_by_dataset(mocker, sample_analysis_config):
@@ -485,91 +487,115 @@ def test_summarize_and_plot_dataset_connectivity(mocker):
     )
 
 
-def test_summarize_and_plot_all(mocker):
-    """Test summarize_and_plot_all computes mean/std per reference and calls plot_grouped_avg_scores."""
+def make_scores_df(scores: dict) -> pd.DataFrame:
+    """ Scores as {(reference, dataset, model): [score per subset]}. """
+    return pd.DataFrame([{"metric": "connectivity", "model": model, "reference": reference, "dataset": dataset,
+                          "subset": subset, "jsd": score}
+                         for (reference, dataset, model), subset_scores in scores.items()
+                         for subset, score in enumerate(subset_scores)])
+
+
+def test_summarize_and_plot_all(mocker, sample_analysis_config):
+    """Test summarize_and_plot_all averages the subsets within each repertoire before summarising over repertoires."""
     mock_plot_grouped = mocker.patch('gen_airr_bm.analysis.analyse_network.plot_grouped_avg_scores')
+    scores_df = make_scores_df({
+        ("test", "dataset1", "model1"): [0.2, 0.4], ("test", "dataset2", "model1"): [0.5, 0.7],
+        ("train", "dataset1", "model1"): [0.5, 0.7], ("train", "dataset2", "model1"): [0.8, 0.6],
+    })
+    reference_scores = pd.DataFrame({"repertoire": ["dataset1", "dataset2"], "score": [0.2, 0.22]})
 
-    divergence_scores_all = {
-        "test": {
-            "dataset1": {"model1": [0.2, 0.4], "model2": [0.1, 0.3]},
-            "dataset2": {"model1": [0.4, 0.2], "model2": [0.3, 0.1]}
-        },
-        "train": {
-            "dataset1": {"model1": [0.5, 0.7], "model2": [0.6, 0.8]},
-            "dataset2": {"model1": [0.7, 0.5], "model2": [0.8, 0.6]}
-        }
-    }
-    output_dir = "/tmp/out"
-    reference_datasets = ["train", "test"]
-    mean_reference_score = 0.21
-
-    summarize_and_plot_all(
-        analysis_config=sample_analysis_config,
-        divergence_scores_all=divergence_scores_all,
-        mean_reference_score=mean_reference_score
-    )
+    summarize_and_plot_all(sample_analysis_config, scores_df, reference_scores)
 
     assert mock_plot_grouped.call_count == 1
     kwargs = mock_plot_grouped.call_args.kwargs
-
-    expected_mean = {
-        "test": {"model1": 0.3, "model2": 0.2},
-        "train": {"model1": 0.6, "model2": 0.7}
-    }
-    expected_std = {
-        "test": {"model1": 0.1, "model2": 0.1},
-        "train": {"model1": 0.1, "model2": 0.1}
-    }
-
-    # Compare nested float dicts using approx to avoid rounding issues
-    mean_scores = kwargs["mean_scores_by_ref"]
-    std_scores = kwargs["std_scores_by_ref"]
-    for ref, models in expected_mean.items():
-        for model, exp_val in models.items():
-            assert mean_scores[ref][model] == pytest.approx(exp_val, rel=1e-12, abs=1e-12)
-
-    for ref, models in expected_std.items():
-        for model, exp_val in models.items():
-            assert std_scores[ref][model] == pytest.approx(exp_val, rel=1e-12, abs=1e-12)
-
-    # Non-float kwargs can be compared directly
+    # Repertoire means: test 0.3 and 0.6, train 0.6 and 0.7
+    assert kwargs["mean_scores_by_ref"]["test"]["model1"] == pytest.approx(0.45)
+    assert kwargs["mean_scores_by_ref"]["train"]["model1"] == pytest.approx(0.65)
+    # The error bars are the SD across the repertoire means, not across all subsets
+    assert kwargs["std_scores_by_ref"]["test"]["model1"] == pytest.approx(np.std([0.3, 0.6], ddof=1))
+    assert kwargs["repertoire_scores_by_ref"]["test"]["model1"] == [("dataset1", pytest.approx(0.3)),
+                                                                    ("dataset2", pytest.approx(0.6))]
+    assert kwargs["error_bar_caption"].startswith("Error bars: SD across repertoires (n=2)")
     assert kwargs["distribution_type"] == "connectivity"
     assert kwargs["file_name"] == "all_datasets_connectivity"
     assert kwargs["scoring_method"] == "JSD"
-    assert kwargs["reference_score"] == mean_reference_score
+    assert kwargs["reference_score"] == pytest.approx(0.21)
 
 
-def test_get_mean_reference_divergence_score(mocker, sample_analysis_config):
-    """Test get_reference_divergence_score collects all ref1 scores and returns their mean."""
+def test_get_reference_divergence_scores(mocker, sample_analysis_config):
+    """Test get_reference_divergence_scores returns one train vs. test score per repertoire."""
     mocker.patch(
         'gen_airr_bm.analysis.analyse_network.get_reference_files',
-        return_value=[("trainA.tsv", "testA.tsv"), ("trainB.tsv", "testB.tsv")]
+        return_value=[("trainB.tsv", "testB.tsv"), ("trainA.tsv", "testA.tsv")]
     )
-
-    side_effect_gcd = [
-        ("datasetA", pd.Series([1, 2]), [pd.Series([2, 1])]),
-        ("datasetB", pd.Series([3, 4]), [pd.Series([4, 3])]),
-    ]
     mocker.patch(
         "gen_airr_bm.analysis.analyse_network.get_connectivity_distributions_by_dataset",
-        side_effect=side_effect_gcd,
+        side_effect=[("datasetA", pd.Series([1, 2]), [pd.Series([2, 1])]),
+                     ("datasetB", pd.Series([3, 4]), [pd.Series([4, 3])])],
     )
-
-    # Mock calculate_divergence_scores_per_dataset with the CORRECT signature:
-    # (ref1_degree_dist: pd.Series, ref2_or_gen_degree_dists: list[pd.Series]) -> list[float]
     mocker.patch(
         "gen_airr_bm.analysis.analyse_network.calculate_divergence_scores",
-        side_effect=[[0.1, 0.3], [0.2, 0.4]],  # one list per dataset
+        side_effect=[[0.1], [0.2]],
     )
 
-    mean = get_mean_reference_divergence_score(
+    reference_scores = get_reference_divergence_scores(
         analysis_config=sample_analysis_config,
         compairr_output_helper_dir="/tmp/helper",
         compairr_output_dir="/tmp/output",
     )
 
-    # Mean of [0.1, 0.3, 0.2, 0.4] = 0.25
-    assert mean == pytest.approx(0.25)
+    # The reference files are processed in sorted order
+    assert reference_scores["repertoire"].tolist() == ["datasetA", "datasetB"]
+    assert reference_scores["score"].tolist() == pytest.approx([0.1, 0.2])
+
+
+@pytest.mark.parametrize("gen_file, expected", [
+    ("/gen/model/6271_pLN_CD8_3.tsv", 3),
+    ("rep_1_0.tsv", 0),
+])
+def test_get_subset_index(gen_file, expected):
+    assert get_subset_index(gen_file) == expected
+
+
+def test_get_subset_index_without_index():
+    assert np.isnan(get_subset_index("/gen/dataset1_gen1.tsv"))
+
+
+@pytest.mark.parametrize("statistical_tests", [False, True])
+def test_run_network_statistics(tmp_path, sample_analysis_config, statistical_tests):
+    sample_analysis_config.analysis_output_dir = str(tmp_path)
+    sample_analysis_config.statistical_tests = statistical_tests
+    sample_analysis_config.donor_pattern = "^(dataset\\d+)$"
+    sample_analysis_config.contrasts = [["model2", "model1"]]
+    scores_df = make_scores_df({
+        ("test", f"dataset{i}", model): [base + 0.01 * i, base + 0.02 * i]
+        for i in range(1, 4) for model, base in [("model1", 0.2), ("model2", 0.3)]
+    } | {("train", "dataset1", "model1"): [0.9, 0.9]})
+    reference_scores = pd.DataFrame({"repertoire": ["dataset1", "dataset2", "dataset3"], "score": [0.1, 0.12, 0.11]})
+
+    run_network_statistics(sample_analysis_config, scores_df, reference_scores)
+
+    prefix = f"{tmp_path}/statistics/connectivity"
+    vs_train_test = pd.read_csv(f"{prefix}_vs_train_test.tsv", sep="\t")
+    # Only the test scores are compared, three repertoires per model
+    assert vs_train_test["first"].tolist() == ["model1", "model2"]
+    assert vs_train_test["n_repertoires"].tolist() == [3, 3]
+    assert ("p_adjusted" in vs_train_test.columns) == statistical_tests
+    contrasts = pd.read_csv(f"{prefix}_contrasts.tsv", sep="\t")
+    assert contrasts[["first", "second"]].values.tolist() == [["model2", "model1"]]
+    for plot in ["vs_train_test", "contrasts"]:
+        assert os.path.exists(f"{prefix}_{plot}.png")
+
+
+def test_run_network_statistics_with_tests_requires_one_repertoire_per_donor(tmp_path, sample_analysis_config):
+    sample_analysis_config.analysis_output_dir = str(tmp_path)
+    sample_analysis_config.statistical_tests = True
+    sample_analysis_config.donor_pattern = "^(dataset)"
+    scores_df = make_scores_df({("test", f"dataset{i}", "model1"): [0.2, 0.3] for i in range(1, 3)})
+    reference_scores = pd.DataFrame({"repertoire": ["dataset1", "dataset2"], "score": [0.1, 0.1]})
+
+    with pytest.raises(ValueError, match="one repertoire per donor"):
+        run_network_statistics(sample_analysis_config, scores_df, reference_scores)
 
 
 def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
@@ -585,8 +611,10 @@ def test_end_to_end_workflow_with_mocks(mocker, sample_analysis_config):
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_degree_distribution_by_dataset')
         mocker.patch('gen_airr_bm.analysis.analyse_network.plot_avg_scores')
         mocker.patch('gen_airr_bm.analysis.analyse_network.calculate_jsd', return_value=[0.1])
-        mocker.patch('gen_airr_bm.analysis.analyse_network.get_mean_reference_divergence_score', return_value=0.25)
+        mocker.patch('gen_airr_bm.analysis.analyse_network.get_reference_divergence_scores',
+                     return_value=pd.DataFrame({"repertoire": ["dataset1"], "score": [0.25]}))
         mocker.patch('gen_airr_bm.analysis.analyse_network.summarize_and_plot_all')
+        mocker.patch('gen_airr_bm.analysis.analyse_network.run_network_statistics')
         mocker.patch('os.path.exists', return_value=True)
 
         # Mock file structure

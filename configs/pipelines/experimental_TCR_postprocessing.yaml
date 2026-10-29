@@ -1,5 +1,5 @@
 n_experiments: 11
-output_dir: "RESULTS_NOV12/TCR"
+output_dir: "RESULTS_SEP25/TCR"
 input_dir: "data/experimental/collectionA"
 seed: 42
 
@@ -45,6 +45,22 @@ postprocessing:
     n_samples: 21500
     n_subsets: 6
   - model_name: "ProGen_kmer"
+    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
+    n_samples: 21500
+    n_subsets: 6
+  - model_name: "TCRpeg_overlap"
+    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
+    n_samples: 21500
+    n_subsets: 6
+  - model_name: "TCRpeg_kmer"
+    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
+    n_samples: 21500
+    n_subsets: 6
+  - model_name: "TCRsep_overlap"
+    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
+    n_samples: 21500
+    n_subsets: 6
+  - model_name: "TCRsep_kmer"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6", "exp_7", "exp_8", "exp_9", "exp_10"]
     n_samples: 21500
     n_subsets: 6

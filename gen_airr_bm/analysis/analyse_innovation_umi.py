@@ -8,10 +8,18 @@ import plotly.express as px
 from collections import defaultdict
 from dataclasses import dataclass, field
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_subset_index
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
 from gen_airr_bm.utils.plotting_utils import plot_avg_innovation_scores, wrap_title, \
-    get_collection_specification_for_title
+    get_collection_specification_for_title, plot_repertoire_statistics
+from gen_airr_bm.utils.statistics_utils import aggregate_repertoire_scores, check_one_repertoire_per_donor, \
+    run_repertoire_statistics, summarise_scores_by_reference
+
+TEST_ONLY_REFERENCE = "test_only"
+# The metrics with the suffix of their overview plot and their description in the statistics plot titles
+METRICS = {"innovation_sensitivity": ("", "Innovation Sensitivity"),
+           "innovation_precision": ("_normalized", "Innovation Precision")}
+SCORE_COLUMNS = ["metric", "model", "reference", "dataset", "subset", "score"]
 
 
 @dataclass
@@ -26,6 +34,7 @@ class InnovationScores:
     innovation_df: pd.DataFrame = field(default_factory=lambda: pd.DataFrame(
         columns=["dataset", "model", "precision_innovation", "sensitivity_innovation", "n_gen_novel", "n_test_only"]
     ))
+    scores: list = field(default_factory=list)
 
 
 def run_innovation_umi_analysis(analysis_config: AnalysisConfig) -> None:
@@ -47,7 +56,11 @@ def run_innovation_umi_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr_output_dir: str) -> None:
-    """ Compute innovation scores and plot them.
+    """ Compute innovation scores and plot them. The scores of every generated subset are averaged within its repertoire
+    before the models are summarised over repertoires (see statistics_utils). The models are also compared at the
+    repertoire level: with each other and in the contrasts given in the config. These comparisons are descriptive, or
+    include confidence intervals and tests if statistical_tests is set, which requires a donor_pattern and one
+    repertoire per donor.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         compairr_output_dir (str): Directory to store CompAIRR output files.
@@ -59,10 +72,17 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     preprocess_gen_for_innovation_precision(analysis_config)
 
     for model in analysis_config.model_names:
-        collect_model_scores(analysis_config, model, "test_only", compairr_output_dir, scores)
+        collect_model_scores(analysis_config, model, TEST_ONLY_REFERENCE, compairr_output_dir, scores)
 
-    plot_innovation_scores(analysis_config, scores)
+    scores_df = pd.DataFrame(scores.scores, columns=SCORE_COLUMNS)
+    scores_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_repertoire_scores.tsv", sep="\t", index=False)
+    if analysis_config.statistical_tests:
+        check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "score", analysis_config.donor_pattern),
+                                       analysis_config.donor_pattern)
+
+    plot_innovation_scores(analysis_config, scores, scores_df)
     scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
+    run_innovation_statistics(analysis_config, scores_df)
 
 
 def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_reference: str, compairr_output_dir: str,
@@ -99,6 +119,12 @@ def collect_model_scores(analysis_config: AnalysisConfig, model: str, test_refer
 
         scores.innovation_sensitivity_all[dataset_name][model] = innovation_sensitivity_scores
         scores.innovation_precision_all[dataset_name][model] = innovation_precision_scores
+
+        for gen_file, sensitivity, precision in zip(gen_files, innovation_sensitivity_scores,
+                                                    innovation_precision_scores):
+            for metric, score in [("innovation_sensitivity", sensitivity), ("innovation_precision", precision)]:
+                scores.scores.append({"metric": metric, "model": model, "reference": test_reference,
+                                      "dataset": dataset_name, "subset": get_subset_index(gen_file), "score": score})
 
 
 def preprocess_test_for_innovation_sensitivity(analysis_config: AnalysisConfig) -> None:
@@ -202,11 +228,12 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, search_for_f
 
 
 # TODO: Refactor innovation plotting hack
-def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationScores) -> None:
-    """ Plot innovation scores for each dataset and model.
+def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationScores, scores_df: pd.DataFrame) -> None:
+    """ Plot innovation scores for each dataset and model, and the innovation of each model over repertoires.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         scores (InnovationScores): Storage class for innovation scores.
+        scores_df (pd.DataFrame): One row per metric, model, dataset and generated subset, with the score in score.
     Returns:
         None
     """
@@ -223,20 +250,16 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
                                    f"{dataset}_innovation_normalized", "innovation",
                                    scoring_method="innovation")
 
-    mean_innovation_sensitivity, std_innovation_sensitivity = collapse_mean_std_across_datasets(scores.mean_innovation_sensitivity,
-                                                                                      scores.std_innovation_sensitivity)
-    mean_innovation_precision, std_innovation_precision = collapse_mean_std_across_datasets(
-        scores.mean_innovation_precision, scores.std_innovation_precision)
-
-    plot_avg_innovation_scores(analysis_config, mean_innovation_sensitivity, std_innovation_sensitivity,
-                               analysis_config.analysis_output_dir, "innovation",
-                               f"innovation_{analysis_config.receptor_type.replace(' ', '_')}", "innovation",
-                               scoring_method="innovation")
-
-    plot_avg_innovation_scores(analysis_config, mean_innovation_precision, std_innovation_precision,
-                               analysis_config.analysis_output_dir, "innovation",
-                               f"innovation_{analysis_config.receptor_type.replace(' ', '_')}_normalized", "innovation",
-                               scoring_method="innovation")
+    for metric, (file_suffix, _) in METRICS.items():
+        mean_scores, std_scores, repertoire_scores, error_bar_caption = summarise_scores_by_reference(
+            scores_df, metric, analysis_config.donor_pattern, score_column="score")
+        if TEST_ONLY_REFERENCE not in mean_scores:
+            continue
+        plot_avg_innovation_scores(analysis_config, mean_scores[TEST_ONLY_REFERENCE],
+                                   std_scores[TEST_ONLY_REFERENCE], analysis_config.analysis_output_dir, "innovation",
+                                   f"innovation_{analysis_config.receptor_type.replace(' ', '_')}{file_suffix}",
+                                   "innovation", scoring_method="innovation", error_bar_caption=error_bar_caption,
+                                   repertoire_scores=repertoire_scores[TEST_ONLY_REFERENCE])
 
     plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
     plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config, scores)
@@ -471,27 +494,23 @@ def plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config: AnalysisCo
         f"{analysis_config.analysis_output_dir}/innovation_precision_by_n_gen_novel_pseudolog.png", scale=3)
 
 
-def collapse_mean_std_across_datasets(mean_dict, std_dict):
-    """
-    mean_dict: {dataset: {model: mean_value}}
-    std_dict:  {dataset: {model: std_value}}
-
+def run_innovation_statistics(analysis_config: AnalysisConfig, scores_df: pd.DataFrame) -> None:
+    """ Runs the repertoire-level comparisons of the innovation sensitivity and precision and plots the contrasts from
+    the config. There is no train vs. test reference, since the test-only sequences are by definition not in train.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        scores_df (pd.DataFrame): One row per metric, model, dataset and generated subset, with the score in score.
     Returns:
-        final_mean: {model: float}
-        final_std:  {model: float}
+        None
     """
-
-    # Collect values across datasets
-    mean_values = defaultdict(list)
-    std_values = defaultdict(list)
-
-    for dataset in sorted(mean_dict):
-        for model in sorted(mean_dict[dataset]):
-            mean_values[model].append(mean_dict[dataset][model])
-            std_values[model].append(std_dict[dataset][model])
-
-    # Compute final aggregated mean + std
-    final_mean = {model: float(np.mean(vals)) for model, vals in mean_values.items()}
-    final_std = {model: float(np.mean(vals)) for model, vals in std_values.items()}
-
-    return final_mean, final_std
+    collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
+                                                                     analysis_config.collection)
+    for metric, (_, description) in METRICS.items():
+        output_prefix = f"{analysis_config.analysis_output_dir}/statistics/{metric}"
+        repertoire_scores = aggregate_repertoire_scores(scores_df[scores_df["metric"] == metric], "score",
+                                                        analysis_config.donor_pattern)
+        results = run_repertoire_statistics(repertoire_scores, analysis_config.model_names, output_prefix,
+                                            analysis_config.statistical_tests, None, analysis_config.contrasts,
+                                            analysis_config.donor_pattern)
+        plot_repertoire_statistics(results, output_prefix, metric, collection_specification,
+                                   score_description=description, x_label=f"Difference in {description}")
