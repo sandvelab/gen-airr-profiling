@@ -3,19 +3,20 @@ output_dir: "RESULTS_SEP25/BCR"
 input_dir: "data/experimental/collectionB"
 seed: 42
 
+# PWM, VAE and ProGen were not resampled again; their postprocessing from RESULTS_NOV12 is kept.
 postprocessing:
-  - model_name: "PWM"
-    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
-    n_samples: 10000
-    n_subsets: 6
-  - model_name: "VAE_overlap"
-    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
-    n_samples: 10000
-    n_subsets: 6
-  - model_name: "VAE_kmer"
-    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
-    n_samples: 10000
-    n_subsets: 6
+#  - model_name: "PWM"
+#    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
+#    n_samples: 10000
+#    n_subsets: 6
+#  - model_name: "VAE_overlap"
+#    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
+#    n_samples: 10000
+#    n_subsets: 6
+#  - model_name: "VAE_kmer"
+#    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
+#    n_samples: 10000
+#    n_subsets: 6
   - model_name: "SoNNia_overlap"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
     n_samples: 10000
@@ -40,14 +41,14 @@ postprocessing:
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
     n_samples: 10000
     n_subsets: 6
-  - model_name: "ProGen_overlap"
-    experiment_names: [ "exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6" ]
-    n_samples: 10000
-    n_subsets: 6
-  - model_name: "ProGen_kmer"
-    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
-    n_samples: 10000
-    n_subsets: 6
+#  - model_name: "ProGen_overlap"
+#    experiment_names: [ "exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6" ]
+#    n_samples: 10000
+#    n_subsets: 6
+#  - model_name: "ProGen_kmer"
+#    experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
+#    n_samples: 10000
+#    n_subsets: 6
   - model_name: "TCRpeg_overlap"
     experiment_names: ["exp_0", "exp_1", "exp_2", "exp_3", "exp_4", "exp_5", "exp_6"]
     n_samples: 10000
