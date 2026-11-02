@@ -211,14 +211,16 @@ def validate_contrasts(contrasts: list, sources: list) -> list:
     return validated
 
 
-def describe_error_bars(n_repertoires: int, n_donors: int, dots: str = "repertoires") -> str:
-    """ Returns the caption that explains the standard deviation error bars of a bar plot, and what its dots are. """
+def describe_error_bars(n_repertoires: int, n_donors: int, dots: str = None) -> str:
+    """ Returns the caption that explains the standard deviation error bars of a plot, and what its dots are if it has
+    any. """
     sample = f"n={n_repertoires}" if n_repertoires == n_donors else f"n={n_repertoires} from {n_donors} donors"
-    return f"Error bars: SD across repertoires ({sample}); dots: {dots}"
+    caption = f"Error bars: SD across repertoires ({sample})"
+    return caption if dots is None else f"{caption}; dots: {dots}"
 
 
 def summarise_scores_by_reference(scores_df: pd.DataFrame, metric, donor_pattern: str | None,
-                                  score_column: str = "jsd") -> tuple[dict, dict, dict, str]:
+                                  score_column: str = "jsd") -> tuple[dict, dict, str]:
     """ Averages the scores of a metric over the generated subsets of each repertoire, and summarises them over
     repertoires, so that the repertoires and not the generated subsets are the observations. The error bars are the
     standard deviation in every collection, so that they are comparable across collections. With statistical tests,
@@ -229,10 +231,10 @@ def summarise_scores_by_reference(scores_df: pd.DataFrame, metric, donor_pattern
         donor_pattern (str | None): Regular expression that extracts the donor from the repertoire name.
         score_column (str): Column with the scores.
     Returns:
-        tuple[dict, dict, dict, str]: As {reference: {model: value}}: the mean and the standard deviation over
-        repertoires, and the (donor, score) pairs of the repertoires; and the error bar caption.
+        tuple[dict, dict, str]: As {reference: {model: value}}: the mean and the standard deviation over
+        repertoires; and the error bar caption.
     """
-    mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref = {}, {}, {}
+    mean_scores_by_ref, std_scores_by_ref = {}, {}
     n_repertoires, n_donors = 0, 0
     metric_scores = scores_df[scores_df["metric"] == metric]
     for reference, reference_scores in metric_scores.groupby("reference"):
@@ -242,11 +244,7 @@ def summarise_scores_by_reference(scores_df: pd.DataFrame, metric, donor_pattern
         std_scores_by_ref[reference] = dict(zip(summary["source"], summary["sd"]))
         n_repertoires = max(n_repertoires, summary["n_repertoires"].max())
         n_donors = max(n_donors, summary["n_donors"].max())
-        repertoire_scores_by_ref[reference] = {
-            model: list(zip(model_scores["donor"], model_scores["score"]))
-            for model, model_scores in repertoire_scores.dropna(subset=["score"]).groupby("source")}
-    return mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, describe_error_bars(n_repertoires,
-                                                                                                n_donors)
+    return mean_scores_by_ref, std_scores_by_ref, describe_error_bars(n_repertoires, n_donors)
 
 
 def run_repertoire_statistics(repertoire_scores: pd.DataFrame, models: list, output_prefix: str,

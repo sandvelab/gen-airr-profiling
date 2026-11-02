@@ -72,9 +72,7 @@ def test_plot_innovation_scores_over_repertoires(mocker, sample_analysis_config)
     # Repertoire means 0.2 and 0.6: the error bar is their SD, not the mean of the within-repertoire SDs
     assert sensitivity.args[1]["modelA"] == pytest.approx(0.4)
     assert sensitivity.args[2]["modelA"] == pytest.approx(np.std([0.2, 0.6], ddof=1))
-    assert sensitivity.kwargs["repertoire_scores"]["modelA"] == [("rep_1", pytest.approx(0.2)),
-                                                                 ("rep_2", pytest.approx(0.6))]
-    assert sensitivity.kwargs["error_bar_caption"].startswith("Error bars: SD across repertoires (n=2)")
+    assert sensitivity.kwargs["error_bar_caption"] == "Error bars: SD across repertoires (n=2)"
     assert overview_calls["innovation_BCR_UMI_normalized"].args[1]["modelA"] == pytest.approx(0.02)
 
 

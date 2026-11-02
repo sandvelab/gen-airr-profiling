@@ -69,13 +69,13 @@ def run_gene_usage_analysis(analysis_config: AnalysisConfig) -> None:
     frequencies_df.to_csv(f"{analysis_config.analysis_output_dir}/gene_usage_frequencies.tsv", sep="\t", index=False)
 
     for metric_name in GENE_USAGE_METRICS:
-        mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, error_bar_caption = \
+        mean_scores_by_ref, std_scores_by_ref, error_bar_caption = \
             summarise_scores_by_reference(scores_df, metric_name, analysis_config.donor_pattern)
         reference_scores = compute_train_test_reference_scores(analysis_config, metric_name, distributions_cache)
         reference_score = float(reference_scores["score"].mean()) if reference_scores is not None else None
         plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref,
                                f"gene_usage_{metric_name.replace(' ', '_')}_grouped", get_metric_label(metric_name),
-                               "JSD", reference_score, error_bar_caption, repertoire_scores_by_ref)
+                               "JSD", reference_score, error_bar_caption)
         plot_gene_usage_frequencies(analysis_config, frequencies_df, metric_name)
         run_gene_usage_statistics(analysis_config, scores_df, metric_name, models_with_gene_calls, reference_scores)
 

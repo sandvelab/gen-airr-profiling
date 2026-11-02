@@ -86,7 +86,7 @@ def plot_avg_scores(mean_scores_dict, std_scores_dict, output_dir, reference_dat
 
 #TODO: Refactor this function (Dirty coding)
 def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dict, output_dir, reference_data, file_name,
-                    distribution_type, scoring_method="JSD", error_bar_caption=None, repertoire_scores=None):
+                    distribution_type, scoring_method="JSD", error_bar_caption=None):
     """ Plots a bar chart for mean scores across models.
     Args:
         mean_scores_dict: dict of {model: mean_score}
@@ -97,8 +97,6 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         distribution_type: used for titles. e.g. "connectivity"
         scoring_method: used for titles. e.g. "JSD"
         error_bar_caption: optional caption that explains the error bars
-        repertoire_scores: optional dict of {model: list of (donor, score)}, plotted as one dot per repertoire, with
-            one marker symbol per donor if donors have several repertoires
     Returns:
         None
     """
@@ -117,18 +115,15 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
     plotting_df.to_csv(plotting_data_file, sep="\t", index=False)
     color_palette = px.colors.qualitative.Safe
 
-    dot_traces = get_repertoire_dot_traces({reference_data: repertoire_scores}, [reference_data],
-                                           plotting_df["Model"].tolist()) if repertoire_scores is not None else []
-    fig = go.Figure([
+    fig = go.Figure(
         go.Bar(
             x=plotting_df["Model"],
             y=plotting_df["Mean_Score"],
             error_y=dict(type="data", array=plotting_df["Std_Dev"], visible=True),
             marker=dict(color="skyblue"),
-            offsetgroup=reference_data,
             showlegend=False,
         )
-    ] + dot_traces)
+    )
 
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
                                                                      analysis_config.collection)
@@ -139,9 +134,7 @@ def plot_avg_innovation_scores(analysis_config, mean_scores_dict, std_scores_dic
         xaxis_tickangle=-45,
         template="plotly_white",
         colorway=color_palette,
-        legend=dict(tracegroupgap=0),
-        # The figure grows with the donor legend, which is only shown if donors have several repertoires
-        height=max(500, 300 + 30 * sum(trace.showlegend is not False for trace in dot_traces)),
+        height=500,
     )
     if error_bar_caption is not None:
         fig.add_annotation(text=error_bar_caption, xref="paper", yref="paper", x=1, y=1.02, showarrow=False,
@@ -168,7 +161,7 @@ def get_donor_symbols(donors) -> dict | None:
 
 def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref, std_scores_by_ref,  file_name,
                             distribution_type, scoring_method="JSD", reference_score=None,
-                            error_bar_caption=None, repertoire_scores_by_ref=None) -> None:
+                            error_bar_caption=None) -> None:
     """
     Plots grouped bar chart for mean scores across models and reference types.
 
@@ -181,8 +174,6 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
         scoring_method: used for titles. e.g. "JSD"
         reference_score: optional float, to plot a reference line
         error_bar_caption: optional caption that explains the error bars
-        repertoire_scores_by_ref: optional dict of {ref_label: {model: list of (donor, score)}}, plotted as one dot
-            per repertoire, with one marker symbol per donor if donors have several repertoires
     Returns:
         None
     """
@@ -219,8 +210,6 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
         ref_df = plotting_df[plotting_df["Reference"] == ref]
         data.append(go.Bar(name=ref.capitalize(), x=ref_df["Model"], y=ref_df["Mean_Score"],
                            error_y=dict(type="data", array=ref_df["Std_Dev"], visible=True), offsetgroup=ref))
-    if repertoire_scores_by_ref is not None:
-        data.extend(get_repertoire_dot_traces(repertoire_scores_by_ref, all_refs, all_models))
 
     fig = go.Figure(data=data)
     color_palette = px.colors.qualitative.Safe
@@ -242,10 +231,7 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
         template="plotly_white",
         colorway=color_palette,
         showlegend=True,
-        scattermode="group",
-        legend=dict(tracegroupgap=0),
-        # The donor legend entries are added to the reference entries, so the figure grows with the legend
-        height=max(500, 300 + 30 * sum(trace.showlegend is not False for trace in data)),
+        height=500,
     )
     if error_bar_caption is not None:
         fig.add_annotation(text=error_bar_caption, xref="paper", yref="paper", x=1, y=1.02, showarrow=False,
@@ -263,32 +249,6 @@ def plot_grouped_avg_scores(analysis_config: AnalysisConfig, mean_scores_by_ref,
 
     fig.write_image(png_path, scale=3)
     print(f"Plot saved as png at: {png_path}")
-
-
-def get_repertoire_dot_traces(repertoire_scores_by_ref: dict, refs: list, models: list) -> list:
-    """ Returns scatter traces with one dot per repertoire, placed on the bars of their reference. If donors have
-    several repertoires, each donor gets its own marker symbol and legend entry. """
-    points = [(ref, model, donor, score) for ref in refs for model in models
-              for donor, score in repertoire_scores_by_ref.get(ref, {}).get(model, [])]
-    first_ref_model = [(donor, model) for ref, model, donor, _ in points if ref == refs[0]]
-    donor_symbols = get_donor_symbols(donor for donor, model in first_ref_model if model == first_ref_model[0][1]) \
-        if first_ref_model else None
-
-    traces = []
-    for ref in refs:
-        donors = sorted(donor_symbols) if donor_symbols else [None]
-        for donor in donors:
-            donor_points = [(model, score) for point_ref, model, point_donor, score in points
-                            if point_ref == ref and (donor is None or point_donor == donor)]
-            if not donor_points:
-                continue
-            traces.append(go.Scatter(
-                x=[model for model, _ in donor_points], y=[score for _, score in donor_points], mode="markers",
-                offsetgroup=ref, name=f"Donor {donor}", legendgroup=f"donor_{donor}",
-                showlegend=donor is not None and ref == refs[0], hoverinfo="y",
-                marker=dict(color="black", size=6, opacity=0.6,
-                            symbol=donor_symbols[donor] if donor is not None else "circle")))
-    return traces
 
 
 def plot_paired_comparisons(comparisons_df: pd.DataFrame, output_path: str, title: str, x_label: str,

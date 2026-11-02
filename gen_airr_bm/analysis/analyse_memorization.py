@@ -8,8 +8,7 @@ import plotly.graph_objects as go
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_sequence_deduplication
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_reference_files, get_subset_index
-from gen_airr_bm.utils.plotting_utils import (get_collection_specification_for_title, get_repertoire_dot_traces,
-                                             plot_repertoire_statistics)
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, plot_repertoire_statistics
 from gen_airr_bm.utils.statistics_utils import (aggregate_repertoire_scores, check_one_repertoire_per_donor,
                                                describe_error_bars, run_repertoire_statistics,
                                                summarise_repertoire_scores)
@@ -151,8 +150,8 @@ def compute_overlap_score(analysis_config: AnalysisConfig, train_file: str, test
 
 def plot_results(repertoire_scores: pd.DataFrame, reference_scores: pd.DataFrame | None, fig_dir: str, file_name: str,
                  receptor_type: str, collection: str = None) -> None:
-    """ Plot the mean memorization score of each model over repertoires, with SD error bars, one dot per repertoire
-    and the train vs. test reference line.
+    """ Plot the mean memorization score of each model over repertoires, with SD error bars and the train vs. test
+    reference line.
     Args:
         repertoire_scores (pd.DataFrame): Scores per model and repertoire as returned by aggregate_repertoire_scores.
         reference_scores (pd.DataFrame | None): Train vs. test scores per repertoire, with columns repertoire and score.
@@ -177,17 +176,13 @@ def plot_results(repertoire_scores: pd.DataFrame, reference_scores: pd.DataFrame
     with open(os.path.join(fig_dir, file_name) + "_mean_ref.tsv", "w") as f:
         f.write(f"{mean_reference_score}\n")
 
-    dots = {"train": {model: list(zip(model_scores["donor"], model_scores["score"]))
-                      for model, model_scores in repertoire_scores.dropna(subset=["score"]).groupby("source")}}
-    dot_traces = get_repertoire_dot_traces(dots, ["train"], models)
-    fig = go.Figure([go.Bar(
+    fig = go.Figure(go.Bar(
         x=models,
         y=scores,
         error_y=dict(type='data', array=errors, visible=True),
         marker=dict(color=px.colors.qualitative.Safe[0]),
-        offsetgroup="train",
         showlegend=False,
-    )] + dot_traces)
+    ))
 
     collection_specification = get_collection_specification_for_title(receptor_type, collection)
     fig.update_layout(
@@ -207,11 +202,9 @@ def plot_results(repertoire_scores: pd.DataFrame, reference_scores: pd.DataFrame
         xaxis_tickangle=-45,
         template="plotly_white",
         colorway=px.colors.qualitative.Safe,
-        legend=dict(tracegroupgap=0),
         # Room for the two-line title and the error bar caption above the plot
         margin=dict(t=150),
-        # The figure grows with the donor legend, which is only shown if donors have several repertoires
-        height=max(500, 300 + 30 * sum(trace.showlegend is not False for trace in dot_traces)),
+        height=500,
     )
     fig.add_annotation(text=describe_error_bars(summary["n_repertoires"].max(), summary["n_donors"].max()),
                        xref="paper", yref="paper", x=1, y=1.02, showarrow=False, xanchor="right", yanchor="bottom",
