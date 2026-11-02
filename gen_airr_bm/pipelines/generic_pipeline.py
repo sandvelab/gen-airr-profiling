@@ -40,7 +40,7 @@ def run_postprocessing(postprocessing, orchestrator):
     orchestrator.run_postprocessing(postprocessing)
 
 
-def main(config_path, break_main=False, parallel=True):
+def main(config_path, break_main=False, parallel=True, max_workers=None):
     config = MainConfig(config_path)
 
     data_generation_orchestrator = DataGenerationOrchestrator()
@@ -52,69 +52,69 @@ def main(config_path, break_main=False, parallel=True):
 
     if parallel:
         if break_main:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for _ in executor.map(
                         lambda data_generation: run_data_generation(data_generation, data_generation_orchestrator),
                         config.data_generation_configs):
                     pass
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for _ in executor.map(
                         lambda model: run_training(model, training_orchestrator, config.output_dir),
                         config.model_configs):
                     pass
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for _ in executor.map(
                         lambda sampling: run_sampling(sampling, sampling_orchestrator),
                         config.sampling_configs):
                     pass
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for _ in executor.map(
                         lambda postprocessing: run_postprocessing(postprocessing, postprocessing_orchestrator),
                         config.postprocessing_configs):
                     pass
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for _ in executor.map(
                         lambda analysis: run_analysis(analysis, analysis_orchestrator),
                         config.analysis_configs):
                     pass
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 for _ in executor.map(
                         lambda tuning: run_tuning(tuning, tuning_orchestrator),
                         config.tuning_configs):
                     pass
 
         else:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 executor.map(
                     lambda data_generation: run_data_generation(data_generation, data_generation_orchestrator),
                     config.data_generation_configs)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 executor.map(
                     lambda model: run_training(model, training_orchestrator, config.output_dir),
                     config.model_configs)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 executor.map(
                     lambda sampling: run_sampling(sampling, sampling_orchestrator),
                     config.sampling_configs)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 executor.map(
                     lambda postprocessing: run_postprocessing(postprocessing, postprocessing_orchestrator),
                     config.postprocessing_configs)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 executor.map(
                     lambda analysis: run_analysis(analysis, analysis_orchestrator),
                     config.analysis_configs)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 executor.map(
                     lambda tuning: run_tuning(tuning, tuning_orchestrator),
                     config.tuning_configs)
@@ -146,6 +146,9 @@ if __name__ == "__main__":
                         help="The main program will break in case of an error in any of the processes.")
     parser.add_argument("--no_parallel", action="store_true",
                         help="Run pipeline stages sequentially instead of in parallel.")
+    parser.add_argument("--max_workers", type=int, default=None,
+                        help="Maximum number of runs in parallel within a stage, e.g. to limit GPU memory use. "
+                             "Defaults to the ThreadPoolExecutor default.")
     args = parser.parse_args()
 
-    main(args.config, args.break_main, parallel=not args.no_parallel)
+    main(args.config, args.break_main, parallel=not args.no_parallel, max_workers=args.max_workers)
