@@ -10,7 +10,7 @@ from gen_airr_bm.analysis.analyse_innovation_umi import preprocess_gen_for_innov
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.file_utils import get_sequence_files, get_subset_index
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
-from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, get_donor_symbols, wrap_title, \
+from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, wrap_title, \
     plot_repertoire_statistics
 from gen_airr_bm.utils.statistics_utils import aggregate_repertoire_scores, check_one_repertoire_per_donor, \
     describe_error_bars, run_repertoire_statistics, summarise_repertoire_scores
@@ -144,7 +144,8 @@ def compute_compairr_overlap_ratio(analysis_config: AnalysisConfig, ref_file: st
 def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores_df: pd.DataFrame) -> None:
     """ Plot innovation sensitivity per model, with one dot per generated subset and a marker for the mean over
     repertoires, with the SD across repertoires as error bars. The subsets are first averaged within each repertoire
-    for the mean and SD. If donors have several repertoires, the dots of each donor get their own marker symbol.
+    for the mean and SD. The dots are circles also if donors have several repertoires, since the dots overlap too
+    much for marker symbols per donor to be told apart.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         scores_df (pd.DataFrame): One row per metric, model, dataset and generated subset, with the score in score.
@@ -154,32 +155,23 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
     df = scores_df[scores_df["metric"] == METRIC_NAME]
     repertoire_scores = aggregate_repertoire_scores(df, "score", analysis_config.donor_pattern)
     summary = summarise_repertoire_scores(repertoire_scores, statistical_tests=False)
-    donors = repertoire_scores.drop_duplicates("repertoire").set_index("repertoire")["donor"]
-    df = df.assign(donor=df["dataset"].map(donors))
-    donor_symbols = get_donor_symbols(donors)
 
     colors = px.colors.qualitative.Dark24
     model_names_sorted = sorted(analysis_config.model_names)
     color_map = {model: colors[i % len(colors)] for i, model in enumerate(model_names_sorted)}
 
-    # Box traces with only their points shown, as in px.strip, which cannot set marker symbols
+    # Box traces with only their points shown, as in px.strip
     fig = go.Figure()
     for model in model_names_sorted:
-        for donor in sorted(donor_symbols) if donor_symbols else [None]:
-            points = df[(df["model"] == model) & ((df["donor"] == donor) if donor is not None else True)]
-            if points.empty:
-                continue
-            fig.add_trace(go.Box(
-                x=[model] * len(points), y=points["score"], name=model, boxpoints="all", jitter=0.3, pointpos=0,
-                fillcolor="rgba(255,255,255,0)", line=dict(color="rgba(255,255,255,0)"), hoveron="points",
-                text=[f"{dataset}, subset {subset}" for dataset, subset in zip(points["dataset"], points["subset"])],
-                hovertemplate="%{text}: %{y:.3g}<extra></extra>", showlegend=False,
-                marker=dict(color=color_map[model], size=11, opacity=0.6,
-                            symbol=donor_symbols[donor] if donor is not None else "circle")))
-    # Legend entries for the donor symbols, in grey since the colours are the models
-    for donor, symbol in sorted((donor_symbols or {}).items()):
-        fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers", name=f"Donor {donor}",
-                                 marker=dict(color="grey", size=11, symbol=symbol)))
+        points = df[df["model"] == model]
+        if points.empty:
+            continue
+        fig.add_trace(go.Box(
+            x=[model] * len(points), y=points["score"], name=model, boxpoints="all", jitter=0.3, pointpos=0,
+            fillcolor="rgba(255,255,255,0)", line=dict(color="rgba(255,255,255,0)"), hoveron="points",
+            text=[f"{dataset}, subset {subset}" for dataset, subset in zip(points["dataset"], points["subset"])],
+            hovertemplate="%{text}: %{y:.3g}<extra></extra>", showlegend=False,
+            marker=dict(color=color_map[model], size=11, opacity=0.6, symbol="circle")))
 
     # Mean per model, drawn as a horizontal tick over each column
     mean_per_model = summary.set_index("source").reindex(model_names_sorted)
@@ -213,10 +205,8 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
         xaxis=dict(tickfont=dict(size=18), categoryorder="array", categoryarray=model_names_sorted),
         yaxis=dict(tickfont=dict(size=18)),
         boxmode="overlay",
-        showlegend=donor_symbols is not None,
-        legend=dict(tracegroupgap=0),
-        # The figure grows with the donor legend, which is only shown if donors have several repertoires
-        height=max(500, 300 + 30 * len(donor_symbols or {})),
+        showlegend=False,
+        height=500,
     )
 
     fig.add_annotation(text=describe_error_bars(summary["n_repertoires"].max(), summary["n_donors"].max(),
