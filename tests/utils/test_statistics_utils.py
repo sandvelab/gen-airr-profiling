@@ -143,14 +143,14 @@ def test_compare_paired_with_tests_bonferroni_correction():
 
 
 @pytest.mark.parametrize("n_repertoires, n_donors, expected", [
-    (20, 20, "Error bars: SD across repertoires (n=20); dots: repertoires"),
-    (11, 5, "Error bars: SD across repertoires (n=11 from 5 donors); dots: repertoires"),
+    (20, 20, "Error bars: SD across repertoires (n=20)"),
+    (11, 5, "Error bars: SD across repertoires (n=11 from 5 donors)"),
 ])
 def test_describe_error_bars(n_repertoires, n_donors, expected):
     assert describe_error_bars(n_repertoires, n_donors) == expected
 
 
-def test_describe_error_bars_with_other_dots():
+def test_describe_error_bars_with_dots():
     assert describe_error_bars(3, 3, dots="generated subsets") == \
            "Error bars: SD across repertoires (n=3); dots: generated subsets"
 

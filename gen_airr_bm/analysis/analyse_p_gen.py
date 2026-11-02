@@ -56,7 +56,7 @@ def run_p_gen_analysis(analysis_config: AnalysisConfig) -> None:
     plot_p_gen_distributions(p_gens_df, analysis_config.model_names, output_dir, analysis_config.receptor_type,
                              analysis_config.collection)
     plot_per_repertoire_scores(summary_df, "median_log10_p_gen_gap", 0, "0 = no difference",
-                               "Median log10 p_gen (train - test)",
+                               "Δ median log<sub>10</sub> p<sub>gen</sub> (train − test)",
                                "Train - Test Gap in Median log10 p_gen", "p_gen_train_test_gap",
                                analysis_config.model_names, output_dir, analysis_config.receptor_type,
                                analysis_config.collection)

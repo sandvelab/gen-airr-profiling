@@ -195,8 +195,7 @@ def test_plot_precision_recall_scores_recall_over_repertoires(mocker, sample_ana
     # Repertoire means 0.2 and 0.6: the error bar is their SD, not the mean of the within-repertoire SDs
     assert mean_scores["modelA"] == pytest.approx(0.4)
     assert std_scores["modelA"] == pytest.approx(np.std([0.2, 0.6], ddof=1))
-    assert kwargs["repertoire_scores"]["modelA"] == [("ds1", pytest.approx(0.2)), ("ds2", pytest.approx(0.6))]
-    assert kwargs["error_bar_caption"].startswith("Error bars: SD across repertoires (n=2)")
+    assert kwargs["error_bar_caption"] == "Error bars: SD across repertoires (n=2)"
 
 
 @pytest.mark.parametrize("statistical_tests", [False, True])

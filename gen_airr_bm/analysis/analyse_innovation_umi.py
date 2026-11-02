@@ -251,15 +251,14 @@ def plot_innovation_scores(analysis_config: AnalysisConfig, scores: InnovationSc
                                    scoring_method="innovation")
 
     for metric, (file_suffix, _) in METRICS.items():
-        mean_scores, std_scores, repertoire_scores, error_bar_caption = summarise_scores_by_reference(
+        mean_scores, std_scores, error_bar_caption = summarise_scores_by_reference(
             scores_df, metric, analysis_config.donor_pattern, score_column="score")
         if TEST_ONLY_REFERENCE not in mean_scores:
             continue
         plot_avg_innovation_scores(analysis_config, mean_scores[TEST_ONLY_REFERENCE],
                                    std_scores[TEST_ONLY_REFERENCE], analysis_config.analysis_output_dir, "innovation",
                                    f"innovation_{analysis_config.receptor_type.replace(' ', '_')}{file_suffix}",
-                                   "innovation", scoring_method="innovation", error_bar_caption=error_bar_caption,
-                                   repertoire_scores=repertoire_scores[TEST_ONLY_REFERENCE])
+                                   "innovation", scoring_method="innovation", error_bar_caption=error_bar_caption)
 
     plot_innovation_scores_by_n_gen_novel(analysis_config, scores)
     plot_innovation_scores_by_n_gen_novel_pseudo_log(analysis_config, scores)

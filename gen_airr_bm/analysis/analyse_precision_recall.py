@@ -246,7 +246,7 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
                                       analysis_config.analysis_output_dir, test_reference,
                                       analysis_config.receptor_type, analysis_config.allowed_mismatches)
 
-    mean_recall, std_recall, repertoire_recall, error_bar_caption = summarise_scores_by_reference(
+    mean_recall, std_recall, error_bar_caption = summarise_scores_by_reference(
         scores_df, "recall", analysis_config.donor_pattern, score_column="score")
     if test_reference not in mean_recall:
         return
@@ -254,8 +254,7 @@ def plot_precision_recall_scores(analysis_config: AnalysisConfig, scores: Precis
     plot_avg_innovation_scores(analysis_config, mean_recall[test_reference], std_recall[test_reference],
                                analysis_config.analysis_output_dir, "recall",
                                f"recall_{analysis_config.receptor_type}", "recall",
-                               scoring_method="recall", error_bar_caption=error_bar_caption,
-                               repertoire_scores=repertoire_recall[test_reference])
+                               scoring_method="recall", error_bar_caption=error_bar_caption)
 
 
 def run_precision_recall_statistics(analysis_config: AnalysisConfig, scores_df: pd.DataFrame) -> None:

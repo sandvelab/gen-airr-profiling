@@ -63,13 +63,13 @@ def run_reduced_dimensionality_analysis(analysis_config: AnalysisConfig, distrib
     for metric in metrics:
         file_stem = strategy.get_file_stem(distribution_name, metric)
         metric_label = strategy.get_metric_label(distribution_name, metric)
-        mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, error_bar_caption = \
+        mean_scores_by_ref, std_scores_by_ref, error_bar_caption = \
             summarise_scores_by_reference(scores_df, metric, analysis_config.donor_pattern)
         reference_scores = (reference_scores_df.loc[reference_scores_df["metric"] == metric, ["repertoire", "score"]]
                             if reference_scores_df is not None else None)
         reference_score = float(reference_scores["score"].mean()) if reference_scores is not None else None
         plot_grouped_avg_scores(analysis_config, mean_scores_by_ref, std_scores_by_ref, f"{file_stem}_grouped",
-                                metric_label, "JSD", reference_score, error_bar_caption, repertoire_scores_by_ref)
+                                metric_label, "JSD", reference_score, error_bar_caption)
         statistics = compute_reduced_dimensionality_statistics(analysis_config, scores_df, metric, file_stem,
                                                                reference_scores)
         if statistics is not None:

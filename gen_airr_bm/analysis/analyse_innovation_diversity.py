@@ -255,18 +255,22 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
         ))
 
     fig.data = sorted(fig.data, key=lambda trace: (0 if trace.name == "test" else 1, trace.name))
+    legend_size = 18
+    margin = dict(t=100, b=100)
+    height = max(500, margin["t"] + margin["b"] + len(model_names_sorted) * 1.6 * legend_size + 20)
     fig.update_layout(
         title={"text": title,
                "font": {"size": 20},
                'y': 0.93,
                'yanchor': 'top'
                },
-        margin=dict(t=100),
+        margin=margin,
+        height=height,
         xaxis_title={'text': xtitle, 'font': {'size': 20}},
         yaxis_title={'text': ytitle, 'font': {'size': 20}},
         xaxis=dict(tickfont=dict(size=18)),
         yaxis=dict(tickfont=dict(size=18)),
-        legend=dict(font=dict(size=18)),
+        legend=dict(font=dict(size=legend_size)),
         template='plotly_white'
     )
     return fig

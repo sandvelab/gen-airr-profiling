@@ -233,9 +233,9 @@ def test_summarize_and_plot_all(mocker, sample_analysis_config):
     assert kwargs["mean_scores_by_ref"]["train"]["model1"] == pytest.approx(0.65)
     # The error bars are the SD across the repertoire means, not across all subsets
     assert kwargs["std_scores_by_ref"]["test"]["model1"] == pytest.approx(np.std([0.3, 0.6], ddof=1))
-    assert kwargs["repertoire_scores_by_ref"]["test"]["model1"] == [("rep_1", pytest.approx(0.3)),
-                                                                    ("rep_2", pytest.approx(0.6))]
-    assert kwargs["error_bar_caption"].startswith("Error bars: SD across repertoires (n=2)")
+    # The bars have no repertoire dots, so the caption only explains the error bars
+    assert kwargs["error_bar_caption"] == "Error bars: SD across repertoires (n=2)"
+    assert "repertoire_scores_by_ref" not in kwargs
     assert kwargs["file_name"] == "clone_frequency_jsd_comparison"
     assert kwargs["reference_score"] == pytest.approx(0.21)
 

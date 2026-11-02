@@ -171,23 +171,21 @@ SUMMARY_SCORES = pd.DataFrame([
 
 
 def test_summarise_scores_by_reference_descriptive(analysis_config):
-    mean_scores_by_ref, std_scores_by_ref, repertoire_scores_by_ref, caption = \
+    mean_scores_by_ref, std_scores_by_ref, caption = \
         summarise_scores_by_reference(SUMMARY_SCORES, "v gene", analysis_config.donor_pattern)
 
     # The two subsets of rep_1 are averaged first, so the repertoire scores are 0.2 and 0.6
-    assert repertoire_scores_by_ref == {"train": {"vae": [("rep_1", pytest.approx(0.2)),
-                                                          ("rep_2", pytest.approx(0.6))]}}
     assert mean_scores_by_ref == {"train": {"vae": pytest.approx(0.4)}}
     sd = np.std([0.2, 0.6], ddof=1)
     assert std_scores_by_ref == {"train": {"vae": pytest.approx(sd)}}
-    assert caption.startswith("Error bars: SD")
+    assert caption == "Error bars: SD across repertoires (n=2)"
 
 
 def test_summarise_scores_by_reference_uses_sd_with_tests(analysis_config):
     analysis_config.statistical_tests = True
 
-    _, std_scores_by_ref, _, caption = summarise_scores_by_reference(SUMMARY_SCORES, "v gene",
-                                                                     analysis_config.donor_pattern)
+    _, std_scores_by_ref, caption = summarise_scores_by_reference(SUMMARY_SCORES, "v gene",
+                                                                  analysis_config.donor_pattern)
 
     # The error bars are the standard deviation also with statistical tests, so they are comparable across collections
     assert std_scores_by_ref == {"train": {"vae": pytest.approx(np.std([0.2, 0.6], ddof=1))}}
@@ -197,10 +195,8 @@ def test_summarise_scores_by_reference_uses_sd_with_tests(analysis_config):
 def test_summarise_scores_by_reference_counts_donors(analysis_config):
     analysis_config.donor_pattern = "^(rep)_"
 
-    *_, repertoire_scores_by_ref, caption = summarise_scores_by_reference(SUMMARY_SCORES, "v gene",
-                                                                          analysis_config.donor_pattern)
+    *_, caption = summarise_scores_by_reference(SUMMARY_SCORES, "v gene", analysis_config.donor_pattern)
 
-    assert [donor for donor, _ in repertoire_scores_by_ref["train"]["vae"]] == ["rep", "rep"]
     assert "(n=2 from 1 donors)" in caption
 
 

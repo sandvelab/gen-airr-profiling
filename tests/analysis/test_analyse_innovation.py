@@ -102,7 +102,7 @@ def test_plot_innovation_sensitivity_by_model(mocker, sample_analysis_config):
     assert fig.layout.annotations[0].text == ("Error bars: SD across repertoires (n=2); dots: generated subsets")
 
 
-def test_plot_innovation_sensitivity_by_model_donor_symbols(mocker, sample_analysis_config):
+def test_plot_innovation_sensitivity_by_model_several_repertoires_per_donor(mocker, sample_analysis_config):
     mock_write = mocker.patch.object(go.Figure, "write_image", autospec=True)
     sample_analysis_config.donor_pattern = "^([^_]+)_"
     scores_df = make_scores_df({("innovation_sensitivity", repertoire, "modelA"): [0.1, 0.3]
@@ -111,11 +111,10 @@ def test_plot_innovation_sensitivity_by_model_donor_symbols(mocker, sample_analy
     plot_innovation_sensitivity_by_model(sample_analysis_config, scores_df)
 
     fig = mock_write.call_args.args[0]
-    # The subsets of each donor get their own symbol, with a legend entry per donor
+    # The dots are circles without a donor legend, also if donors have several repertoires
     dots = {trace.marker.symbol: len(trace.y) for trace in fig.data if trace.name == "modelA"}
-    assert dots == {"circle": 4, "square": 2}
-    assert [trace.name for trace in fig.data if trace.showlegend is not False] == ["Donor d1", "Donor d2"]
-    assert fig.layout.showlegend
+    assert dots == {"circle": 6}
+    assert not fig.layout.showlegend
     assert fig.layout.annotations[0].text.startswith("Error bars: SD across repertoires (n=3 from 2 donors)")
 
 

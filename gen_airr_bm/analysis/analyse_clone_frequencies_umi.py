@@ -101,7 +101,7 @@ def summarize_and_plot_all(analysis_config: AnalysisConfig, scores_df: pd.DataFr
     Returns:
         None
     """
-    mean_scores, std_scores, repertoire_scores, error_bar_caption = \
+    mean_scores, std_scores, error_bar_caption = \
         summarise_scores_by_reference(scores_df, METRIC_NAME, analysis_config.donor_pattern)
 
     plot_grouped_avg_scores(
@@ -112,8 +112,7 @@ def summarize_and_plot_all(analysis_config: AnalysisConfig, scores_df: pd.DataFr
         distribution_type="clone frequency",
         scoring_method="JSD",
         reference_score=reference_score,
-        error_bar_caption=error_bar_caption,
-        repertoire_scores_by_ref=repertoire_scores
+        error_bar_caption=error_bar_caption
     )
 
 
