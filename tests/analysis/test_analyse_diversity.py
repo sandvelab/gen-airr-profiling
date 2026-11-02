@@ -267,6 +267,23 @@ def test_plot_diversity_scatter_plotly(mocker, tmp_path):
     mock_write.assert_called_once_with(fig, output_path + ".png", scale=3)
 
 
+@pytest.mark.parametrize("n_repertoires", [2, 7, 11, 19])
+def test_plot_diversity_scatter_plotly_legend_fits(mocker, tmp_path, n_repertoires):
+    # The legend is cut off where it is taller than the plot area. With up to 10 repertoires, the legend font is
+    # larger, which the figure height did not account for, so e.g. 7 repertoires (Collection C) were cut off.
+    mock_write = mocker.patch.object(go.Figure, "write_image", autospec=True)
+    repertoires = [f"{6000 + i}_pLN_CD8_{i}" for i in range(n_repertoires)]
+    scores_df = make_scores_df({(repertoire, "modelA"): [0.1, 0.3] for repertoire in repertoires})
+
+    plot_diversity_scatter_plotly({"train": {repertoire: 0.0 for repertoire in repertoires}}, scores_df,
+                                  str(tmp_path / "path"), "Gini Coefficient", "TCR", donor_pattern="^([^_]+)_")
+
+    layout = mock_write.call_args.args[0].layout
+    plot_area_height = layout.height - layout.margin.t - layout.margin.b
+    # A title and one entry per repertoire, each ~1.6 x the font size
+    assert plot_area_height >= (n_repertoires + 1) * 1.6 * layout.legend.font.size
+
+
 def test_plot_diversity_scatter_plotly_umi_references(mocker, tmp_path):
     mock_write = mocker.patch.object(go.Figure, "write_image", autospec=True)
     reference_diversities = {"train": {"IGK_s1_m6_0": 0.8, "IGK_s2_m6_1": 0.6},

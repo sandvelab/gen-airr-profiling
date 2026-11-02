@@ -274,14 +274,21 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, scores_df: pd.Dat
         showlegend=False,
     ))
 
-    legend_size = 16 if len(df['dataset'].unique()) <= 10 else 12
+    n_datasets = df["dataset"].nunique()
+    legend_size = 16 if n_datasets <= 10 else 12
+    if colour_repertoires:
+        margin = dict(t=150, b=200)
+        legend_height = (n_datasets + 1) * 1.6 * legend_size + 20
+        height = max(500, margin["t"] + margin["b"] + legend_height)
+    else:
+        margin, height = dict(t=150), 500
     fig.update_layout(legend_title_text="Dataset",
                       title={'text': wrap_title(title, width=50),
                              'font': {'size': 20},
                              'y': 0.93,
                              'yanchor': 'top'
                              },
-                      margin=dict(t=150),
+                      margin=margin,
                       xaxis_title={'text': "Data Origin",
                                            'font': {'size': 20}},
                       yaxis_title={'text': metric_name,
@@ -292,8 +299,7 @@ def plot_diversity_scatter_plotly(reference_diversities: dict, scores_df: pd.Dat
                       yaxis=dict(tickfont=dict(size=18)),
                       legend=dict(font=dict(size=legend_size)),
                       showlegend=colour_repertoires,
-                      # The figure grows with the repertoire legend, so that it is not cut off
-                      height=max(500, 300 + 28 * df["dataset"].nunique()) if colour_repertoires else 500
+                      height=height,
                       )
 
     if colour_repertoires:
