@@ -57,10 +57,19 @@ for analysis in config.get("analyses", []):
 
     relative_paths = [str(f.relative_to(folder)) for f in files]
     counts = {model: sum(mentions(path, model) for path in relative_paths) for model in models}
-    tables = " ".join(f.read_text(errors="ignore") for f in files
-                      if f.suffix == ".tsv" and f.stat().st_size < TABLE_SIZE_LIMIT)
     checked = [m for m in models if not (args.skip and args.skip in m)]
     skipped = [m for m in models if args.skip and args.skip in m]
+    # The result tables are in the analysis folder or one level below (e.g. statistics/), and are not per-model
+    # caches. Reading stops once every model was found, since some analyses have hundreds of thousands of files.
+    found = set()
+    for f, path in zip(files, relative_paths):
+        if found == set(models):
+            break
+        if (f.suffix == ".tsv" and path.count("/") <= 1 and f.stat().st_size < TABLE_SIZE_LIMIT
+                and not any(mentions(path, m) for m in models)):
+            text = f.read_text(errors="ignore")
+            found.update(m for m in models if m not in found and mentions(text, m))
+    tables = " ".join(found)
 
     expected = max((counts[m] for m in checked), default=0)
     if expected:
