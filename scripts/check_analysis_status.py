@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 TABLE_SIZE_LIMIT = 5_000_000  # result tables are small; larger TSVs are sequences or CompAIRR outputs
+CACHE_DIRS = ("compairr_output/", "compairr_helper_files/")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("config")
@@ -68,26 +69,26 @@ for analysis in config.get("analyses", []):
 
     # The result tables are in the analysis folder or one level below (e.g. statistics/), and are not per-model
     # caches. Reading stops once every model was found, since some analyses have hundreds of thousands of files.
-    found, n_tables = set(), 0
+    found = set()
     for f, path in zip(files, relative_paths):
         if found == set(models):
             break
         if (f.suffix == ".tsv" and path.count("/") <= 1 and f.stat().st_size < TABLE_SIZE_LIMIT
-                and not any(mentions(path, m) for m in models)):
-            n_tables += 1
+                and not path.startswith(CACHE_DIRS) and not any(mentions(path, m) for m in models)):
             text = f.read_text(errors="ignore")
             found.update(m for m in models if m not in found and mentions(text, m))
 
-    if n_tables == 0:
-        # Some analyses (e.g. innovation_diversity) only write plots, one subfolder per step
+    if not found:
+        # Some analyses (e.g. innovation_diversity) only write plots, one subfolder per step. Tables without any model
+        # in them (e.g. CompAIRR outputs of the test sequences) are not result tables either.
         png_paths = [str(f.relative_to(folder)) for f in pngs]
         subfolders = sorted({path.split("/")[0] for path in relative_paths if "/" in path})
-        print("   no result tables (plots only); PNGs per subfolder: "
+        print("   no result tables with the models (plots only, or not written yet); PNGs per subfolder: "
               + ", ".join(f"{s}: {sum(p.startswith(s + '/') for p in png_paths)}" for s in subfolders))
     else:
         not_in_tables = [m for m in checked if m not in found]
         print("   in result tables: " + (f"missing {', '.join(not_in_tables)}" if not_in_tables else "all models"))
     if skipped:
-        print("   skipped: " + ", ".join(f"{m} ({counts[m]} files" + ("" if n_tables == 0 else
+        print("   skipped: " + ", ".join(f"{m} ({counts[m]} files" + ("" if not found else
                                          f", {'in' if m in found else 'not in'} tables") + ")" for m in skipped))
     print()
