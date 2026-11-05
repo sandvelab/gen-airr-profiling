@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import pytest
 
@@ -12,6 +14,8 @@ from gen_airr_bm.analysis.analyse_innovation_diversity import (
     plot_cluster_counts,
 )
 from gen_airr_bm.core.analysis_config import AnalysisConfig
+
+MODULE = "gen_airr_bm.analysis.analyse_innovation_diversity"
 
 
 @pytest.fixture
@@ -74,82 +78,143 @@ def test_run_innovation_diversity_analysis(mocker, sample_analysis_config):
     mock_plot_cluster.assert_called_once()
 
 
-def test_save_innovative_sequences_for_compairr(mocker, sample_analysis_config):
-    mocker.patch("os.makedirs")
-    comparison_mapping = {"/ref/test_ds.tsv": ["/gen/ds_0.tsv", "/gen/ds_1.tsv"]}
-    mock_get_sequence_files = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_diversity.get_sequence_files",
-        return_value=comparison_mapping,
+def make_tmp_config(tmp_path, model_names=("model1", "model2")):
+    return AnalysisConfig(
+        analysis="innovation_diversity",
+        model_names=list(model_names),
+        analysis_output_dir=str(tmp_path / "analysis"),
+        root_output_dir=str(tmp_path),
+        default_model_name="humanTRB",
+        reference_data=["train", "test"],
+        n_subsets=2,
+        subfolder_name="analysis_subfolder",
+        receptor_type="TCR",
     )
 
-    gen_df = pd.DataFrame({"junction_aa": ["A", "B", "C"], "other": [1, 2, 3]})
-    ref_df = pd.DataFrame({"junction_aa": ["B", "C", "D"]})
 
-    # Implementation reads (gen, ref) per gen file per model:
-    # 2 models * 2 gen files * 2 reads = 8
-    mocker.patch(
-        "pandas.read_csv",
-        side_effect=[gen_df, ref_df] * (len(sample_analysis_config.model_names) * 2),
-    )
-    mock_to_csv = mocker.patch("pandas.DataFrame.to_csv")
-
-    out_dir = save_innovative_sequences_for_compairr(sample_analysis_config)
-
-    assert out_dir == "/tmp/test_output/innovation_unique_overlap_compairr_sequences_split"
-
-    assert mock_get_sequence_files.call_count == len(sample_analysis_config.model_names)
-    for i, model in enumerate(sample_analysis_config.model_names):
-        assert mock_get_sequence_files.call_args_list[i].args == (
-            sample_analysis_config,
-            model,
-            "test",
-        )
-
-    expected_writes = len(sample_analysis_config.model_names) * sum(
-        len(v) for v in comparison_mapping.values()
-    )
-    assert mock_to_csv.call_count == expected_writes
-
-    for call in mock_to_csv.call_args_list:
-        assert call.kwargs["sep"] == "\t"
-        assert call.kwargs["index"] is False
+def write_tsv(path, df):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, sep="\t", index=False)
+    return str(path)
 
 
-def test_count_nearest_neighbors(mocker, sample_analysis_config):
-    mocker.patch("os.makedirs")
+def set_mtime(paths, mtime):
+    for path in paths:
+        os.utime(path, (mtime, mtime))
 
-    def listdir_side_effect(path):
-        if path.endswith("/model1"):
-            return ["dataset_0.tsv", "dataset_1.tsv"]
-        if path.endswith("/model2"):
-            return ["dataset_0.tsv"]
-        return []
 
-    mocker.patch("os.listdir", side_effect=listdir_side_effect)
+def test_save_innovative_sequences_for_compairr(mocker, tmp_path):
+    config = make_tmp_config(tmp_path, ["model1"])
+    ref_file = write_tsv(tmp_path / "test_compairr_sequences/ds.tsv", pd.DataFrame({"junction_aa": ["B", "C", "D"]}))
+    gen_files = [write_tsv(tmp_path / f"gen/model1/ds_{i}.tsv",
+                           pd.DataFrame({"junction_aa": ["A", "B", "C"], "other": [1, 2, 3]})) for i in range(2)]
+    mocker.patch(f"{MODULE}.get_sequence_files", return_value={ref_file: gen_files})
 
-    mock_compute = mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_diversity.compute_nearest_neighbor_counts",
-        side_effect=[
-            {"1": 1, "2": 2, "3": 3, ">3": 4, "n_sequences": 10},
-            {"1": 2, "2": 1, "3": 0, ">3": 7, "n_sequences": 10},
-            {"1": 0, "2": 0, "3": 1, ">3": 9, "n_sequences": 10},
-            {"1": 3, "2": 2, "3": 1, ">3": 4, "n_sequences": 10},
-            {"1": 2, "2": 2, "3": 2, ">3": 4, "n_sequences": 10},
-        ],
-    )
+    out_dir = save_innovative_sequences_for_compairr(config)
 
-    result = count_nearest_neighbors(
-        sample_analysis_config,
-        "/tmp/test_output/innov_dir",
-        "/tmp/test_output/analysis_innov/nn_counts_innovation",
-    )
+    assert out_dir == f"{tmp_path}/innovation_unique_overlap_compairr_sequences_split"
+    for i in range(2):
+        # Only the generated sequences that are also in the test set
+        saved = pd.read_csv(f"{out_dir}/model1/ds_{i}.tsv", sep="\t")
+        assert saved["junction_aa"].tolist() == ["B", "C"]
+        assert saved.columns.tolist() == ["junction_aa", "other"]
+
+
+def test_save_innovative_sequences_for_compairr_keeps_up_to_date_files(mocker, tmp_path):
+    config = make_tmp_config(tmp_path, ["model1"])
+    ref_file = write_tsv(tmp_path / "test_compairr_sequences/ds.tsv", pd.DataFrame({"junction_aa": ["B"]}))
+    gen_files = [write_tsv(tmp_path / f"gen/model1/ds_{i}.tsv", pd.DataFrame({"junction_aa": ["A", "B"]}))
+                 for i in range(2)]
+    mocker.patch(f"{MODULE}.get_sequence_files", return_value={ref_file: gen_files})
+    out_dir = save_innovative_sequences_for_compairr(config)
+    outputs = [f"{out_dir}/model1/ds_{i}.tsv" for i in range(2)]
+    set_mtime([ref_file] + gen_files, 1_000)
+    set_mtime(outputs, 2_000)
+    # The second subset was regenerated after its innovative sequences were saved
+    write_tsv(tmp_path / "gen/model1/ds_1.tsv", pd.DataFrame({"junction_aa": ["B", "B2"]}))
+    set_mtime([gen_files[1]], 3_000)
+    read_csv = mocker.spy(pd, "read_csv")
+
+    save_innovative_sequences_for_compairr(config)
+
+    # Only the stale subset is computed again: the test file and that subset are read, the other is kept
+    assert sorted(call.args[0] for call in read_csv.call_args_list) == sorted([ref_file, gen_files[1]])
+    assert os.path.getmtime(outputs[0]) == 2_000
+    assert os.path.getmtime(outputs[1]) > 2_000
+
+
+def make_nn_inputs(tmp_path, model_files):
+    """ Innovative sequences per model and the train and test sequences of their repertoires. """
+    sequences_dir = tmp_path / "innov_dir"
+    files = []
+    for model, names in model_files.items():
+        for name in names:
+            files.append(write_tsv(sequences_dir / model / name, pd.DataFrame({"junction_aa": ["A"]})))
+    for dataset in {name.rsplit("_", 1)[0] for names in model_files.values() for name in names}:
+        for split in ["train", "test"]:
+            files.append(write_tsv(tmp_path / f"{split}_compairr_sequences/{dataset}.tsv",
+                                   pd.DataFrame({"junction_aa": ["A"]})))
+    set_mtime(files, 1_000)
+    return str(sequences_dir)
+
+
+NN_COUNTS = {"1": 1, "2": 2, "3": 3, ">3": 4, "n_sequences": 10}
+
+
+def test_count_nearest_neighbors(mocker, tmp_path):
+    config = make_tmp_config(tmp_path)
+    sequences_dir = make_nn_inputs(tmp_path, {"model1": ["dataset_0.tsv", "dataset_1.tsv"],
+                                              "model2": ["dataset_0.tsv"]})
+    mock_compute = mocker.patch(f"{MODULE}.compute_nearest_neighbor_counts", return_value=NN_COUNTS)
+    output_dir = str(tmp_path / "analysis/nn_counts_innovation")
+
+    result = count_nearest_neighbors(config, sequences_dir, output_dir)
 
     assert set(result.keys()) == {"model1", "model2", "test"}
     # model1: 2 gen splits + 1 test => 3 calls; model2: 1 gen split + 1 test => 2 calls
     assert mock_compute.call_count == 5
-
+    assert sorted(result["model1"].index) == ["dataset_0", "dataset_1"]
     for _, df in result.items():
         assert all(col in df.columns for col in ["1", "2", "3", ">3", "n_sequences"])
+    # The counts are saved per model, named after the model
+    assert sorted(os.listdir(f"{output_dir}/counts")) == ["model1_counts.tsv", "model1_test_counts.tsv",
+                                                           "model2_counts.tsv", "model2_test_counts.tsv"]
+
+
+def test_count_nearest_neighbors_reuses_saved_counts(mocker, tmp_path):
+    config = make_tmp_config(tmp_path)
+    sequences_dir = make_nn_inputs(tmp_path, {"model1": ["dataset_0.tsv", "dataset_1.tsv"],
+                                              "model2": ["dataset_0.tsv"]})
+    output_dir = str(tmp_path / "analysis/nn_counts_innovation")
+    mocker.patch(f"{MODULE}.compute_nearest_neighbor_counts", return_value=NN_COUNTS)
+    first = count_nearest_neighbors(config, sequences_dir, output_dir)
+    # model2 was regenerated after its counts were saved
+    set_mtime([f"{sequences_dir}/model2/dataset_0.tsv"], 10**10)
+    mock_compute = mocker.patch(f"{MODULE}.compute_nearest_neighbor_counts", return_value=NN_COUNTS)
+
+    second = count_nearest_neighbors(config, sequences_dir, output_dir)
+
+    # Only model2 is computed again: 1 gen split + 1 test
+    assert [call.kwargs["identifier_prefix"] for call in mock_compute.call_args_list] == [
+        "dataset_0_model2", "dataset_test"]
+    pd.testing.assert_frame_equal(second["model1"], first["model1"], check_dtype=False)
+
+
+def test_count_nearest_neighbors_recomputes_incomplete_counts(mocker, tmp_path):
+    config = make_tmp_config(tmp_path, ["model1"])
+    sequences_dir = make_nn_inputs(tmp_path, {"model1": ["dataset_0.tsv"]})
+    output_dir = str(tmp_path / "analysis/nn_counts_innovation")
+    mocker.patch(f"{MODULE}.compute_nearest_neighbor_counts", return_value=NN_COUNTS)
+    count_nearest_neighbors(config, sequences_dir, output_dir)
+    # A subset was added, whose file is older than the saved counts
+    added = write_tsv(tmp_path / "innov_dir/model1/dataset_1.tsv", pd.DataFrame({"junction_aa": ["A"]}))
+    set_mtime([added], 1_000)
+    mock_compute = mocker.patch(f"{MODULE}.compute_nearest_neighbor_counts", return_value=NN_COUNTS)
+
+    result = count_nearest_neighbors(config, sequences_dir, output_dir)
+
+    assert mock_compute.call_count == 3
+    assert sorted(result["model1"].index) == ["dataset_0", "dataset_1"]
 
 
 def test_compute_nearest_neighbor_counts(mocker):
@@ -238,45 +303,26 @@ def test_make_distance_figure(mocker):
     fig.update_layout.assert_called_once()
 
 
-def test_cluster_innovation_sequences(mocker, sample_analysis_config):
-    mocker.patch("os.makedirs")
+def test_cluster_innovation_sequences(mocker, tmp_path):
+    config = make_tmp_config(tmp_path)
+    sequences_dir = make_nn_inputs(tmp_path, {"model1": ["ds_0.tsv", "ds_1.tsv"], "model2": ["ds_0.tsv"]})
+    cluster_files = {}
+    for i, n_clusters in enumerate([2, 3, 1]):
+        cluster_files[i] = write_tsv(tmp_path / f"r{i}.tsv", pd.DataFrame({"#cluster_no": list(range(n_clusters))}))
+    mock_cluster = mocker.patch(f"{MODULE}.run_compairr_cluster",
+                                side_effect=lambda compairr_output_dir, sequences_path, output_file_identifier,
+                                distance: cluster_files[distance - 1])
 
-    def listdir_side_effect(path):
-        if path.endswith("/model1"):
-            return ["ds_0.tsv", "ds_1.tsv"]
-        if path.endswith("/model2"):
-            return ["ds_0.tsv"]
-        return []
+    out = cluster_innovation_sequences(config, sequences_dir)
 
-    mocker.patch("os.listdir", side_effect=listdir_side_effect)
+    assert set(out.keys()) == {"model1", "model2"}
+    assert out["model1"]["ds_0"] == {1: 2, 2: 3, 3: 1}
+    assert mock_cluster.call_count == 9
 
-    mocker.patch(
-        "gen_airr_bm.analysis.analyse_innovation_diversity.run_compairr_cluster",
-        side_effect=[
-            "/tmp/r1.tsv",
-            "/tmp/r2.tsv",
-            "/tmp/r3.tsv",
-            "/tmp/r4.tsv",
-            "/tmp/r5.tsv",
-            "/tmp/r6.tsv",
-            "/tmp/r7.tsv",
-            "/tmp/r8.tsv",
-            "/tmp/r9.tsv",
-        ],
-    )
-
-    def read_csv_side_effect(path, sep="\t"):
-        if path in {"/tmp/r1.tsv", "/tmp/r4.tsv", "/tmp/r7.tsv"}:
-            return pd.DataFrame({"#cluster_no": [1, 1, 2]})
-        if path in {"/tmp/r2.tsv", "/tmp/r5.tsv", "/tmp/r8.tsv"}:
-            return pd.DataFrame({"#cluster_no": [1, 2, 3, 3]})
-        return pd.DataFrame({"#cluster_no": [1]})
-
-    mocker.patch("pandas.read_csv", side_effect=read_csv_side_effect)
-
-    out = cluster_innovation_sequences(sample_analysis_config, "/tmp/test_output/innov_dir")
-
-    assert set(out.keys()) == set(sample_analysis_config.model_names)
+    # A second run reuses the saved counts, with the same distances as keys
+    mock_cluster.reset_mock()
+    assert cluster_innovation_sequences(config, sequences_dir) == out
+    assert mock_cluster.call_count == 0
 
 
 def test_plot_cluster_counts(mocker, sample_analysis_config):

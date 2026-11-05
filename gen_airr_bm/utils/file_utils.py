@@ -1,8 +1,10 @@
 import os
 import re
+import tempfile
 from collections import defaultdict
 
 import numpy as np
+import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 
@@ -85,3 +87,36 @@ def split_subset_name(name: str) -> tuple[str, int]:
     """ Splits the name of a generated subset into its repertoire and subset index, e.g. ("rep_1", 3) for rep_1_3. """
     repertoire, subset = name.rsplit("_", 1)
     return repertoire, int(subset)
+
+
+def is_up_to_date(output_path: str, input_paths) -> bool:
+    """ Whether an output that is computed from the given inputs can be reused: it exists and is at least as new as
+    every input. An input that was regenerated after the output, e.g. a model's resampled sequences, makes it stale.
+    Args:
+        output_path (str): Path to the output.
+        input_paths: Paths to the files the output is computed from.
+    Returns:
+        bool: True if the output exists and no input is newer.
+    """
+    if not os.path.exists(output_path):
+        return False
+    output_mtime = os.path.getmtime(output_path)
+    return all(os.path.getmtime(path) <= output_mtime for path in input_paths)
+
+
+def write_tsv_atomically(df: pd.DataFrame, path: str, index: bool = False) -> None:
+    """ Writes a table to a temporary file next to path and renames it, so that a run that is stopped while writing
+    does not leave a partly written file that a later run would take as up to date.
+    Args:
+        df (pd.DataFrame): Table to write.
+        path (str): Path of the TSV file.
+        index (bool): Whether to write the index.
+    """
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(path) or ".", suffix=".tmp")
+    os.close(tmp_fd)
+    try:
+        df.to_csv(tmp_path, sep="\t", index=index)
+        os.replace(tmp_path, path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)

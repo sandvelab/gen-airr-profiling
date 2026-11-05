@@ -8,7 +8,8 @@ from dataclasses import dataclass, field
 from gen_airr_bm.analysis.analyse_innovation_umi import preprocess_gen_for_innovation_precision, \
     plot_innovation_scores_by_n_gen_novel, plot_innovation_precision_sensitivity
 from gen_airr_bm.core.analysis_config import AnalysisConfig
-from gen_airr_bm.utils.file_utils import get_sequence_files, get_subset_index
+from gen_airr_bm.utils.file_utils import get_sequence_files, get_subset_index, is_up_to_date, \
+    write_tsv_atomically
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence
 from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title, wrap_title, \
     plot_repertoire_statistics
@@ -20,6 +21,10 @@ from gen_airr_bm.utils.statistics_utils import aggregate_repertoire_scores, chec
 METRIC_NAME = "innovation_sensitivity"
 METRIC_DESCRIPTION = "Innovation Sensitivity"
 SCORE_COLUMNS = ["metric", "model", "reference", "dataset", "subset", "score"]
+# The two score tables of a run. The scores of a model are reused from them by later runs while its sequences
+# are unchanged, so that only regenerated models are recomputed, and the plots can be redrawn quickly.
+SCORES_FILE = "innovation_repertoire_scores.tsv"
+INNOVATION_SCORES_FILE = "innovation_scores.csv"
 
 
 @dataclass
@@ -66,10 +71,13 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     scores = InnovationScores()
 
     for model in analysis_config.model_names:
-        collect_innovation_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
+        if not reuse_saved_innovation_scores(analysis_config, model, test_reference, scores):
+            collect_innovation_scores(analysis_config, model, test_reference, compairr_output_dir, scores)
 
+    # Both tables are written before the plots, so that they are kept if plotting fails
     scores_df = pd.DataFrame(scores.scores, columns=SCORE_COLUMNS)
-    scores_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_repertoire_scores.tsv", sep="\t", index=False)
+    write_tsv_atomically(scores_df, f"{analysis_config.analysis_output_dir}/{SCORES_FILE}")
+    scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/{INNOVATION_SCORES_FILE}", index=False)
     if analysis_config.statistical_tests:
         check_one_repertoire_per_donor(aggregate_repertoire_scores(scores_df, "score", analysis_config.donor_pattern),
                                        analysis_config.donor_pattern)
@@ -78,8 +86,52 @@ def compute_and_plot_innovation_scores(analysis_config: AnalysisConfig, compairr
     plot_innovation_precision_sensitivity(analysis_config, scores)
     if analysis_config.receptor_type != "UMI":
         plot_innovation_sensitivity_by_model(analysis_config, scores_df)
-    scores.innovation_df.to_csv(f"{analysis_config.analysis_output_dir}/innovation_scores.csv", index=False)
     run_innovation_statistics(analysis_config, scores_df)
+
+
+def reuse_saved_innovation_scores(analysis_config: AnalysisConfig, model: str, test_reference: str,
+                                  scores: InnovationScores) -> bool:
+    """ Adds the scores of a model from the tables of an earlier run, if both tables are newer than the model's
+    generated subsets and the test sequences, and have a row for every subset. Otherwise, e.g. after the model's
+    sequences were regenerated, the scores have to be computed again. Changing allowed_mismatches or indels does not
+    make the tables stale, so they have to be removed by hand in that case.
+    Args:
+        analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
+        model (str): Name of the model.
+        test_reference (str): Reference dataset for testing.
+        scores (InnovationScores): Storage for the scores, to which the saved scores of the model are added.
+    Returns:
+        bool: True if the saved scores were added.
+    """
+    scores_path = f"{analysis_config.analysis_output_dir}/{SCORES_FILE}"
+    innovation_path = f"{analysis_config.analysis_output_dir}/{INNOVATION_SCORES_FILE}"
+    if not (os.path.exists(scores_path) and os.path.exists(innovation_path)):
+        return False
+    comparison_files = get_sequence_files(analysis_config, model, test_reference)
+    gen_files = [gen_file for files in comparison_files.values() for gen_file in files]
+    inputs = list(comparison_files) + gen_files
+    if not (is_up_to_date(scores_path, inputs) and is_up_to_date(innovation_path, inputs)):
+        return False
+
+    saved_scores = pd.read_csv(scores_path, sep="\t", dtype={"model": str, "dataset": str})
+    saved_innovation = pd.read_csv(innovation_path, dtype={"model": str, "dataset": str})
+    model_scores = saved_scores[(saved_scores["model"] == model) & (saved_scores["metric"] == METRIC_NAME)]
+    model_innovation = saved_innovation[saved_innovation["model"] == model]
+    expected_scores = {(os.path.splitext(os.path.basename(ref_file))[0], get_subset_index(gen_file))
+                       for ref_file, files in comparison_files.items() for gen_file in files}
+    expected_subsets = {os.path.splitext(os.path.basename(gen_file))[0] for gen_file in gen_files}
+    if (len(model_scores) != len(expected_scores)
+            or set(zip(model_scores["dataset"], model_scores["subset"])) != expected_scores
+            or len(model_innovation) != len(expected_subsets)
+            or set(model_innovation["dataset"]) != expected_subsets):
+        return False
+
+    scores.scores.extend(model_scores[SCORE_COLUMNS].to_dict("records"))
+    model_innovation = model_innovation[scores.innovation_df.columns].reset_index(drop=True)
+    scores.innovation_df = (model_innovation if scores.innovation_df.empty
+                            else pd.concat([scores.innovation_df, model_innovation], ignore_index=True))
+    print(f"Reusing the saved innovation scores of {model}")
+    return True
 
 
 def collect_innovation_scores(analysis_config: AnalysisConfig, model: str, test_reference: str,

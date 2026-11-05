@@ -3,7 +3,7 @@ import pandas as pd
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.utils.compairr_utils import run_compairr_existence, run_compairr_cluster
-from gen_airr_bm.utils.file_utils import get_sequence_files
+from gen_airr_bm.utils.file_utils import get_sequence_files, is_up_to_date, write_tsv_atomically
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -38,7 +38,8 @@ def run_innovation_diversity_analysis(analysis_config: AnalysisConfig) -> None:
 
 
 def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> str:
-    """ Saves the innovative sequences for each model and dataset in a format suitable for CompAIRR.
+    """ Saves the innovative sequences for each model and dataset in a format suitable for CompAIRR. A file of an
+    earlier run is kept if it is newer than its generated subset and the test sequences.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
     Returns:
@@ -53,14 +54,19 @@ def save_innovative_sequences_for_compairr(analysis_config: AnalysisConfig) -> s
         comparison_files_dir = get_sequence_files(analysis_config, model, test_reference)
 
         for ref_file, gen_files in comparison_files_dir.items():
+            ref_file_df = None
             for gen_file in gen_files:
                 file_name = os.path.basename(gen_file)
                 innovative_sequences_file = f"{innovative_sequences_dir}/{model}/{file_name}"
+                # Kept from an earlier run unless the generated or the test sequences are newer
+                if is_up_to_date(innovative_sequences_file, [gen_file, ref_file]):
+                    continue
 
+                if ref_file_df is None:
+                    ref_file_df = pd.read_csv(ref_file, sep='\t')
                 gen_df = pd.read_csv(gen_file, sep='\t')
-                ref_file_df = pd.read_csv(ref_file, sep='\t')
                 innovative_sequences_df = gen_df[gen_df['junction_aa'].isin(ref_file_df['junction_aa'])]
-                innovative_sequences_df.to_csv(innovative_sequences_file, sep='\t', index=False)
+                write_tsv_atomically(innovative_sequences_df, innovative_sequences_file)
 
     return innovative_sequences_dir
 
@@ -69,7 +75,8 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, sequences_dir: str,
                             output_dir: str) -> dict:
     """
     Computes the distances from the model sequences and test sequences to the training sequences
-    at distances 1-3 using CompAIRR.
+    at distances 1-3 using CompAIRR. The counts are saved per model in output_dir/counts, and reused by later runs
+    while they are newer than the model's sequences and the train and test sequences.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         sequences_dir (str): Directory where the generated sequences are saved for CompAIRR analysis.
@@ -79,14 +86,32 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, sequences_dir: str,
                                   at each distance to the training set.
     """
     all_distance_dfs = {}
+    counts_dir = f"{output_dir}/counts"
+    os.makedirs(counts_dir, exist_ok=True)
     for model in analysis_config.model_names:
         compairr_output_dir = f"{output_dir}/compairr_output/{model}"
         os.makedirs(compairr_output_dir, exist_ok=True)
 
+        gen_files = [f for f in os.listdir(f"{sequences_dir}/{model}") if f.endswith(".tsv")]
+        dataset_names = {os.path.splitext(f)[0].rsplit('_', 1)[0] for f in gen_files}
+        inputs = ([f"{sequences_dir}/{model}/{f}" for f in gen_files]
+                  + [f"{analysis_config.root_output_dir}/{split}_compairr_sequences/{dataset_name}.tsv"
+                     for split in ["train", "test"] for dataset_name in dataset_names])
+        # The counts of the model, and of the test sequences of its repertoires, named after the model so that they
+        # are removed with its other analysis outputs
+        gen_counts_path = f"{counts_dir}/{model}_counts.tsv"
+        test_counts_path = f"{counts_dir}/{model}_test_counts.tsv"
+        saved = read_saved_counts([gen_counts_path, test_counts_path], inputs,
+                                  [{os.path.splitext(f)[0] for f in gen_files}, dataset_names])
+        if saved is not None:
+            print(f"Reusing the saved nearest neighbour counts of {model} in {counts_dir}")
+            all_distance_dfs[model], all_distance_dfs["test"] = saved
+            continue
+
         gen_train_overlap_counts = {}
         test_train_overlap_counts = {}
 
-        for innovation_gen_file_split in os.listdir(f"{sequences_dir}/{model}"):
+        for innovation_gen_file_split in gen_files:
             dataset_split_name = os.path.splitext(innovation_gen_file_split)[0]
             dataset_name = dataset_split_name.rsplit('_', 1)[0]
 
@@ -115,11 +140,36 @@ def count_nearest_neighbors(analysis_config: AnalysisConfig, sequences_dir: str,
 
         gen_train_df = pd.DataFrame.from_dict(gen_train_overlap_counts, orient='index')
         test_train_df = pd.DataFrame.from_dict(test_train_overlap_counts, orient='index')
+        write_tsv_atomically(gen_train_df, gen_counts_path, index=True)
+        write_tsv_atomically(test_train_df, test_counts_path, index=True)
 
         all_distance_dfs[model] = gen_train_df
         all_distance_dfs["test"] = test_train_df
 
     return all_distance_dfs
+
+
+def read_saved_counts(counts_paths: list, inputs: list, expected_rows: list) -> list | None:
+    """ Reads count tables of an earlier run, if all of them are newer than the inputs they were computed from and
+    have exactly the expected rows (e.g. one per generated subset).
+    Args:
+        counts_paths (list): Paths of the count tables, with the subset or repertoire names as index.
+        inputs (list): Paths of the files the counts were computed from.
+        expected_rows (list): For each table, the set of row names it should have.
+    Returns:
+        list | None: The tables, or None if any of them is missing, stale or incomplete.
+    """
+    if not all(is_up_to_date(path, inputs) for path in counts_paths):
+        return None
+    tables = []
+    for path, rows in zip(counts_paths, expected_rows):
+        df = pd.read_csv(path, sep='\t', index_col=0)
+        df.index = df.index.astype(str)
+        df.columns = df.columns.astype(str)
+        if set(df.index) != rows or len(df) != len(rows):
+            return None
+        tables.append(df)
+    return tables
 
 
 def compute_nearest_neighbor_counts(compairr_output_dir: str, search_for_file: str, search_in_file: str,
@@ -278,7 +328,8 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
 
 def cluster_innovation_sequences(analysis_config: AnalysisConfig, innovation_sequences_dir: str) -> dict:
     """
-    Clusters the innovative sequences by distance using CompAIRR clustering.
+    Clusters the innovative sequences by distance using CompAIRR clustering. The cluster counts are saved per model in
+    clustering/counts, and reused by later runs while they are newer than the model's innovative sequences.
     Args:
         analysis_config (AnalysisConfig): Configuration for the analysis, including paths and model names.
         innovation_sequences_dir (str): Directory where the innovative sequences are saved for CompAIRR analysis.
@@ -288,11 +339,23 @@ def cluster_innovation_sequences(analysis_config: AnalysisConfig, innovation_seq
     clustering_dir = f"{analysis_config.analysis_output_dir}/clustering"
     os.makedirs(clustering_dir, exist_ok=True)
 
+    counts_dir = f"{clustering_dir}/counts"
+    os.makedirs(counts_dir, exist_ok=True)
+
     n_clusters_by_model = {}
     for model in analysis_config.model_names:
+        gen_files = [f for f in os.listdir(f"{innovation_sequences_dir}/{model}") if f.endswith(".tsv")]
+        counts_path = f"{counts_dir}/{model}_cluster_counts.tsv"
+        saved = read_saved_counts([counts_path], [f"{innovation_sequences_dir}/{model}/{f}" for f in gen_files],
+                                  [{os.path.splitext(f)[0] for f in gen_files}])
+        if saved is not None:
+            print(f"Reusing the saved cluster counts of {model} in {counts_dir}")
+            n_clusters_by_model[model] = {name: {int(dist): int(n) for dist, n in row.items()}
+                                          for name, row in saved[0].iterrows()}
+            continue
 
         n_clusters_by_dataset = {}
-        for innovation_gen_file_split in os.listdir(f"{innovation_sequences_dir}/{model}"):
+        for innovation_gen_file_split in gen_files:
             dataset_split_name = os.path.splitext(innovation_gen_file_split)[0]
             gen_file = f"{innovation_sequences_dir}/{model}/{innovation_gen_file_split}"
             compairr_output_dir = f"{clustering_dir}/compairr_output/{model}"
@@ -308,6 +371,7 @@ def cluster_innovation_sequences(analysis_config: AnalysisConfig, innovation_seq
                 n_clusters_by_distance[dist] = n_clusters
 
             n_clusters_by_dataset[dataset_split_name] = n_clusters_by_distance
+        write_tsv_atomically(pd.DataFrame.from_dict(n_clusters_by_dataset, orient='index'), counts_path, index=True)
         n_clusters_by_model[model] = n_clusters_by_dataset
 
     return n_clusters_by_model
