@@ -1,0 +1,99 @@
+n_experiments: 6
+output_dir: "RESULTS_SEP25/UMI"
+input_dir: "data/experimental/collectionC"
+seed: 42
+
+analyses:
+    - name: "clone_frequencies"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "reduced_dimensionality"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "memorization"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: False
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "network"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "precision_recall"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: False
+      subfolder_name: "all models with distance 0"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "precision_recall"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      allowed_mismatches: 1
+      indels: True
+      deduplicate: False
+      subfolder_name: "all models with distance 1"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "diversity"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "all models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "innovation_umi"
+      model_names: [ "PWM", "VAE_kmer", "SoNNia_kmer", "Akbar_kmer", "Saka_kmer", "ProGen_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      n_subsets: 3
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all models excluding train"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"
+    - name: "gene_usage"
+      model_names: [ "VAE_kmer", "SoNNia_kmer", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 3
+      subfolder_name: "gene generating models"
+      receptor_type: "BCR UMI"
+      statistical_tests: False
+      donor_pattern: "^[^_]+_([^_]+)_"

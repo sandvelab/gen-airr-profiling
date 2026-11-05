@@ -151,3 +151,63 @@ def test_compute_and_plot_with_tests_requires_one_repertoire_per_donor(mocker, s
 
     with pytest.raises(ValueError, match="one repertoire per donor"):
         compute_and_plot_innovation_scores(sample_analysis_config, "/out/compairr")
+
+
+def make_saved_innovation_run(tmp_path, config, saved_subsets):
+    """ Test and generated files of one repertoire with 2 subsets per model, and the score tables of an earlier run
+    with the given subsets per model. The inputs are older than the tables. """
+    files = [tmp_path / "test_compairr_sequences/rep_1.tsv"]
+    for model in config.model_names:
+        files += [tmp_path / f"novel_unique_generated_compairr_sequences_split/{model}/rep_1_{i}.tsv" for i in range(2)]
+    for path in files:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame({"junction_aa": ["A"]}).to_csv(path, sep="\t", index=False)
+        os.utime(path, (1_000, 1_000))
+    make_scores_df({("innovation_sensitivity", "rep_1", model): [0.1 * (i + 1) for i in saved_subsets[model]]
+                    for model in saved_subsets}).to_csv(tmp_path / "innovation_repertoire_scores.tsv", sep="\t",
+                                                        index=False)
+    pd.DataFrame([{"dataset": f"rep_1_{i}", "model": model, "precision_innovation": 0.5,
+                   "sensitivity_innovation": 0.1 * (i + 1), "n_gen_novel": 10, "n_test_only": 4}
+                  for model, subsets in saved_subsets.items() for i in subsets]).to_csv(
+        tmp_path / "innovation_scores.csv", index=False)
+    return files
+
+
+def run_with_saved_scores(mocker, config):
+    """ Runs compute_and_plot_innovation_scores without plots, and returns the models that were computed. """
+    for function in ["plot_innovation_scores_by_n_gen_novel", "plot_innovation_precision_sensitivity",
+                     "plot_innovation_sensitivity_by_model", "run_innovation_statistics"]:
+        mocker.patch(f"{MODULE}.{function}")
+    computed = []
+
+    def collect(analysis_config, model, test_reference, compairr_output_dir, scores):
+        computed.append(model)
+        scores.scores.extend(make_scores_df({("innovation_sensitivity", "rep_1", model): [0.9, 0.9]})
+                             .to_dict("records"))
+
+    mocker.patch(f"{MODULE}.collect_innovation_scores", side_effect=collect)
+    compute_and_plot_innovation_scores(config, "/out/compairr")
+    return computed
+
+
+def test_compute_and_plot_reuses_saved_scores_of_unchanged_models(mocker, tmp_path, sample_analysis_config):
+    files = make_saved_innovation_run(tmp_path, sample_analysis_config, {"modelA": [0, 1], "modelB": [0, 1]})
+    # modelB was regenerated after the tables were written
+    os.utime(files[-1], (10**10, 10**10))
+
+    computed = run_with_saved_scores(mocker, sample_analysis_config)
+
+    assert computed == ["modelB"]
+    scores = pd.read_csv(tmp_path / "innovation_repertoire_scores.tsv", sep="\t")
+    # modelA keeps its saved scores, modelB has the new ones
+    assert scores.groupby("model")["score"].apply(list).to_dict() == {
+        "modelA": [pytest.approx(0.1), pytest.approx(0.2)], "modelB": [0.9, 0.9]}
+    innovation = pd.read_csv(tmp_path / "innovation_scores.csv")
+    assert innovation[innovation["model"] == "modelA"]["dataset"].tolist() == ["rep_1_0", "rep_1_1"]
+
+
+def test_compute_and_plot_recomputes_models_missing_from_saved_scores(mocker, tmp_path, sample_analysis_config):
+    # modelA has only one of its two subsets in the tables, modelB none
+    make_saved_innovation_run(tmp_path, sample_analysis_config, {"modelA": [0]})
+
+    assert run_with_saved_scores(mocker, sample_analysis_config) == ["modelA", "modelB"]

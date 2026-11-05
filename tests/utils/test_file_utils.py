@@ -1,9 +1,13 @@
+import os
+
+import pandas as pd
 import pytest
 import yaml
 
 from gen_airr_bm.core.analysis_config import AnalysisConfig
 from gen_airr_bm.core.main_config import MainConfig
-from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name, get_sequence_files
+from gen_airr_bm.utils.file_utils import get_generated_sequences_dir_name, get_sequence_files, is_up_to_date, \
+    write_tsv_atomically
 
 
 def make_analysis_config(root_output_dir="/tmp/test_output", analysis="precision_recall", receptor_type="TCR",
@@ -62,3 +66,29 @@ def test_main_config_reads_use_novel_sequences(tmp_path, config_value, expected)
     main_config = MainConfig(str(config_path))
 
     assert main_config.analysis_configs[0].use_novel_sequences is expected
+
+
+def test_is_up_to_date(tmp_path):
+    inputs = [tmp_path / "a.tsv", tmp_path / "b.tsv"]
+    output = tmp_path / "out.tsv"
+    for path in inputs + [output]:
+        path.write_text("x")
+    for path in inputs:
+        os.utime(path, (1_000, 1_000))
+    os.utime(output, (2_000, 2_000))
+
+    assert is_up_to_date(str(output), [str(p) for p in inputs])
+    # An input regenerated after the output makes it stale
+    os.utime(inputs[1], (3_000, 3_000))
+    assert not is_up_to_date(str(output), [str(p) for p in inputs])
+    assert not is_up_to_date(str(tmp_path / "missing.tsv"), [])
+
+
+def test_write_tsv_atomically(tmp_path):
+    path = tmp_path / "table.tsv"
+
+    write_tsv_atomically(pd.DataFrame({"a": [1, 2]}, index=["x", "y"]), str(path), index=True)
+
+    assert pd.read_csv(path, sep="\t", index_col=0)["a"].to_dict() == {"x": 1, "y": 2}
+    # No temporary file is left behind
+    assert os.listdir(tmp_path) == ["table.tsv"]
