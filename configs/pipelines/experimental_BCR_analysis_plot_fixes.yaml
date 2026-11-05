@@ -1,0 +1,80 @@
+n_experiments: 7
+output_dir: "RESULTS_SEP25/BCR"
+input_dir: "data/experimental/collectionB"
+seed: 42
+
+analyses:
+    - name: "reduced_dimensionality"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
+    - name: "memorization"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      allowed_mismatches: 0
+      indels: False
+      deduplicate: False
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
+    - name: "network"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      allowed_mismatches: 1
+      indels: True
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
+    - name: "diversity"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
+    - name: "innovation"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      n_subsets: 6
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
+    - name: "innovation_diversity"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      n_subsets: 6
+    - name: "gene_usage"
+      model_names: [ "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      n_subsets: 6
+      subfolder_name: "gene generating models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
+    - name: "p_gen"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      reference_data: [ "train", "test" ]
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
