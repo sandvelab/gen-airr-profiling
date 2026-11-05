@@ -7,15 +7,20 @@ of shuffles whose MAP is at least the observed one. Shuffling keeps the label co
 EXACT_MAX_REPERTOIRES repertoires all orderings are enumerated (exact p-value); above that, random shuffles
 are used with p = (1 + #null >= observed) / (1 + n_permutations).
 
-Multiple testing: p-values are corrected (Benjamini-Hochberg by default) within each family, where a family
-is one receptor type x one label (phenotype or subject) over the tested models. One test is run per model
-configuration (e.g. ProGen_kmer and ProGen_overlap are two tests). The family is therefore set by --models and
---labels: choose it before looking at the p-values. "train" is excluded unless listed in --models, since it is
-the reference, not a model being evaluated.
+Multiple testing: p-values are corrected within each family, where a family is one receptor type x one label
+(phenotype or subject) over the tested models. One test is run per model configuration (e.g. ProGen_kmer and
+ProGen_overlap are two tests). The family is therefore set by --models and --labels: choose it before looking
+at the p-values. "train" is excluded unless listed in --models, since it is the reference, not a model being
+evaluated. By default three corrections are reported side by side, since the tests are not independent (all
+models in a family share the same repertoires and labels):
+    p_bh          Benjamini-Hochberg: false discovery rate, valid for independent or positively dependent tests
+    p_by          Benjamini-Yekutieli: false discovery rate under any dependence (more conservative)
+    p_bonferroni  Bonferroni: family-wise error rate under any dependence (most conservative)
 
 Outputs in --output_dir:
     all_map_metrics.csv        MAP scores of every map_metrics.tsv found
-    map_permutation_tests.csv  one row per tested model x label: MAP, p, corrected p, family size, null summary
+    map_permutation_tests.csv  one row per tested model x label: MAP, p, corrected p-values, family size,
+                               null summary
     map_metrics_<receptor>.png bar chart per receptor type
 
 Usage:
@@ -41,6 +46,9 @@ from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_ti
 EXACT_MAX_REPERTOIRES = 8  # 8! = 40,320 orderings; enumerating more gets slow
 TOLERANCE = 1e-12  # treat floating-point ties with the observed MAP as ">="
 LABEL_EXTRACTORS = {"phenotype": extract_phenotype, "subject": extract_subject}
+# Column suffix -> statsmodels multipletests method
+CORRECTIONS = {"bh": "fdr_bh", "by": "fdr_by", "bonferroni": "bonferroni", "holm": "holm"}
+DEFAULT_CORRECTIONS = ("bh", "by", "bonferroni")
 
 
 def map_permutation_test(similarities_df, labels, n_permutations=9999, seed=0):
@@ -121,20 +129,21 @@ def run_permutation_tests(df, models=None, labels=("phenotype", "subject"), n_pe
     return pd.DataFrame(rows)
 
 
-def correct_for_multiple_testing(tests_df, method="fdr_bh"):
+def correct_for_multiple_testing(tests_df, corrections=DEFAULT_CORRECTIONS):
     """Correct p-values within each family (receptor type x label) over the tested models.
 
     Args:
         tests_df: output of run_permutation_tests
-        method: statsmodels multipletests method, e.g. "fdr_bh" (Benjamini-Hochberg) or "holm"
+        corrections: keys of CORRECTIONS, e.g. ("bh", "by", "bonferroni")
     Returns:
-        tests_df with columns n_tests (family size), p_adjusted and correction_method
+        tests_df with column n_tests (family size) and one column p_<correction> per correction
     """
     tests_df = tests_df.copy()
-    tests_df["n_tests"] = tests_df.groupby(["receptor_type", "label"])["p"].transform("size")
-    tests_df["p_adjusted"] = tests_df.groupby(["receptor_type", "label"])["p"].transform(
-        lambda p: multipletests(p, method=method)[1])
-    tests_df["correction_method"] = method
+    families = tests_df.groupby(["receptor_type", "label"])["p"]
+    tests_df["n_tests"] = families.transform("size")
+    for correction in corrections:
+        method = CORRECTIONS[correction]
+        tests_df[f"p_{correction}"] = families.transform(lambda p: multipletests(p, method=method)[1])
     return tests_df.sort_values(["receptor_type", "label", "p", "model"]).reset_index(drop=True)
 
 
@@ -227,8 +236,9 @@ if __name__ == "__main__":
                              "Together with --labels this sets the multiple-testing family.")
     parser.add_argument("--labels", nargs="+", choices=list(LABEL_EXTRACTORS), default=list(LABEL_EXTRACTORS),
                         help="Labels to test (default: phenotype subject)")
-    parser.add_argument("--correction", default="fdr_bh",
-                        help="statsmodels multipletests method: fdr_bh (default), holm, bonferroni, fdr_by, ...")
+    parser.add_argument("--corrections", nargs="+", choices=list(CORRECTIONS), default=list(DEFAULT_CORRECTIONS),
+                        help="Multiple-testing corrections to report, one p_<name> column each "
+                             "(default: bh by bonferroni; holm is also available)")
     parser.add_argument("--n_permutations", type=int, default=9999,
                         help=f"Random shuffles when there are more than {EXACT_MAX_REPERTOIRES} repertoires")
     parser.add_argument("--seed", type=int, default=0)
@@ -242,7 +252,7 @@ if __name__ == "__main__":
             if tests.empty:
                 print("No permutation tests were run")
             else:
-                tests = correct_for_multiple_testing(tests, args.correction)
+                tests = correct_for_multiple_testing(tests, args.corrections)
                 tests_path = os.path.join(args.output_dir, "map_permutation_tests.csv")
                 tests.to_csv(tests_path, index=False)
                 print(f"\nPermutation tests saved: {tests_path}")
