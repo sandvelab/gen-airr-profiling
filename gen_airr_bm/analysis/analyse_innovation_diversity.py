@@ -230,15 +230,17 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
         None
     """
     if innovation:
-        innovation_title_part = "Innovative "
+        # The innovative sequences are the generated sequences that are in the test set, deduplicated, i.e. the test
+        # sequences that the model covers
+        title_start = "Test Sequences Covered by the Generated Sequences, <br>by Distance to the Nearest Training Sequence"
         plotting_dfs = {model: df for model, df in plotting_dfs.items() if model != "test"}
     else:
-        innovation_title_part = ""
+        title_start = "Generated Sequences <br>by Distance to the Nearest Training Sequence"
 
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
                                                                      analysis_config.collection)
     fig = plot_single_dataset(plotting_dfs,
-                              title=f'Number of {innovation_title_part}Model Sequences by Distance to Nearest <br>Train Sequence for {collection_specification} Repertoires',
+                              title=f'{title_start} <br>for {collection_specification} Repertoires',
                               xtitle='Distance to nearest training sequence', ytitle='Mean Sequence Count',
                               distance_cols=['1', '2', '3', '>3'])
     png_path = f"{output_dir}/distances_plot.png"
@@ -254,7 +256,7 @@ def plot_nn_counts_across_datasets(analysis_config: AnalysisConfig, plotting_dfs
         subset_mask = {model: df.index.str.startswith(dataset)
                        for model, df in plotting_dfs.items()}
         fig = plot_single_dataset(plotting_dfs,
-                                  title=f'Number of {innovation_title_part}model sequences by distance to nearest <br>train sequence for {collection_specification} Repertoires <br>({dataset})',
+                                  title=f'{title_start} <br>for {collection_specification} Repertoires ({dataset})',
                                   xtitle='Distance to nearest training sequence', ytitle='Mean Sequence Count',
                                   distance_cols=['1', '2', '3', '>3'],
                                   subset_mask=subset_mask)
@@ -306,7 +308,8 @@ def plot_single_dataset(plotting_dfs: dict, title, xtitle: str, ytitle: str, dis
 
     fig.data = sorted(fig.data, key=lambda trace: (0 if trace.name == "test" else 1, trace.name))
     legend_size = 18
-    margin = dict(t=100, b=100)
+    # Room for titles of up to three lines
+    margin = dict(t=140, b=100)
     height = max(500, margin["t"] + margin["b"] + len(model_names_sorted) * 1.6 * legend_size + 20)
     fig.update_layout(
         title={"text": title,
@@ -397,7 +400,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
                                                                      analysis_config.collection)
     fig = plot_single_dataset(
         cluster_dfs,
-        title=f"Average Number of Clusters by Distance Threshold <br>for {collection_specification} Repertoires",
+        title=f"Clusters of Test Sequences Covered by the Generated Sequences <br>for {collection_specification} Repertoires",
         xtitle='Distance',
         ytitle='Mean Number of Clusters',
         distance_cols=['1', '2', '3']
@@ -415,7 +418,7 @@ def plot_cluster_counts(analysis_config: AnalysisConfig, num_clusters_by_model: 
                        for model, df in cluster_dfs.items()}
         fig = plot_single_dataset(
             cluster_dfs,
-            title=f'Average Number of Clusters by Distance Threshold <br>for {collection_specification} Repertoires ({dataset})',
+            title=f'Clusters of Test Sequences Covered by the Generated Sequences <br>for {collection_specification} Repertoires ({dataset})',
             xtitle='Distance',
             ytitle='Mean Number of Clusters',
             distance_cols=['1', '2', '3'],

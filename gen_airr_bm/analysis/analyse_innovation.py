@@ -244,7 +244,7 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
     collection_specification = get_collection_specification_for_title(analysis_config.receptor_type,
                                                                      analysis_config.collection)
     fig.update_layout(
-        title={'text': wrap_title(f"Innovation Scores for Generated {collection_specification} Repertoires", width=50),
+        title={'text': wrap_title(f"Test Set Coverage for Generated {collection_specification} Repertoires", width=50),
                'font': {'size': 20},
                'y': 0.95,
                'yanchor': 'top'
