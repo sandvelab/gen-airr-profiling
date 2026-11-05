@@ -3,9 +3,15 @@
 Permutation test: the Jaccard similarity matrix saved next to each map_metrics.tsv is kept fixed, the
 phenotype (or subject) labels are shuffled across repertoires, and MAP is recomputed. The p-value is the share
 of shuffles whose MAP is at least the observed one. Shuffling keeps the label counts, so singleton labels
-(skipped by compute_map) stay singletons and the null matches the observed MAP. With up to
-EXACT_MAX_REPERTOIRES repertoires all orderings are enumerated (exact p-value); above that, random shuffles
-are used with p = (1 + #null >= observed) / (1 + n_permutations).
+(skipped by compute_map) stay singletons and the null matches the observed MAP.
+
+Every ordering of the labels is equally likely under the null, and orderings that give the same labeling (e.g.
+swapping two CD8 repertoires) give the same MAP, so the exact null only needs the distinct labelings, each
+counted once (11 TCR repertoires: 11,550 phenotype and 277,200 subject labelings instead of 11! orderings).
+With up to EXACT_MAX_LABELINGS distinct labelings the null is exact; above that, random shuffles are used with
+p = (1 + #null >= observed) / (1 + n_permutations). The labelings (or shuffles) depend only on the labels, so
+they are made once and reused for every model; the null MAP values are computed per model, since their spread
+depends on the model's similarity matrix (only their mean is the same for all models).
 
 Multiple testing: p-values are corrected within each family, where a family is one receptor type x one label
 (phenotype or subject) over the tested models. One test is run per model configuration (e.g. ProGen_kmer and
@@ -31,7 +37,9 @@ Usage:
 import argparse
 import glob
 import itertools
+import math
 import os
+from functools import lru_cache
 from types import SimpleNamespace
 
 import numpy as np
@@ -43,12 +51,77 @@ from statsmodels.stats.multitest import multipletests
 from gen_airr_bm.analysis.analyse_phenotype import compute_map, extract_phenotype, extract_subject
 from gen_airr_bm.utils.plotting_utils import get_collection_specification_for_title
 
-EXACT_MAX_REPERTOIRES = 8  # 8! = 40,320 orderings; enumerating more gets slow
+EXACT_MAX_LABELINGS = 1_000_000  # distinct labelings scored at once; about 5 s and 100 MB per model at 11 repertoires
 TOLERANCE = 1e-12  # treat floating-point ties with the observed MAP as ">="
 LABEL_EXTRACTORS = {"phenotype": extract_phenotype, "subject": extract_subject}
 # Column suffix -> statsmodels multipletests method
 CORRECTIONS = {"bh": "fdr_bh", "by": "fdr_by", "bonferroni": "bonferroni", "holm": "holm"}
 DEFAULT_CORRECTIONS = ("bh", "by", "bonferroni")
+
+
+def count_labelings(labels):
+    """Number of distinct labelings of the repertoires with the same label counts."""
+    counts = pd.Series(labels).value_counts()
+    return math.factorial(len(labels)) // math.prod(math.factorial(c) for c in counts)
+
+
+@lru_cache(maxsize=None)
+def null_labelings(labels, n_permutations, seed):
+    """Labelings to score under the null, as label codes (one row per labeling). Cached, so every model with the
+    same labels reuses them.
+
+    Args:
+        labels: tuple of labels, one per repertoire
+        n_permutations: number of random shuffles when the distinct labelings are too many to enumerate
+        seed: random seed for the random shuffles
+    Returns:
+        (np.ndarray of shape (n_labelings, n_repertoires), method "exact" or "random")
+    """
+    codes = pd.factorize(pd.Series(labels))[0]
+    n = len(codes)
+    if count_labelings(labels) > EXACT_MAX_LABELINGS:
+        rng = np.random.default_rng(seed)
+        return rng.permuted(np.tile(codes, (n_permutations, 1)), axis=1), "random"
+
+    # Place the labels one after another: choose the positions of the first label among all positions, then of the
+    # second among the remaining ones, and so on.
+    labelings = [np.full(n, -1)]
+    for code, count in enumerate(np.bincount(codes)):
+        extended = []
+        for labeling in labelings:
+            free = np.flatnonzero(labeling < 0)
+            for positions in itertools.combinations(free, count):
+                new = labeling.copy()
+                new[list(positions)] = code
+                extended.append(new)
+        labelings = extended
+    return np.array(labelings), "exact"
+
+
+def compute_map_for_labelings(similarities_df, labelings):
+    """MAP of one similarity matrix for many labelings at once; the same result as compute_map per labeling.
+
+    Args:
+        similarities_df: pd.DataFrame, square similarity matrix
+        labelings: np.ndarray of label codes, one row per labeling, columns in the order of the matrix rows
+    Returns:
+        np.ndarray with one MAP per labeling
+    """
+    sim = similarities_df.values.copy().astype(float)
+    np.fill_diagonal(sim, -np.inf)
+    n = sim.shape[0]
+    ap_sum = np.zeros(len(labelings))
+    n_queries = np.zeros(len(labelings))
+    for i in range(n):
+        ranking = np.argsort(-sim[i])  # the same ranking as compute_map
+        ranking = ranking[ranking != i]
+        relevant = labelings[:, ranking] == labelings[:, [i]]
+        n_relevant = relevant.sum(axis=1)
+        precisions = np.cumsum(relevant, axis=1) / np.arange(1, n)
+        has_peers = n_relevant > 0  # repertoires without peers are skipped, as in compute_map
+        ap_sum += np.where(has_peers, (precisions * relevant).sum(axis=1) / np.maximum(n_relevant, 1), 0.0)
+        n_queries += has_peers
+    return np.divide(ap_sum, n_queries, out=np.zeros(len(labelings)), where=n_queries > 0)
 
 
 def map_permutation_test(similarities_df, labels, n_permutations=9999, seed=0):
@@ -60,26 +133,20 @@ def map_permutation_test(similarities_df, labels, n_permutations=9999, seed=0):
         n_permutations: number of random shuffles when the test is not exact
         seed: random seed for the random shuffles
     Returns:
-        dict with the observed MAP, p-value, null mean, null 95th percentile, and method ("exact" or "random")
+        dict with the observed MAP, p-value, null mean, null 95th percentile, method ("exact" or "random") and
+        the number of null labelings
     """
     observed = compute_map(similarities_df, labels)
-    n = len(labels)
+    labelings, method = null_labelings(tuple(labels), n_permutations, seed)
+    null = compute_map_for_labelings(similarities_df, labelings)
 
-    if n <= EXACT_MAX_REPERTOIRES:
-        # Every ordering of the labels; orderings that give the same grouping are counted equally often.
-        null = np.array([compute_map(similarities_df, [labels[i] for i in order])
-                         for order in itertools.permutations(range(n))])
+    if method == "exact":
         p_value = float(np.mean(null >= observed - TOLERANCE))
-        method = "exact"
     else:
-        rng = np.random.default_rng(seed)
-        null = np.array([compute_map(similarities_df, list(rng.permutation(labels)))
-                         for _ in range(n_permutations)])
         p_value = float((1 + np.sum(null >= observed - TOLERANCE)) / (1 + n_permutations))
-        method = "random"
 
     return {"map": observed, "p": p_value, "null_mean": float(null.mean()),
-            "null_95": float(np.quantile(null, 0.95)), "method": method}
+            "null_95": float(np.quantile(null, 0.95)), "method": method, "n_null": len(null)}
 
 
 def run_permutation_tests(df, models=None, labels=("phenotype", "subject"), n_permutations=9999, seed=0):
@@ -124,7 +191,8 @@ def run_permutation_tests(df, models=None, labels=("phenotype", "subject"), n_pe
             rows.append({"receptor_type": row["receptor_type"], "model": row["model"], "label": label_name,
                          "n_repertoires": len(names), "map": test["map"], "p": test["p"],
                          "null_mean": test["null_mean"], "null_95": test["null_95"],
-                         "permutation_method": test["method"], "source_path": row["source_path"]})
+                         "permutation_method": test["method"], "n_null": test["n_null"],
+                         "source_path": row["source_path"]})
 
     return pd.DataFrame(rows)
 
@@ -240,7 +308,7 @@ if __name__ == "__main__":
                         help="Multiple-testing corrections to report, one p_<name> column each "
                              "(default: bh by bonferroni; holm is also available)")
     parser.add_argument("--n_permutations", type=int, default=9999,
-                        help=f"Random shuffles when there are more than {EXACT_MAX_REPERTOIRES} repertoires")
+                        help=f"Random shuffles when there are more than {EXACT_MAX_LABELINGS:,} distinct labelings")
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
