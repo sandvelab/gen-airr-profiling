@@ -253,7 +253,7 @@ def plot_innovation_sensitivity_by_model(analysis_config: AnalysisConfig, scores
         template="plotly_white",
         colorway=px.colors.qualitative.Dark24,
         xaxis_title={'text': "Model", 'font': {'size': 20}},
-        yaxis_title={'text': "Innovation Score", 'font': {'size': 20}},
+        yaxis_title={'text': "Test Set Coverage", 'font': {'size': 20}},
         xaxis=dict(tickfont=dict(size=18), categoryorder="array", categoryarray=model_names_sorted),
         yaxis=dict(tickfont=dict(size=18)),
         boxmode="overlay",

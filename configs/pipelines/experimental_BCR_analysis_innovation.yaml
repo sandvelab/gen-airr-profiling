@@ -1,0 +1,16 @@
+n_experiments: 7
+output_dir: "RESULTS_SEP25/BCR"
+input_dir: "data/experimental/collectionB"
+seed: 42
+
+analyses:
+    - name: "innovation"
+      model_names: [ "PWM", "VAE_overlap", "VAE_kmer", "SoNNia_overlap", "SoNNia_kmer", "Akbar_overlap", "Akbar_kmer", "Saka_overlap", "Saka_kmer", "ProGen_overlap", "ProGen_kmer", "TCRpeg_overlap", "TCRpeg_kmer" ]
+      default_model_name: "humanIGH"
+      allowed_mismatches: 0
+      indels: False
+      subfolder_name: "all models"
+      receptor_type: "BCR"
+      n_subsets: 6
+      statistical_tests: False
+      donor_pattern: "^([^_]+)_"
